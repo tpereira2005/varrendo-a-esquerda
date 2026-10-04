@@ -2,6 +2,16 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 const fixture = {pst:'50,00',cand:[{n:'22',nm:'Exemplo',sg:'PL',vap:'100',pvap:'60,00',e:'s'}]};
+test('unavailable hosting cache does not prevent reading official data',async()=>{
+  const original=globalThis.fetch;const cache=globalThis.caches;
+  globalThis.caches={default:{match:async()=>{throw new Error('Cache disabled')},put:async()=>{throw new Error('Cache disabled')}}};
+  globalThis.fetch=async()=>Response.json(fixture);
+  try {
+    const {readArea}=await import('../lib/live.mjs?cache-disabled');
+    const d=await (await readArea('BR')).json();
+    assert.equal(d.ok,true);assert.equal(d.presidential.votesRight,100);
+  }finally{globalThis.fetch=original;globalThis.caches=cache;}
+});
 test('state batch fetches five fixed official URLs, caches and keeps several-seat races pending', async()=>{
   const original=globalThis.fetch; const urls=[];
   globalThis.fetch=async url=>{urls.push(url);return Response.json(fixture)};
