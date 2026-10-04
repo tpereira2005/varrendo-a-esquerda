@@ -15,6 +15,13 @@
       "when": 1791134466523,
       "tag": "0001_eager_ink",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1791146269551,
+      "tag": "0002_medical_black_queen",
+      "breakpoints": true
     }
   ]
 }

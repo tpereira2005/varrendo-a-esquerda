@@ -1,0 +1,1 @@
+ALTER TABLE `results` ADD `priority_until` integer DEFAULT 0 NOT NULL;
