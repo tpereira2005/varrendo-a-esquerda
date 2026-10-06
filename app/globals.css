@@ -180,15 +180,32 @@ body {
   opacity: 0.9;
 }
 
+.sem-quebra {
+  white-space: nowrap;
+}
+
+/* Telemóvel: botão, estado e horas numa só linha, por baixo do título. */
 .relogios {
-  display: grid;
-  justify-items: start;
-  gap: 4px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 10px;
+  width: 100%;
 }
 
 @media (min-width: 640px) {
   .relogios {
+    display: grid;
     justify-items: end;
+    width: auto;
+  }
+}
+
+/* No telemóvel o placar mostra só "Flávio", para o nome caber numa linha ao lado do 22. */
+@media (max-width: 479px) {
+  .lado-nome .apelido {
+    display: none;
   }
 }
 
@@ -680,7 +697,6 @@ html[data-theme="dark"] .barra-duelo > .bg-lula {
   fill: var(--ink);
   paint-order: stroke;
   stroke: var(--card);
-  stroke-width: 4px;
   stroke-linejoin: round;
 }
 
@@ -864,17 +880,26 @@ details[open] > summary::after {
   font-weight: 500;
 }
 
-.ext-cabecalho,
+/* Telemóvel: nome e deslocação na 1.ª linha, barra a toda a largura, votos por baixo. */
+.ext-cabecalho {
+  display: none;
+}
+
 .ext-linha {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
-  gap: 4px 14px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "nome desloc"
+    "barra barra"
+    "info info";
+  gap: 4px 12px;
   align-items: center;
 }
 
-.ext-cabecalho > :nth-child(n + 3) {
-  display: none;
-}
+.ext-linha > .ext-nome { grid-area: nome; }
+.ext-linha > .mini-duelo { grid-area: barra; }
+.ext-linha > .ext-info { grid-area: info; }
+.ext-linha > .ext-desloc { grid-area: desloc; text-align: right; }
 
 .ext-linha {
   width: 100%;
@@ -913,16 +938,14 @@ details[open] > summary::after {
 @media (min-width: 768px) {
   .ext-cabecalho,
   .ext-linha {
+    display: grid;
     grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.6fr) minmax(0, 1.1fr) minmax(0, 0.9fr);
-  }
-  .ext-cabecalho > :nth-child(n + 3) {
-    display: block;
+    grid-template-areas: "nome barra info desloc";
+    gap: 4px 14px;
+    align-items: center;
   }
   .ext-cabecalho {
     padding: 0 10px;
-  }
-  .ext-desloc {
-    text-align: right;
   }
 }
 
@@ -938,24 +961,28 @@ details[open] > summary::after {
 
 .ext-cidade {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
-  gap: 2px 14px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "nome info"
+    "barra barra";
+  gap: 2px 12px;
   align-items: center;
   font-size: 0.85rem;
   padding: 4px 10px;
   border-left: 2px solid var(--line);
 }
 
-.ext-cidade > .hint {
-  grid-column: 2;
-}
+.ext-cidade > :first-child { grid-area: nome; }
+.ext-cidade > .mini-duelo { grid-area: barra; }
+.ext-cidade > .hint { grid-area: info; text-align: right; }
 
 @media (min-width: 768px) {
   .ext-cidade {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr) minmax(0, 1.4fr);
+    grid-template-areas: "nome barra info";
   }
   .ext-cidade > .hint {
-    grid-column: auto;
+    text-align: left;
   }
 }
 

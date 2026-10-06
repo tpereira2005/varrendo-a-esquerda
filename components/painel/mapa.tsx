@@ -1,6 +1,7 @@
 import MAP from '@/lib/brazil-map.json';
 import type { Race } from '@/lib/types';
 import { pct } from './format';
+import { useLargura } from './largura';
 
 type Shape = { n: string; d: string; c: number[] };
 const SHAPES: Record<string, Shape> = MAP.s;
@@ -24,8 +25,13 @@ export function stateView(r: Race) {
  */
 export function Mapa({ states, selected, onSelect }: { states: Race[]; selected: string; onSelect: (uf: string) => void }) {
   const views = states.map((r) => ({ r, s: SHAPES[r.uf], v: stateView(r) }));
+  // Siglas com tamanho real constante (~11 px), qualquer que seja a largura do mapa.
+  // Em ecrãs estreitos, as dos estados pequenos do litoral ficam escondidas para não se sobreporem.
+  const [ref, width] = useLargura<HTMLElement>(500);
+  const k = 1000 / Math.max(200, Math.min(width, 540));
+  const narrow = width < 480;
   return (
-    <figure>
+    <figure ref={ref}>
       <svg viewBox="0 0 1000 971" className="mapa w-full h-auto max-h-[520px]" role="group" aria-label="Mapa: quem vai à frente em cada estado">
         <defs>
           {views.map(({ r, s }) => (
@@ -62,12 +68,13 @@ export function Mapa({ states, selected, onSelect }: { states: Race[]; selected:
               {v.flipped && <path d={s.d} className="contorno-virou" />}
             </g>
           ))}
-          {views.map(({ r, s, v }) => (
-            <text key={r.uf} x={s.c[0]} y={s.c[1]} textAnchor="middle" fontSize={SMALL.has(r.uf) ? 15 : 22} className="sigla">
+          {views.map(({ r, s, v }) => (narrow && SMALL.has(r.uf) ? null : (
+            <text key={r.uf} x={s.c[0]} y={s.c[1]} textAnchor="middle" fontSize={(SMALL.has(r.uf) ? 8.5 : 11) * k}
+              style={{ strokeWidth: 3 * k }} className="sigla">
               {r.uf}
               {v.lead === 0 ? ' ▲' : v.lead === 1 ? ' ●' : ''}
             </text>
-          ))}
+          )))}
         </g>
       </svg>
       <figcaption className="hint flex flex-wrap gap-x-4 gap-y-1">

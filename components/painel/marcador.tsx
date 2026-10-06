@@ -12,7 +12,15 @@ function Lado({ side, c, counted }: { side: Side; c: Finalist & Partial<Cand>; c
       <div className="lado-id">
         <span className="dorsal" aria-hidden="true">{c.number}</span>
         <div>
-          <div className="lado-nome">{flavio ? 'Flávio Bolsonaro' : 'Lula'}</div>
+          <div className="lado-nome">
+            {flavio ? (
+              <>
+                Flávio<span className="apelido"> Bolsonaro</span>
+              </>
+            ) : (
+              'Lula'
+            )}
+          </div>
           <div className="hint">{c.party} · {c.number}</div>
         </div>
       </div>

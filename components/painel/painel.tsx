@@ -389,7 +389,10 @@ function Cabecalho({ data, now, festejo = false }: { data: Snapshot | null; now:
               )}
             </h1>
             <p>
-              Eleições Brasil 2026 · 2.ª volta · <span className="c-flavio">Flávio 22</span> × <span className="c-lula">Lula 13</span>
+              <span className="sem-quebra">Eleições Brasil 2026 · 2.ª volta</span>{' '}
+              <span className="sem-quebra">
+                · <span className="c-flavio">Flávio 22</span> × <span className="c-lula">Lula 13</span>
+              </span>
             </p>
           </div>
         </div>

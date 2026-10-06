@@ -1,17 +1,26 @@
+'use client';
 import type { Snapshot } from '@/lib/types';
 import { pp, pct } from './format';
+import { useLargura } from './largura';
 
-const W = 600;
-const H = 220;
-const PAD = { l: 44, r: 12, t: 12, b: 26 };
+const PAD = { l: 38, r: 10, t: 12, b: 26 };
 
-/** Diferença Flávio − Lula (pontos percentuais) ao longo do apuramento. */
+/**
+ * Diferença Flávio − Lula (pontos percentuais) ao longo do apuramento.
+ * Desenhado à largura real do ecrã (1 unidade = 1 px), para o texto ficar sempre legível.
+ */
 export function Evolucao({ data }: { data: Snapshot }) {
+  const [ref, W] = useLargura<HTMLElement>(600);
+  const H = Math.round(Math.max(180, Math.min(280, W * 0.4)));
   const points = data.timeline
     .filter((p) => p.votesA + p.votesB > 0)
     .map((p) => ({ x: p.pctSections, y: (100 * (p.votesA - p.votesB)) / (p.votesA + p.votesB), at: p.generatedAt }));
   if (points.length < 2) {
-    return <p className="hint">O gráfico aparece com o segundo ficheiro oficial da noite.</p>;
+    return (
+      <figure ref={ref}>
+        <p className="hint">O gráfico aparece com o segundo ficheiro oficial da noite.</p>
+      </figure>
+    );
   }
   // A escala ignora os primeiros 5% (diferenças enormes e sem significado com poucos votos); esses pontos ficam no limite.
   const settled = points.filter((p) => p.x >= 5);
@@ -26,7 +35,7 @@ export function Evolucao({ data }: { data: Snapshot }) {
   const turns = data.events.filter((e) => e.kind === 'virada' && e.key === data.national.key);
 
   return (
-    <figure>
+    <figure ref={ref}>
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" role="img"
         aria-label={`Diferença atual ${pp(last.y)} com ${pct(last.x)} das secções`}>
         <defs>
@@ -35,14 +44,14 @@ export function Evolucao({ data }: { data: Snapshot }) {
         </defs>
         {[lim, lim / 2, 0, -lim / 2, -lim].map((v) => (
           <g key={v}>
-            <line x1={PAD.l} x2={W - PAD.r} y1={sy(v)} y2={sy(v)} stroke="var(--line)" strokeWidth={v === 0 ? 2 : 1} />
-            <text x={PAD.l - 6} y={sy(v) + 4} textAnchor="end" fontSize="11" fill="var(--muted)">
+            <line x1={PAD.l} x2={W - PAD.r} y1={sy(v)} y2={sy(v)} stroke="color-mix(in srgb, var(--muted) 30%, transparent)" strokeWidth={v === 0 ? 1.6 : 1} />
+            <text x={PAD.l - 6} y={sy(v) + 4} textAnchor="end" fontSize="12" fill="var(--muted)">
               {v > 0 ? `+${v}` : v}
             </text>
           </g>
         ))}
         {[0, 25, 50, 75, 100].map((x) => (
-          <text key={x} x={sx(x)} y={H - 6} textAnchor="middle" fontSize="11" fill="var(--muted)">{x}%</text>
+          <text key={x} x={sx(x)} y={H - 6} textAnchor={x === 0 ? 'start' : x === 100 ? 'end' : 'middle'} fontSize="12" fill="var(--muted)">{x}%</text>
         ))}
         <path d={area} fill="var(--flavio)" opacity="0.18" clipPath="url(#pos)" />
         <path d={area} fill="var(--lula)" opacity="0.18" clipPath="url(#neg)" />
