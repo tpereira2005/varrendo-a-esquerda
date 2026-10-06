@@ -425,14 +425,14 @@ body {
 .barra-duelo {
   position: relative;
   display: flex;
-  gap: 4px;
   height: 18px;
+  border-radius: 999px;
+  overflow: hidden;
 }
 
-/* Dois segmentos arredondados com um degradé plano na cor de cada candidato (sem brilhos nem animações). */
+/* Verde e vermelho encostados, com um degradé plano na cor de cada candidato (sem brilhos nem animações). */
 .barra-duelo > span {
   min-width: 0;
-  border-radius: 999px;
   transition: width 0.8s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -454,27 +454,24 @@ html[data-theme="dark"] .barra-duelo > .bg-lula {
 
 .barra-duelo.fina {
   height: 10px;
-  gap: 3px;
 }
 
-/* Marca dos 50%: pequeno triângulo por cima da barra. */
+/* Marca dos 50%: pequeno entalhe no topo da barra. */
 .meta-50 {
   position: absolute;
   left: 50%;
-  top: -7px;
+  top: 0;
   width: 0;
   height: 0;
   margin-left: -5px;
   border-left: 5px solid transparent;
   border-right: 5px solid transparent;
-  border-top: 6px solid var(--muted);
-  opacity: 0.6;
+  border-top: 6px solid var(--card);
 }
 
 .barra-duelo.fina .meta-50 {
-  top: -6px;
   margin-left: -4px;
-  border-width: 5px 4px 0;
+  border-width: 4px 4px 0;
 }
 
 .apuramento {

@@ -54,3 +54,11 @@ Requer Node.js 22.13 ou mais recente. A publicação é feita pelo plugin Sites 
 
 - [Divulgação de resultados do TSE](https://www.tse.jus.br/eleicoes/informacoes-tecnicas-sobre-a-divulgacao-de-resultados) e [formato do ficheiro unificado](https://www.tse.jus.br/eleicoes/eleicoes-2026-content/arquivos/divulgacao-de-resultados/tse-ea20-arquivo-de-resultado-unificado).
 - Mapa do Brasil e reações do boneco: projeto original.
+
+## Licença
+
+Código sob a [licença MIT](LICENSE). Exceções, que pertencem aos respetivos autores:
+
+- `lib/parties.json`, `lib/brazil-map.json` e as imagens do boneco (`public/emoji/`), vindos do [projeto original](https://github.com/ODevLibertario/varrendo-a-esquerda);
+- os ficheiros oficiais em `data/fontes/` e os dados derivados deles, publicados pelo TSE;
+- `build/sites-vite-plugin.ts`, que tem a sua própria licença (`build/sites-vite-plugin.LICENSE`).
