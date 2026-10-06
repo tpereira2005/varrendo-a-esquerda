@@ -1,0 +1,4 @@
+# Finais de linha uniformes (LF) no repositório, em Windows e noutros sistemas.
+* text=auto eol=lf
+*.png binary
+*.jpg binary

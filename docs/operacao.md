@@ -42,14 +42,14 @@ Painel Flávio Bolsonaro (PL, 22) × Lula (PT, 13), do ponto de vista de quem to
 
 - O TSE publica o total do estrangeiro (ficheiro `zz`, tratado como a disputa `ZZ`), um ficheiro por cidade com posto consular (186 cidades) e um resumo com o progresso de todas (`zz-e006258-ab.json`).
 - O país de cada cidade vem de `lib/exterior.json` (o TSE não o indica). Portugal = Lisboa, Porto e Faro, e aparece sempre primeiro.
-- Recolha: o resumo é lido no máximo a cada 45 s; só se pedem os ficheiros das cidades com votos novos (no máximo 8 por lote, Portugal primeiro). O "para virar" usa o progresso real do estrangeiro.
+- Recolha: o resumo é lido a cada 30 s ou logo que o ficheiro nacional mude; só se pedem os ficheiros das cidades com votos novos (no máximo 8 por lote, Portugal primeiro). O "para virar" usa o progresso real do estrangeiro.
 - Arquivo da 1.ª volta por país: `data/exterior-turno1.json`, gerado por `scripts/build-turno1.mjs` a partir dos 186 ficheiros oficiais (a soma confere com o total oficial: 330 882 votos válidos).
 - Migração `drizzle/0004_estrangeiro.sql` (tabela `exterior`), aditiva.
 
 ## Recolha
 
 - Janela ativa: de 25/10 às 16h30 de Brasília (19h30 em Lisboa) até todas as disputas terem totalização final. Fora dela não há pedidos ao TSE.
-- Intervalos: Brasil e estado escolhido a cada 15 s; restantes a cada 45 s. Um ficheiro final deixa de ser pedido.
+- Ritmo: o ficheiro nacional é verificado a cada 10 s (pedido condicional). Quando muda, todos os outros ficheiros entram logo no lote; sem mudanças, o estado escolhido é verificado a cada 20 s e os restantes a cada 60 s. Um ficheiro final deixa de ser pedido. A página atualiza a cada 4 s (15 s em segundo plano).
 - A configuração `ele-c.json` é lida no máximo a cada 10 minutos. Os IDs 6258/6260 (campo `cdt2` da 1.ª volta) ficam "confirmados" quando o TSE publicar as eleições com `t=2`.
 - 404 (ficheiro ainda não publicado): nova tentativa ao ritmo normal. 403/429: pausa global de pelo menos 10 minutos (ou o `Retry-After`).
 - A recolha é feita pelos pedidos de quem tem a página **aberta e visível**. A tarefa horária do Sites (`POST /api/collect`) é só uma rede de segurança.
@@ -65,18 +65,21 @@ Painel Flávio Bolsonaro (PL, 22) × Lula (PT, 13), do ponto de vista de quem to
 
 ## Ensaio local
 
-1. `npm run build` e aplicar a migração `drizzle/0003_segunda_volta.sql` à base local (ver README, "Local D1 migrations").
-2. Criar `.dev.vars` com `COLLECTION_FORCE=1` e `TSE_BASE=http://127.0.0.1:8787`.
-3. `node scripts/fake-tse.mjs --origem=<pasta com os ficheiros da 1.ª volta>` (opções: `--passo=20`, `--final=lula`, `--com-429`).
+1. `npm run build` e aplicar as migrações pendentes (`drizzle/0003_segunda_volta.sql`, `drizzle/0004_estrangeiro.sql`) à base local (ver [base-tecnica-sites.md](base-tecnica-sites.md), "Local D1 migrations").
+2. Criar `.dev.vars` com `COLLECTION_FORCE=1` e `TSE_BASE=http://127.0.0.1:8787`. **Apagar antes de publicar.**
+3. `npm run simulador` (opções: `-- --passo=20`, `--final=lula`, `--com-429`). Usa os ficheiros oficiais da 1.ª volta em `data/fontes/1a-volta`.
 4. `npm run dev` e abrir http://localhost:5173 (a página tem de estar visível para a recolha avançar).
-5. Testes automáticos: `node --test test/*.test.mjs`.
+5. Testes automáticos: `npm test`.
 
 Para repetir o ensaio do zero, apagar as linhas da 2.ª volta da base local:
 
 ```sql
 DELETE FROM results WHERE turn=2; DELETE FROM revisions WHERE turn=2; DELETE FROM notices WHERE turn=2;
-DELETE FROM timeline; DELETE FROM rounds; UPDATE collector SET next_at=0, pause_until=0, cursor=0;
+DELETE FROM timeline; DELETE FROM rounds; DELETE FROM exterior;
+UPDATE collector SET next_at=0, pause_until=0, cursor=0, lease_until=0;
 ```
+
+Para regenerar o arquivo da 1.ª volta (`data/turno1.json` e `data/exterior-turno1.json`): `npm run dados:1a-volta`.
 
 ## Publicação (Codex / plugin Sites)
 

@@ -1,5 +1,5 @@
 // Simulador local do TSE para ensaiar a noite da 2.ª volta.
-// Uso: node scripts/fake-tse.mjs [--passo=20] [--final=lula] [--com-429] [--porta=8787]
+// Uso: npm run simulador -- [--passo=20] [--final=lula] [--com-429] [--porta=8787]
 // O site local tem de ter, em .dev.vars: COLLECTION_FORCE=1 e TSE_BASE=http://127.0.0.1:8787
 import { createServer } from 'node:http';
 import { readFileSync } from 'node:fs';
@@ -13,7 +13,7 @@ const STEP_S = Number(arg('passo', 20));
 const PORT = Number(arg('porta', 8787));
 const LULA_WINS = arg('final', 'flavio') === 'lula';
 const WITH_429 = process.argv.includes('--com-429');
-const DIR = arg('origem', '../../outputs/backup-turno1/tse');
+const DIR = arg('origem', 'data/fontes/1a-volta');
 const STEPS = 30;
 
 const started = Date.now();
@@ -70,7 +70,7 @@ const config = JSON.parse(readFileSync(join(DIR, 'ele-c.json'), 'utf8'));
 config.pl.find((p) => p.c === 'ele2026').e.push({ cd: '6258', t: '2', nm: 'Simulação 2.º turno federal' }, { cd: '6260', t: '2', nm: 'Simulação 2.º turno estadual' });
 // Estrangeiro: resumo (abrangências) e um ficheiro por cidade, a partir dos ficheiros da 1.ª volta.
 const zz = RACES.find((r) => r.uf === 'ZZ');
-const citySource = (cd) => JSON.parse(readFileSync(join(DIR, '..', 'exterior', 'cidades', `zz${cd}-c0001-e006257-u.json`), 'utf8'));
+const citySource = (cd) => JSON.parse(readFileSync(join(DIR, 'estrangeiro', 'cidades', `zz${cd}-c0001-e006257-u.json`), 'utf8'));
 function cityVotes(cd, s) {
   const src = citySource(cd);
   const get = (n) => src.carg[0].agr.flatMap((a) => a.par.flatMap((p) => p.cand)).find((c) => c.n === n)?.vap ?? 0;

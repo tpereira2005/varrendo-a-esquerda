@@ -1,12 +1,12 @@
 // Gera data/turno1.json a partir dos ficheiros finais da 1.ª volta descarregados do TSE.
-// Uso: node scripts/build-turno1.mjs <pasta-com-os-ficheiros-tse>
+// Uso: npm run dados:1a-volta  (lê os ficheiros oficiais guardados em data/fontes/1a-volta)
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { readdirSync } from 'node:fs';
 import { UFS, candidatesOf, turnoutOf, officialTime, pct } from '../lib/tse.mjs';
 import { parseCity, byCountry } from '../lib/exterior.mjs';
 
-const dir = process.argv[2] ?? '../../outputs/backup-turno1/tse';
+const dir = process.argv[2] ?? 'data/fontes/1a-volta';
 const GOVERNOR_RUNOFF = ['AC', 'AM', 'DF', 'ES', 'RJ', 'RN', 'TO'];
 
 function read(uf, cargo, ele) {
@@ -48,8 +48,8 @@ writeFileSync(
 );
 console.log('data/turno1.json:', Object.keys(president).length, 'presidência;', Object.keys(governor).length, 'governadores');
 
-// Estrangeiro por país: um ficheiro oficial por cidade (pasta exterior/cidades ao lado da pasta tse).
-const citiesDir = join(dir, '..', 'exterior', 'cidades');
+// Estrangeiro por país: um ficheiro oficial por cidade com posto consular.
+const citiesDir = join(dir, 'estrangeiro', 'cidades');
 const cities = {};
 for (const f of readdirSync(citiesDir)) {
   const cd = f.match(/^zz(\d+)-c0001/)?.[1];
