@@ -1,24 +1,28 @@
 'use client';
 import type { Cand, Finalist, Snapshot } from '@/lib/types';
 import { Numero } from './numero';
-import { ago, compact, countdown, int, pct, pp, timeBrasilia, timeLisbon } from './format';
+import { ago, compact, countdown, int, pct, pp, timeBrasilia, timeLisbon, titleCase, shortName, FLAVIO } from './format';
+
+const LULA = '13';
 
 type Side = 'flavio' | 'lula';
 
 function Lado({ side, c, counted }: { side: Side; c: Finalist & Partial<Cand>; counted: boolean }) {
-  const flavio = side === 'flavio';
   return (
     <div className={`lado lado-${side}`}>
       <div className="lado-id">
         <span className="dorsal" aria-hidden="true">{c.number}</span>
         <div>
           <div className="lado-nome">
-            {flavio ? (
+            {/* Nomes pelo número do candidato: um finalista substituído pelo TSE aparece com o seu nome. */}
+            {c.number === FLAVIO ? (
               <>
                 Flávio<span className="apelido"> Bolsonaro</span>
               </>
-            ) : (
+            ) : c.number === LULA ? (
               'Lula'
+            ) : (
+              titleCase(c.name)
             )}
           </div>
           <div className="hint">{c.party} · {c.number}</div>
@@ -53,7 +57,7 @@ export function Marcador({ data, now }: { data: Snapshot; now: number }) {
   const diff = (a.votes ?? 0) - (b.votes ?? 0);
   const leader: Side | null = !counted || diff === 0 ? null : diff > 0 ? 'flavio' : 'lula';
   const winner: Side | null = p?.winner == null ? null : p.winner === 0 ? 'flavio' : 'lula';
-  const name = (s: Side) => (s === 'flavio' ? 'Flávio' : 'Lula');
+  const name = (s: Side) => shortName(s === 'flavio' ? a : b, 1);
 
   return (
     <section className={`card hero ${winner ? `hero-${winner}` : ''}`} aria-labelledby="t-pres" id="placar">

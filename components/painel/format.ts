@@ -58,4 +58,4 @@ export function titleCase(s: string) {
 export const FLAVIO = '22';
 /** "Flávio"/"Lula" na Presidência; nome do boletim nos governadores. */
 export const shortName = (c: { number: string; name: string }, cargo: number) =>
-  cargo === 1 ? (c.number === FLAVIO ? 'Flávio' : 'Lula') : titleCase(c.name);
+  cargo === 1 && c.number === FLAVIO ? 'Flávio' : cargo === 1 && c.number === '13' ? 'Lula' : titleCase(c.name);

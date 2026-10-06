@@ -22,15 +22,15 @@ export function Duelo({ race }: { race: Race }) {
       <div className="grid grid-cols-2 gap-3">
         {[a, b].map((c, i) => (
           <div key={c.number} className={i ? 'text-right' : ''}>
-            <div className="font-semibold leading-tight">{race.cargo === 1 ? (i ? 'Lula' : 'Flávio Bolsonaro') : titleCase(c.name)}</div>
+            <div className="font-semibold leading-tight">{race.cargo === 1 && c.number === '22' ? 'Flávio Bolsonaro' : race.cargo === 1 && c.number === '13' ? 'Lula' : titleCase(c.name)}</div>
             <div className="hint">
               {c.party} · {c.number}
               {race.cargo === 3 && <span className="tag ml-1">{c.group}</span>}
             </div>
             <div className="pct-medio" style={{ color: `var(--${i ? colorB === 'neutral' ? 'muted' : colorB : colorA})` }}>
-              {p && total ? <Numero value={c.pct} format={(v) => pct(v, 1)} /> : '—'}
+              {p && total ? <Numero value={c.pct} format={(v) => pct(v, 1)} /> : <span className="fantasma" title="1.ª volta">{pct(c.r1Pct, 1)}</span>}
             </div>
-            <div className="hint">{p && total ? <><Numero value={c.votes} format={(v) => int(Math.round(v))} /> votos</> : `1.ª volta: ${pct(c.r1Pct, 2)}`}</div>
+            <div className="hint">{p && total ? <><Numero value={c.votes} format={(v) => int(Math.round(v))} /> votos</> : '1.ª volta (todos os candidatos)'}</div>
           </div>
         ))}
       </div>

@@ -10,7 +10,7 @@ import { Arquivo } from './arquivo';
 import { Estrangeiro } from './estrangeiro';
 import { Festejo } from './festejo';
 import { chime, keepAwake, reacquireAwake, unlockAudio } from './efeitos';
-import { compact, pct, timeBrasilia, timeLisbon, FLAVIO } from './format';
+import { compact, pct, shortName, timeBrasilia, timeLisbon, FLAVIO } from './format';
 
 const read = (k: string) => {
   try {
@@ -100,7 +100,7 @@ export default function Painel({ initial }: { initial: Snapshot | null }) {
       ? winner.number === FLAVIO
         ? '🎉 FLÁVIO ELEITO! · Varrendo'
         : 'Lula eleito · Varrendo'
-      : `${a.votes >= b.votes ? '▲' : '●'} Flávio ${pct(a.pct)} × ${pct(b.pct)} Lula · ${pct(p.pctSections, 0)}`;
+      : `${a.votes >= b.votes ? '▲' : '●'} ${shortName(a, 1)} ${pct(a.pct)} × ${pct(b.pct)} ${shortName(b, 1)} · ${pct(p.pctSections, 0)}`;
   }, [p, winner]);
 
   // Avisos novos: mostrados uma vez (toast, som e notificação do sistema, se autorizados).
@@ -206,42 +206,50 @@ export default function Painel({ initial }: { initial: Snapshot | null }) {
           </section>
         ) : (
           <section className="card text-center">
-            <div className="text-xl font-bold">Lula foi eleito Presidente pelo TSE.</div>
-            <div className="hint">Resultado oficial · Flávio Bolsonaro com {pct(p!.cands[0].pct, 2)} dos votos válidos</div>
+            <div className="text-xl font-bold">{shortName(winner, 1)} foi eleito Presidente pelo TSE.</div>
+            <div className="hint">
+              Resultado oficial · {shortName(p!.cands[p!.winner === 0 ? 1 : 0], 1)} com {pct(p!.cands[p!.winner === 0 ? 1 : 0].pct, 2)} dos votos válidos
+            </div>
           </section>
         ))}
 
       <Marcador data={data} now={now} />
 
-      <div className="colunas">
-        <div className="coluna">
+      {/*
+        PC: linhas de pares com alturas parecidas (em vez de duas colunas soltas, que deixavam
+        um vazio enorme quando um lado tinha poucos cartões, por exemplo antes do fecho das urnas).
+        Telemóvel: tudo numa coluna, pela mesma ordem.
+      */}
+      {((data.toFlip && p && p.pctSections > 0) || data.timeline.length > 0) && (
+        <div className="par">
           {data.toFlip && p && p.pctSections > 0 && <ParaVirar data={data} />}
-
           {data.timeline.length > 0 && (
             <section className="card">
               <h2>Evolução da noite</h2>
               <Evolucao data={data} />
             </section>
           )}
-
-          <section className="card">
-            <h2 className="mb-2">Avisos</h2>
-            <Avisos events={data.events} corrections={data.corrections} />
-          </section>
         </div>
+      )}
 
-        <div className="coluna">
-          <section className="card grid gap-3">
-            <h2>Estados</h2>
-            <Placar score={data.score} />
-            {data.score.pending > 0 && leading.flavio + leading.lula > 0 && (
-              <p className="hint text-center">
-                À frente agora: <b className="c-flavio">Flávio em {leading.flavio}</b> · <b className="c-lula">Lula em {leading.lula}</b>
-              </p>
-            )}
-            <Mapa states={data.states} selected={uf} onSelect={select} />
-          </section>
+      <section className="card">
+        <h2 className="mb-2">Avisos</h2>
+        <Avisos events={data.events} corrections={data.corrections} />
+      </section>
 
+      <div className="par">
+        <section className="card grid gap-3 content-start">
+          <h2>Estados</h2>
+          <Placar score={data.score} />
+          {data.score.pending > 0 && leading.flavio + leading.lula > 0 && (
+            <p className="hint text-center">
+              À frente agora: <b className="c-flavio">Flávio em {leading.flavio}</b> · <b className="c-lula">Lula em {leading.lula}</b>
+            </p>
+          )}
+          <Mapa states={data.states} selected={uf} onSelect={select} />
+        </section>
+
+        <div className="pilha">
           <section className="card">
             <h2 className="mb-2">Detalhe do estado</h2>
             <DetalheEstado data={data} uf={uf} onSelect={select} />
@@ -432,13 +440,13 @@ function BarraFixa({ data }: { data: Snapshot }) {
   return (
     <div className={`barra-fixa ${visible ? 'on' : ''}`} aria-hidden={!visible}>
       <button className="barra-fixa-in" onClick={() => document.getElementById('placar')?.scrollIntoView({ behavior: 'smooth' })} tabIndex={visible ? 0 : -1}>
-        <b className="c-flavio">Flávio {pct(a.pct)}</b>
+        <b className="c-flavio">{shortName(a, 1)} {pct(a.pct)}</b>
         <span className="barra-duelo grow">
           <span className="bg-flavio" style={{ width: `${share}%` }} />
           <span className="bg-lula" style={{ width: `${100 - share}%` }} />
           <i className="meta-50" />
         </span>
-        <b className="c-lula">{pct(b.pct)} Lula</b>
+        <b className="c-lula">{pct(b.pct)} {shortName(b, 1)}</b>
         <span className="hint hidden sm:inline">{pct(p.pctSections, 1)} apurado</span>
       </button>
     </div>
@@ -448,12 +456,13 @@ function BarraFixa({ data }: { data: Snapshot }) {
 function ParaVirar({ data }: { data: Snapshot }) {
   const f = data.toFlip!;
   const flavioBehind = f.trailing === 0;
-  const who = flavioBehind ? 'O Flávio' : 'O Lula';
+  const cands = data.national.parsed!.cands;
+  const who = shortName(cands[f.trailing], 1);
   const need = f.impossible || f.needPct == null ? null : f.needPct;
   const text =
     need == null
-      ? `${who} já não tem votos suficientes por apurar para virar.`
-      : `${who} ${flavioBehind ? 'precisa' : 'precisaria'} de ~${pct(need, 1)} dos votos que faltam.`;
+      ? `${who === 'Flávio' || who === 'Lula' ? `O ${who}` : who} já não tem votos suficientes por apurar para virar.`
+      : `${who === 'Flávio' || who === 'Lula' ? `O ${who}` : who} ${flavioBehind ? 'precisa' : 'precisaria'} de ~${pct(need, 1)} dos votos que faltam.`;
   // Medidor de 50% (basta empatar o resto) a 100% (precisaria de todos os votos que faltam).
   const pos = need == null ? 100 : Math.max(0, Math.min(100, ((need - 50) / 50) * 100));
   const verdict = need == null ? 'impossível' : need > 60 ? 'muito difícil' : need > 55 ? 'difícil' : need > 52 ? 'possível' : 'tudo em aberto';

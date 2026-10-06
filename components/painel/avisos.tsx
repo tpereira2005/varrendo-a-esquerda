@@ -18,7 +18,7 @@ export function Avisos({ events, corrections }: { events: Notice[]; corrections:
   }
   return (
     <div className="grid gap-2">
-      <ul className="grid gap-2">
+      <ul className="lista-avisos grid gap-2">
         {list.map((e) => (
           <li key={e.id} className="aviso">
             <span className="aviso-icone" style={{ background: TONE[e.tone] }} aria-hidden="true">

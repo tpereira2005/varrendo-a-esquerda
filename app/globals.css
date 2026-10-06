@@ -75,8 +75,9 @@ body {
   gap: 16px;
 }
 
-.colunas,
-.coluna {
+/* Pares de cartões: lado a lado no PC, empilhados no telemóvel. */
+.par,
+.pilha {
   display: grid;
   gap: 16px;
   align-content: start;
@@ -114,13 +115,21 @@ body {
     padding: 18px 28px 56px;
     gap: 18px;
   }
-  .colunas {
-    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  .par {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     align-items: start;
     gap: 18px;
   }
-  .coluna {
+  /* um só cartão no par ocupa a largura toda */
+  .par > :only-child {
+    grid-column: 1 / -1;
+  }
+  .pilha {
     gap: 18px;
+  }
+  /* avisos em duas colunas quando ocupam a largura toda */
+  .lista-avisos {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
   .card {
     padding: 22px;
@@ -370,8 +379,9 @@ body {
   margin-top: 8px;
 }
 
-.lado-pct .fantasma {
-  opacity: 0.22;
+/* Antes dos votos: a percentagem da 1.ª volta aparece esbatida, como referência. */
+.fantasma {
+  opacity: 0.25;
 }
 
 .lado-flavio .lado-pct { color: var(--flavio); }
@@ -858,14 +868,13 @@ details[open] > summary::after {
 }
 
 /* entrada dos cartões ao abrir a página */
-.wrap > :is(header, section, details, footer, .colunas, .faixa-brasil),
-.coluna > * {
+.wrap > :is(header, section, details, footer, .par, .faixa-brasil) {
   animation: entrar 0.5s ease both;
 }
 
-.coluna > :nth-child(2) { animation-delay: 0.06s; }
-.coluna > :nth-child(3) { animation-delay: 0.12s; }
-.coluna > :nth-child(4) { animation-delay: 0.18s; }
+.par > :nth-child(2) {
+  animation: entrar 0.5s ease 0.08s both;
+}
 
 .linha-evolucao {
   stroke-dasharray: 1;
