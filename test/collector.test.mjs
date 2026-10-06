@@ -146,7 +146,7 @@ test('linha temporal, avisos sem duplicação e correção quando o TSE retira u
   assert.equal(s.corrections[0].title, 'FLÁVIO BOLSONARO ELEITO PRESIDENTE!');
 });
 
-test('ritmo: nacional a cada 10 s, estado visto a cada 20 s, restantes a cada 60 s; finais deixam de ser pedidos', async () => {
+test('ritmo: nacional a cada 10 s, estado visto a cada 20 s, restantes a cada 60 s; finais só a cada 10 min', async () => {
   const store = new D1Store(database());
   await store.db.batch(
     jobs.map((j) =>
@@ -163,8 +163,9 @@ test('ritmo: nacional a cada 10 s, estado visto a cada 20 s, restantes a cada 60
 
   const json = round2File('BR', 1, { pct: 100, a: 2, b: 1, final: true });
   await store.success(BR, await store.get(BR.key), json, parseRunoff(json, BR), 'f', new Headers(), T0);
-  const plan = collectionPlan(jobs, await store.queue(), T0 + 3_600_000);
-  assert.equal(plan.due.some((p) => p.job.key === BR.key), false);
+  // Final: deixa de ser pedido ao ritmo da noite; só volta a ser verificado a cada 10 min (correções).
+  assert.equal(collectionPlan(jobs, await store.queue(), T0 + 60_000).due.some((p) => p.job.key === BR.key), false);
+  assert.equal(collectionPlan(jobs, await store.queue(), T0 + INTERVALS.final).due.some((p) => p.job.key === BR.key), true);
 });
 
 test('nova geração nacional: todos os outros ficheiros ficam logo pendentes e entram no mesmo lote', async () => {
@@ -212,4 +213,75 @@ test('recolha completa das 35 disputas e estado da noite', async () => {
   assert.equal(s.phase, 'apuramento');
   assert.equal(s.toFlip.impossible, true);
   assert.ok(s.events.some((e) => e.kind === 'estado' || e.kind === 'estado-virou'));
+});
+
+// ---- revisão externa (6/10/2026): bloqueios, prazos, correções após a totalização ----
+
+test('429 na configuração do TSE pára o lote e aplica a pausa global com Retry-After', async () => {
+  const store = new D1Store(database());
+  const calls = [];
+  const fetchImpl = async (url) => {
+    calls.push(url);
+    if (url.endsWith('ele-c.json')) return new Response('', { status: 429, headers: { 'retry-after': '900' } });
+    return fakeTse()(url);
+  };
+  await collectStep(store, { now, sleep, fetchImpl });
+  assert.equal(calls.length, 1);
+  assert.equal((await store.state()).pause_until, T0 + 900_000);
+  // A tentativa fica registada: sem linha prévia em `rounds`, não se repete a cada lote.
+  assert.ok((await store.round()).checked_at >= T0);
+});
+
+test('falha da configuração (não bloqueio) fica registada e não se repete a cada lote', async () => {
+  const store = new D1Store(database());
+  const calls = [];
+  const fetchImpl = async (url) => {
+    calls.push(url);
+    if (url.endsWith('ele-c.json')) return new Response('', { status: 500 });
+    return fakeTse()(url);
+  };
+  await collectStep(store, { now, sleep, limit: 1, fetchImpl });
+  await collectStep(store, { now: () => T0 + 20_000, sleep, limit: 1, fetchImpl });
+  assert.equal(calls.filter((u) => u.endsWith('ele-c.json')).length, 1);
+});
+
+test('nenhum pedido começa depois do prazo do lote (a concessão de 30 s nunca é ultrapassada)', async () => {
+  const store = new D1Store(database());
+  await store.saveRound({ federal: 6258, estadual: 6260, confirmed: true }, T0);
+  const cities = Object.fromEntries(Object.keys((await import('../lib/exterior.mjs')).CITIES).slice(0, 12).map((cd) => [cd, ['21:00:00', '50,00']]));
+  let t = T0;
+  const starts = [];
+  const fetchImpl = async (url) => {
+    const start = t;
+    starts.push(start - T0);
+    await Promise.resolve();
+    t = Math.max(t, start + 8_000); // cada resposta demora o máximo permitido; pedidos em paralelo sobrepõem-se
+    if (url.endsWith('-ab.json')) {
+      return Response.json({ ele: '6258', t: '2', abr: Object.entries(cities).map(([cd, [ht, pst]]) => ({ tpabr: 'mun', cdabr: cd, dt: '25/10/2026', ht, s: { st: '1', pst } })) });
+    }
+    const city = url.match(/zz(\d+)-c0001/);
+    if (city) return Response.json(round2File(city[1], 1, { a: 1, b: 1, pct: 50 }));
+    return fakeTse()(url);
+  };
+  await collectStep(store, { now: () => t, sleep, limit: 1, foreground: true, fetchImpl });
+  // Cada série de pedidos só pode começar até 12 s (20 s de orçamento − 8 s de tempo limite).
+  assert.ok(starts.length > 1);
+  assert.ok(Math.max(...starts) <= 12_000, `pedido iniciado aos ${Math.max(...starts)} ms`);
+  assert.ok(t - T0 <= 20_000 + 8_000, `lote terminou aos ${t - T0} ms`);
+});
+
+test('resultado final continua a ser verificado devagar, para receber correções do TSE', async () => {
+  const store = new D1Store(database());
+  await store.saveRound({ federal: 6258, estadual: 6260, confirmed: true }, T0);
+  for (const j of jobs) {
+    const json = round2File(j.uf, j.cargo, { pct: 100, a: 2, b: 1, final: true, numbers: j.finalists.map((f) => f.number) });
+    if (j.cargo === 3 && j.uf !== 'RJ') continue;
+    await store.success(j, null, json, parseRunoff(json, j), 'h' + j.key, new Headers(), T0);
+  }
+  const plan = (t) => collectionPlan(jobs, [], 0) && store.queue().then((rows) => collectionPlan(jobs, rows, t));
+  assert.equal((await plan(T0 + 60_000)).due.some((p) => p.job.key === BR.key), false);
+  assert.equal((await plan(T0 + INTERVALS.final)).due.some((p) => p.job.key === BR.key), true);
+  const calls = [];
+  await collectStep(store, { now: () => T0 + INTERVALS.final, sleep, fetchImpl: fakeTse({ calls }) });
+  assert.ok(calls.some((u) => u.includes('/br/')));
 });

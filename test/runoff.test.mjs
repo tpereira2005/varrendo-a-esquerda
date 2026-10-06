@@ -176,3 +176,12 @@ test('janela da noite eleitoral começa às 16h30 de Brasília', () => {
   assert.equal(new Date(ROUND.opensAt).toISOString(), '2026-10-25T19:30:00.000Z');
   assert.equal(new Date(ROUND.pollsCloseAt).toISOString(), '2026-10-25T20:00:00.000Z');
 });
+
+test('finalista substituído: nomes e resultado oficial usam o candidato real, nunca "Lula" por omissão', () => {
+  const p = parseRunoff(round2File('BR', 1, { pct: 100, a: 60, b: 40, numbers: ['70', '13'], st: ['Eleito', 'Não eleito'] }), BR);
+  assert.equal(p.cands[0].number, '70');
+  const e = eventsFor(RACES[0], p, []).find((x) => x.kind === 'eleito');
+  assert.match(e.title, /Augusto Cury/i);
+  assert.doesNotMatch(e.title, /Lula/);
+  assert.equal(moodFor(p, null).label, 'Desespero'); // o Flávio não foi eleito
+});
