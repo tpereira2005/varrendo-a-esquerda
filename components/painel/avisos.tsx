@@ -1,10 +1,17 @@
+'use client';
+import { useState } from 'react';
 import type { Notice } from '@/lib/types';
 import { timeLisbon } from './format';
 
+const LIMIT = 8;
 const TONE = { good: 'var(--good)', bad: 'var(--bad)', neutral: 'var(--muted)' } as const;
 
 export function Avisos({ events, corrections }: { events: Notice[]; corrections: Notice[] }) {
-  const list = [...events].sort((a, b) => (b.at ?? b.noticedAt) - (a.at ?? a.noticedAt));
+  const [all, setAll] = useState(false);
+  // Mais recentes primeiro; à mesma hora, o resultado do Presidente vem à frente.
+  const weight = (e: Notice) => (e.kind === 'eleito' ? (e.uf === 'BR' ? 2 : 1) : 0);
+  const sorted = [...events].sort((a, b) => (b.at ?? b.noticedAt) - (a.at ?? a.noticedAt) || weight(b) - weight(a));
+  const list = all ? sorted : sorted.slice(0, LIMIT);
   if (!list.length && !corrections.length) {
     return <p className="hint">Viradas, marcos do apuramento, estados decididos e o resultado oficial vão aparecer aqui.</p>;
   }
@@ -20,6 +27,11 @@ export function Avisos({ events, corrections }: { events: Notice[]; corrections:
           </li>
         ))}
       </ul>
+      {sorted.length > LIMIT && (
+        <button className="btn" onClick={() => setAll(!all)}>
+          {all ? 'Mostrar só os mais recentes' : `Mostrar todos (${sorted.length})`}
+        </button>
+      )}
       {corrections.length > 0 && (
         <details>
           <summary className="text-sm">Correções do TSE ({corrections.length})</summary>

@@ -3,10 +3,12 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Notice, Snapshot } from '@/lib/types';
 import { Duelo } from './duelo';
 import { Evolucao } from './evolucao';
-import { Mapa } from './mapa';
+import { Mapa, stateView } from './mapa';
 import { Placar, Crescimento, DetalheEstado, Governadores } from './estados';
 import { Avisos } from './avisos';
 import { Arquivo } from './arquivo';
+import { Festejo } from './festejo';
+import { chime, keepAwake, reacquireAwake, unlockAudio } from './efeitos';
 import { compact, countdown, pct, timeBrasilia, timeLisbon, FLAVIO } from './format';
 
 const read = (k: string) => {
@@ -22,6 +24,13 @@ const write = (k: string, v: string) => {
   } catch {}
 };
 
+/** Intervalo de atualização: rápido com a página à vista; mais lento em segundo plano (o PC continua a receber avisos). */
+function pollDelay(data: Snapshot | null) {
+  const hidden = typeof document !== 'undefined' && document.visibilityState !== 'visible';
+  if (!data?.active) return hidden ? 300_000 : 60_000;
+  return hidden ? 15_000 : 5000;
+}
+
 export default function Painel({ initial }: { initial: Snapshot | null }) {
   const [data, setData] = useState<Snapshot | null>(initial);
   const [error, setError] = useState<string | null>(null);
@@ -29,19 +38,32 @@ export default function Painel({ initial }: { initial: Snapshot | null }) {
   const [now, setNow] = useState(initial?.serverNow ?? 0);
   const [toast, setToast] = useState<Notice | null>(null);
   const [alerts, setAlerts] = useState(true);
-  const [party, setParty] = useState<'flavio' | 'lula' | null>(null);
+  const [sound, setSound] = useState(false);
+  const [awake, setAwake] = useState(false);
+  const [party, setParty] = useState(false);
   const seen = useRef<Set<string> | null>(null);
   const skew = useRef(0);
+  const dataRef = useRef(data);
+  useEffect(() => {
+    dataRef.current = data;
+  }, [data]);
 
   // Preferências guardadas no browser: só existem no cliente, por isso são lidas depois da hidratação.
   useEffect(() => {
     /* eslint-disable react-hooks/set-state-in-effect */
     setUf(read('estado') ?? 'SP');
     setAlerts(read('avisos') !== '0');
+    setSound(read('som') === '1');
     setNow(Date.now() + skew.current);
     /* eslint-enable react-hooks/set-state-in-effect */
     const t = setInterval(() => setNow(Date.now() + skew.current), 1000);
-    return () => clearInterval(t);
+    // O áudio só fica disponível depois de um clique na página.
+    const unlock = () => read('som') === '1' && unlockAudio();
+    addEventListener('pointerdown', unlock, { once: true });
+    return () => {
+      clearInterval(t);
+      removeEventListener('pointerdown', unlock);
+    };
   }, []);
 
   const select = useCallback((next: string) => {
@@ -49,7 +71,36 @@ export default function Painel({ initial }: { initial: Snapshot | null }) {
     write('estado', next);
   }, []);
 
-  // Avisos novos: mostrados uma vez (toast + notificação do sistema, se autorizada).
+  const national = data?.national;
+  const p = national?.parsed ?? null;
+  const winner = p?.winner != null ? p.cands[p.winner] : null;
+  const festejo = winner?.number === FLAVIO;
+
+  // Festejo em ecrã inteiro: abre uma vez por aparelho quando o TSE declara o Flávio eleito.
+  useEffect(() => {
+    if (!festejo || !national) return;
+    const id = `${national.key}:eleito:${FLAVIO}`;
+    if (read('festejo') === id) return;
+    write('festejo', id);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setParty(true);
+  }, [festejo, national]);
+
+  // Título do separador (visível na barra de tarefas do Windows e nos separadores do Chrome).
+  useEffect(() => {
+    if (!p || p.cands[0].votes + p.cands[1].votes === 0) {
+      document.title = 'Varrendo a Esquerda · 2.ª volta 2026';
+      return;
+    }
+    const [a, b] = p.cands;
+    document.title = winner
+      ? winner.number === FLAVIO
+        ? '🎉 FLÁVIO ELEITO! · Varrendo'
+        : 'Lula eleito · Varrendo'
+      : `${a.votes >= b.votes ? '▲' : '●'} Flávio ${pct(a.pct)} × ${pct(b.pct)} Lula · ${pct(p.pctSections, 0)}`;
+  }, [p, winner]);
+
+  // Avisos novos: mostrados uma vez (toast, som e notificação do sistema, se autorizados).
   useEffect(() => {
     if (!data) return;
     if (!seen.current) {
@@ -60,51 +111,58 @@ export default function Painel({ initial }: { initial: Snapshot | null }) {
     fresh.forEach((e) => seen.current!.add(e.id));
     write('vistos', JSON.stringify([...seen.current].slice(-500)));
     // Prioridade do destaque: Presidente eleito > outros eleitos > Brasil > restantes.
-    const rank = (e: Notice) => (e.kind === 'eleito' ? 2 : 0) + (e.key === data.national.key ? 1 : 0) + (e.kind === 'eleito' && e.key === data.national.key ? 4 : 0);
+    const rank = (e: Notice) =>
+      (e.kind === 'eleito' ? 2 : 0) + (e.key === data.national.key ? 1 : 0) + (e.kind === 'eleito' && e.key === data.national.key ? 4 : 0);
     const top = fresh.sort((a, b) => rank(b) - rank(a))[0];
     if (!top || !alerts) return;
     setToast(top);
-    if (top.kind === 'eleito' && top.key === data.national.key) setParty(top.winner === FLAVIO ? 'flavio' : 'lula');
-    if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+    const presidentWon = top.kind === 'eleito' && top.key === data.national.key && top.winner === FLAVIO;
+    if (sound && !presidentWon) void chime(top.tone);
+    if (typeof Notification !== 'undefined' && Notification.permission === 'granted' && document.visibilityState !== 'visible') {
       try {
-        new Notification(top.title, { body: top.detail, icon: '/favicon.svg', tag: top.id });
+        new Notification(top.title, { body: top.detail, icon: '/emoji/humor-10.png', tag: top.id });
       } catch {}
     }
     navigator.vibrate?.(top.tone === 'good' ? [80, 60, 80] : 120);
     const t = setTimeout(() => setToast(null), 8000);
     return () => clearTimeout(t);
-  }, [data, alerts]);
+  }, [data, alerts, sound]);
 
-  // Atualização: 5 s durante a noite, 60 s fora dela; parada com o separador oculto.
+  // Atualização contínua; ao voltar ao separador, atualiza logo.
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout>;
     let stopped = false;
     const tick = async () => {
-      if (document.visibilityState === 'visible') {
-        try {
-          const r = await fetch(`/api/state?uf=${encodeURIComponent(uf)}`, { cache: 'no-store' });
-          if (!r.ok) throw new Error(((await r.json().catch(() => null)) as { error?: string } | null)?.error ?? 'Sem ligação');
-          const next: Snapshot = await r.json();
-          skew.current = next.serverNow - Date.now();
-          setData(next);
-          setError(null);
-        } catch (e) {
-          setError(e instanceof Error ? e.message : 'Sem ligação');
-        }
+      try {
+        const r = await fetch(`/api/state?uf=${encodeURIComponent(uf)}`, { cache: 'no-store' });
+        if (!r.ok) throw new Error(((await r.json().catch(() => null)) as { error?: string } | null)?.error ?? 'Sem ligação');
+        const next: Snapshot = await r.json();
+        skew.current = next.serverNow - Date.now();
+        setData(next);
+        setError(null);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : 'Sem ligação');
       }
-      if (!stopped) timer = setTimeout(tick, data?.active ? 5000 : 60_000);
+      if (!stopped) timer = setTimeout(tick, pollDelay(dataRef.current));
     };
-    timer = setTimeout(tick, data ? (data.active ? 5000 : 60_000) : 0);
-    const wake = () => document.visibilityState === 'visible' && (clearTimeout(timer), tick());
+    timer = setTimeout(tick, dataRef.current ? pollDelay(dataRef.current) : 0);
+    const wake = () => {
+      if (document.visibilityState !== 'visible') return;
+      reacquireAwake();
+      clearTimeout(timer);
+      void tick();
+    };
     document.addEventListener('visibilitychange', wake);
     return () => {
       stopped = true;
       clearTimeout(timer);
       document.removeEventListener('visibilitychange', wake);
     };
-  }, [uf, data?.active]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [uf]);
 
-  if (!data) {
+  const closeParty = useCallback(() => setParty(false), []);
+
+  if (!data || !national) {
     return (
       <main className="wrap">
         <Cabecalho data={null} now={now} />
@@ -113,80 +171,110 @@ export default function Painel({ initial }: { initial: Snapshot | null }) {
     );
   }
 
-  const national = data.national;
-  const p = national.parsed;
-  const winner = p?.winner != null ? p.cands[p.winner] : null;
+  const leading = data.states.reduce(
+    (n, r) => {
+      const v = stateView(r);
+      if (v.lead === 0) n.flavio++;
+      else if (v.lead === 1) n.lula++;
+      return n;
+    },
+    { flavio: 0, lula: 0 },
+  );
 
   return (
-    <main className="wrap">
-      <Cabecalho data={data} now={now} />
+    <main className={`wrap ${festejo ? 'modo-festejo' : ''}`}>
+      <Cabecalho data={data} now={now} festejo={festejo} />
+      <BarraFixa data={data} />
 
-      {winner && (
-        <section className="card text-center" style={{ borderColor: winner.number === FLAVIO ? 'var(--flavio)' : 'var(--line)', borderWidth: 2 }}>
-          {winner.number === FLAVIO ? (
-            <>
-              <div className="text-2xl font-extrabold c-flavio">FLÁVIO BOLSONARO ELEITO PRESIDENTE!</div>
-              <div className="hint">Resultado oficial do TSE · {pct(winner.pct, 2)} dos votos válidos</div>
-            </>
-          ) : (
-            <>
-              <div className="text-xl font-bold">Lula foi eleito Presidente pelo TSE.</div>
-              <div className="hint">Resultado oficial · Flávio Bolsonaro com {pct(p!.cands[0].pct, 2)} dos votos válidos</div>
-            </>
-          )}
-        </section>
-      )}
-
-      <section className="card" aria-labelledby="t-pres">
-        <div className="flex items-start justify-between gap-3 mb-3">
-          <div>
-            <h2 id="t-pres">Presidente · Brasil</h2>
-            <p className="hint">Flávio Bolsonaro (PL, 22) × Lula (PT, 13)</p>
-          </div>
-          <figure className="text-center shrink-0">
+      {winner &&
+        (festejo ? (
+          <section className="card faixa-festejo">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={data.mood.src} alt={`Boneco: ${data.mood.label}`} width={72} height={72} />
-            <figcaption className="hint font-semibold">{data.mood.label}</figcaption>
-          </figure>
+            <img src="/emoji/humor-10.png" alt="" width={84} height={84} className="shrink-0" />
+            <div className="grow">
+              <div className="text-2xl lg:text-3xl font-extrabold">FLÁVIO BOLSONARO ELEITO PRESIDENTE!</div>
+              <div className="font-semibold opacity-90">
+                Resultado oficial do TSE · {pct(winner.pct, 2)} dos votos válidos · a esquerda foi varrida! 🧹
+              </div>
+            </div>
+            <button className="btn btn-forte shrink-0" onClick={() => (sound && unlockAudio(), setParty(true))}>
+              🎉 Festejar outra vez
+            </button>
+          </section>
+        ) : (
+          <section className="card text-center">
+            <div className="text-xl font-bold">Lula foi eleito Presidente pelo TSE.</div>
+            <div className="hint">Resultado oficial · Flávio Bolsonaro com {pct(p!.cands[0].pct, 2)} dos votos válidos</div>
+          </section>
+        ))}
+
+      <div className="colunas">
+        <div className="coluna">
+          <section className="card" aria-labelledby="t-pres" id="placar">
+            <div className="flex items-start justify-between gap-3 mb-3">
+              <div>
+                <h2 id="t-pres">Presidente · Brasil</h2>
+                <p className="hint">Flávio Bolsonaro (PL, 22) × Lula (PT, 13)</p>
+              </div>
+              <figure className="text-center shrink-0">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={data.mood.src} alt={`Boneco: ${data.mood.label}`} width={72} height={72} className="boneco" />
+                <figcaption className="hint font-semibold">{data.mood.label}</figcaption>
+              </figure>
+            </div>
+            <Duelo race={national} now={now} />
+            {data.phase === 'antes' && (
+              <p className="mt-3 rounded-xl p-3 text-sm" style={{ background: 'var(--soft)' }}>
+                As urnas fecham às <b>{timeLisbon(data.pollsCloseAt)} em Lisboa</b> ({timeBrasilia(data.pollsCloseAt)} em Brasília), domingo, 25 de
+                outubro.
+                {now < data.pollsCloseAt && (
+                  <>
+                    {' '}
+                    Faltam <b>{countdown(data.pollsCloseAt, now)}</b>.
+                  </>
+                )}
+              </p>
+            )}
+          </section>
+
+          {data.toFlip && p && p.pctSections > 0 && <ParaVirar data={data} />}
+
+          {data.timeline.length > 0 && (
+            <section className="card">
+              <h2>Evolução da noite</h2>
+              <Evolucao data={data} />
+            </section>
+          )}
+
+          <section className="card">
+            <h2 className="mb-2">Avisos</h2>
+            <Avisos events={data.events} corrections={data.corrections} />
+          </section>
         </div>
-        <Duelo race={national} now={now} />
-        {data.phase === 'antes' && (
-          <p className="mt-3 rounded-xl p-3 text-sm" style={{ background: 'var(--soft)' }}>
-            As urnas fecham às <b>{timeLisbon(data.pollsCloseAt)} em Lisboa</b> ({timeBrasilia(data.pollsCloseAt)} em Brasília), domingo, 25 de outubro.
-            {now < data.pollsCloseAt && <> Faltam <b>{countdown(data.pollsCloseAt, now)}</b>.</>}
-          </p>
-        )}
-      </section>
 
-      {data.toFlip && p && p.pctSections > 0 && <ParaVirar data={data} />}
+        <div className="coluna">
+          <section className="card grid gap-3">
+            <h2>Estados</h2>
+            <Placar score={data.score} />
+            {data.score.pending > 0 && leading.flavio + leading.lula > 0 && (
+              <p className="hint text-center">
+                À frente agora: <b className="c-flavio">Flávio em {leading.flavio}</b> · <b className="c-lula">Lula em {leading.lula}</b>
+              </p>
+            )}
+            <Mapa states={data.states} selected={uf} onSelect={select} />
+          </section>
 
-      {data.timeline.length > 0 && (
-        <section className="card">
-          <h2>Evolução da noite</h2>
-          <Evolucao data={data} />
-        </section>
-      )}
+          <section className="card">
+            <h2 className="mb-2">Detalhe do estado</h2>
+            <DetalheEstado data={data} uf={uf} onSelect={select} now={now} />
+          </section>
 
-      <section className="card grid gap-3">
-        <h2>Estados</h2>
-        <Placar score={data.score} />
-        <Mapa states={data.states} selected={uf} onSelect={select} />
-      </section>
-
-      <section className="card">
-        <h2 className="mb-2">Detalhe do estado</h2>
-        <DetalheEstado data={data} uf={uf} onSelect={select} now={now} />
-      </section>
-
-      <section className="card">
-        <h2 className="mb-2">Face à 1.ª volta</h2>
-        <Crescimento states={data.states} onSelect={select} />
-      </section>
-
-      <section className="card">
-        <h2 className="mb-2">Avisos</h2>
-        <Avisos events={data.events} corrections={data.corrections} />
-      </section>
+          <section className="card">
+            <h2 className="mb-2">Face à 1.ª volta</h2>
+            <Crescimento states={data.states} onSelect={select} />
+          </section>
+        </div>
+      </div>
 
       <details className="card">
         <summary>Governadores (7 estados)</summary>
@@ -202,41 +290,71 @@ export default function Painel({ initial }: { initial: Snapshot | null }) {
         </div>
       </details>
 
-      <Rodape data={data} alerts={alerts} setAlerts={(v) => (setAlerts(v), write('avisos', v ? '1' : '0'))} error={error} />
+      <Rodape
+        data={data}
+        error={error}
+        alerts={alerts}
+        setAlerts={(v) => (setAlerts(v), write('avisos', v ? '1' : '0'))}
+        sound={sound}
+        setSound={(v) => {
+          setSound(v);
+          write('som', v ? '1' : '0');
+          if (v) {
+            unlockAudio();
+            void chime('good');
+          }
+        }}
+        awake={awake}
+        setAwake={async (v) => setAwake(v && (await keepAwake(v)))}
+      />
 
       {toast && (
-        <div role="status" className="toast" style={{ background: toast.tone === 'good' ? 'var(--flavio)' : toast.tone === 'bad' ? 'var(--lula)' : '#333' }}
-          onClick={() => setToast(null)}>
+        <div
+          role="status"
+          className="toast"
+          style={{ background: toast.tone === 'good' ? 'var(--flavio)' : toast.tone === 'bad' ? 'var(--lula)' : '#333' }}
+          onClick={() => setToast(null)}
+        >
           <div className="font-bold">{toast.title}</div>
           <div className="text-sm opacity-90">{toast.detail}</div>
         </div>
       )}
-      {party === 'flavio' && <Confetes onDone={() => setParty(null)} />}
+      {party && festejo && winner && p && <Festejo winner={winner} other={p.cands[1]} sound={sound} onClose={closeParty} />}
     </main>
   );
 }
 
-function Cabecalho({ data, now }: { data: Snapshot | null; now: number }) {
+function Cabecalho({ data, now, festejo = false }: { data: Snapshot | null; now: number; festejo?: boolean }) {
   const phase = data?.phase ?? 'antes';
-  const label = data?.paused
-    ? 'Recolha em pausa'
-    : phase === 'antes'
-      ? 'Antes do fecho das urnas'
-      : phase === 'apuramento'
-        ? 'Apuramento em curso'
-        : 'Encerrado';
+  const label = festejo
+    ? 'Flávio eleito'
+    : data?.paused
+      ? 'Recolha em pausa'
+      : phase === 'antes'
+        ? 'Antes do fecho das urnas'
+        : phase === 'apuramento'
+          ? 'Apuramento em curso'
+          : 'Encerrado';
   return (
     <header className="flex flex-wrap items-end justify-between gap-2 pt-2">
       <div>
-        <h1 className="text-2xl font-extrabold tracking-tight">
-          Varrendo a <span className="c-lula">Esquerda</span>
+        <h1 className="text-2xl lg:text-3xl font-extrabold tracking-tight">
+          {festejo ? (
+            <>
+              A <span className="c-lula">esquerda</span> foi varrida! 🧹
+            </>
+          ) : (
+            <>
+              Varrendo a <span className="c-lula">Esquerda</span>
+            </>
+          )}
         </h1>
         <p className="hint font-semibold">
           2.ª volta · <span className="c-flavio">Flávio 22</span> × <span className="c-lula">Lula 13</span>
         </p>
       </div>
       <div className="grid justify-items-start sm:justify-items-end gap-1">
-        <span className={`pill ${phase === 'apuramento' && data?.active ? 'live' : ''}`}>{label}</span>
+        <span className={`pill ${phase === 'apuramento' && data?.active ? 'live' : ''} ${festejo ? 'pill-festejo' : ''}`}>{label}</span>
         {now > 0 && (
           <span className="hint">
             <b>{timeLisbon(now, true)}</b> Lisboa · {timeBrasilia(now)} Brasília
@@ -244,6 +362,35 @@ function Cabecalho({ data, now }: { data: Snapshot | null; now: number }) {
         )}
       </div>
     </header>
+  );
+}
+
+/** Resumo fixo no topo, visível quando o placar principal sai do ecrã. */
+function BarraFixa({ data }: { data: Snapshot }) {
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const el = document.getElementById('placar');
+    if (!el) return;
+    const io = new IntersectionObserver(([e]) => setVisible(!e.isIntersecting && e.boundingClientRect.top < 0));
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+  const p = data.national.parsed;
+  if (!p || p.cands[0].votes + p.cands[1].votes === 0) return null;
+  const [a, b] = p.cands;
+  const share = (100 * a.votes) / (a.votes + b.votes);
+  return (
+    <div className={`barra-fixa ${visible ? 'on' : ''}`} aria-hidden={!visible}>
+      <button className="barra-fixa-in" onClick={() => document.getElementById('placar')?.scrollIntoView({ behavior: 'smooth' })} tabIndex={visible ? 0 : -1}>
+        <b className="c-flavio">Flávio {pct(a.pct)}</b>
+        <span className="bar grow" style={{ height: 10 }}>
+          <span style={{ width: `${share}%`, background: 'var(--flavio)' }} />
+          <span style={{ width: `${100 - share}%`, background: 'var(--lula)' }} />
+        </span>
+        <b className="c-lula">{pct(b.pct)} Lula</b>
+        <span className="hint hidden sm:inline">{pct(p.pctSections, 1)} apurado</span>
+      </button>
+    </div>
   );
 }
 
@@ -271,58 +418,67 @@ function ParaVirar({ data }: { data: Snapshot }) {
   );
 }
 
-function Rodape({ data, alerts, setAlerts, error }: { data: Snapshot; alerts: boolean; setAlerts: (v: boolean) => void; error: string | null }) {
+type RodapeProps = {
+  data: Snapshot;
+  error: string | null;
+  alerts: boolean;
+  setAlerts: (v: boolean) => void;
+  sound: boolean;
+  setSound: (v: boolean) => void;
+  awake: boolean;
+  setAwake: (v: boolean) => void;
+};
+
+function Rodape({ data, error, alerts, setAlerts, sound, setSound, awake, setAwake }: RodapeProps) {
   const [perm, setPerm] = useState<string>('default');
-  // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => setPerm(typeof Notification === 'undefined' ? 'unsupported' : Notification.permission), []);
+  const [canAwake, setCanAwake] = useState(false);
+  useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect */
+    setPerm(typeof Notification === 'undefined' ? 'unsupported' : Notification.permission);
+    setCanAwake('wakeLock' in navigator);
+    /* eslint-enable react-hooks/set-state-in-effect */
+  }, []);
   return (
     <footer className="card grid gap-3 text-sm">
       {error && <p className="c-lula font-semibold">Sem ligação ao site: {error}. A mostrar os últimos dados recebidos.</p>}
       {data.collector.pauseUntil > data.serverNow && (
         <p className="c-lula">O TSE pediu uma pausa; nova consulta às {timeLisbon(data.collector.pauseUntil)}.</p>
       )}
-      <label className="flex items-center gap-3 min-h-[44px]">
-        <input type="checkbox" className="size-5" checked={alerts} onChange={(e) => setAlerts(e.target.checked)} />
-        Mostrar avisos no ecrã
-      </label>
-      {perm === 'default' && (
-        <button className="btn" onClick={() => Notification.requestPermission().then(setPerm)}>
-          Ativar notificações do sistema (com a página aberta)
-        </button>
-      )}
+      <div className="opcoes">
+        <label>
+          <input type="checkbox" checked={alerts} onChange={(e) => setAlerts(e.target.checked)} />
+          Avisos no ecrã
+        </label>
+        <label>
+          <input type="checkbox" checked={sound} onChange={(e) => setSound(e.target.checked)} />
+          Som (avisos e fanfarra)
+        </label>
+        {canAwake && (
+          <label>
+            <input type="checkbox" checked={awake} onChange={(e) => setAwake(e.target.checked)} />
+            Manter o ecrã ligado
+          </label>
+        )}
+        {perm === 'default' && (
+          <button className="btn" onClick={() => Notification.requestPermission().then(setPerm)}>
+            Ativar notificações do sistema
+          </button>
+        )}
+        {perm === 'granted' && <span className="hint self-center">Notificações ativas quando o separador estiver em segundo plano.</span>}
+      </div>
       <p className="hint">
         Dados: Tribunal Superior Eleitoral (eleições {data.ids.federal} e {data.ids.estadual}
         {data.ids.confirmedAt ? ', confirmadas na configuração oficial' : ', a confirmar na configuração oficial'}). Vitória só com indicação
         oficial do TSE. Os agrupamentos “direita/esquerda” são critério do{' '}
-        <a className="underline" href="https://github.com/ODevLibertario/varrendo-a-esquerda">projeto original</a>, não do TSE.
+        <a className="underline" href="https://github.com/ODevLibertario/varrendo-a-esquerda">
+          projeto original
+        </a>
+        , não do TSE.
       </p>
       <p className="hint">
-        Durante a noite os dados atualizam-se a cada 5 s com a página aberta; o TSE é consultado no máximo a cada 15 s (Brasil e estado
-        escolhido) ou 45 s (restantes).
+        Durante a noite, a página atualiza a cada 5 s (15 s em segundo plano); o TSE é consultado no máximo a cada 15 s (Brasil e estado escolhido) ou
+        45 s (restantes). Deixa a página aberta para a recolha continuar.
       </p>
     </footer>
-  );
-}
-
-function Confetes({ onDone }: { onDone: () => void }) {
-  useEffect(() => {
-    const t = setTimeout(onDone, 7000);
-    return () => clearTimeout(t);
-  }, [onDone]);
-  const colors = ['#009c3b', '#ffdf00', '#002776', '#ffffff'];
-  return (
-    <div className="confetti" aria-hidden="true">
-      {Array.from({ length: 120 }, (_, i) => (
-        <i
-          key={i}
-          style={{
-            left: `${(i * 37) % 100}%`,
-            background: colors[i % colors.length],
-            animationDuration: `${3 + (i % 7) * 0.5}s`,
-            animationDelay: `${(i % 13) * 0.15}s`,
-          }}
-        />
-      ))}
-    </div>
   );
 }

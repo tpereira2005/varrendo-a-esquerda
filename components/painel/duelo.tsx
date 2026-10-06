@@ -65,8 +65,9 @@ export function Duelo({ race, now, size = 'big' }: { race: Race; now: number; si
         <div className="hint flex flex-wrap justify-between gap-x-3">
           <span>Ficheiro TSE: {timeLisbon(race.meta.generatedAt, true)} (Lisboa)</span>
           <span>
-            Verificado {ago(race.meta.successAt, now)}
-            {race.meta.stale && race.meta.successAt ? ' · sem novos dados do TSE' : ''}
+            {p?.final
+              ? 'Totalização final do TSE'
+              : `Verificado ${ago(race.meta.successAt, now)}${race.meta.stale && race.meta.successAt ? ' · sem novos dados do TSE' : ''}`}
           </span>
         </div>
       )}

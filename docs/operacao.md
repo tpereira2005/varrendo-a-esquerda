@@ -26,6 +26,14 @@ Painel Flávio Bolsonaro (PL, 22) × Lula (PT, 13), do ponto de vista de quem to
 | `app/api/arquivo` | Arquivo da 1.ª volta (estático). |
 | `scripts/fake-tse.mjs` | Simulador local do TSE para ensaios. |
 
+## Página
+
+- **Telemóvel:** uma coluna. **PC (≥ 1024 px):** duas colunas — placar, "para virar", evolução e avisos à esquerda; estados, mapa e detalhe à direita.
+- Barra fixa no topo com o resultado quando o placar sai do ecrã; título do separador com o resultado em direto (visível na barra de tarefas do Windows).
+- Em segundo plano (outro separador), a página continua a atualizar a cada 15 s e mostra notificações do sistema, se autorizadas.
+- Opções no rodapé: avisos no ecrã, som (avisos e fanfarra; o browser só deixa tocar depois de um clique na página), manter o ecrã ligado.
+- **Modo festejo:** só quando o TSE declara oficialmente o Flávio eleito. Abre um festejo em ecrã inteiro (fogo de artifício, confetes, boneco, fanfarra se o som estiver ativo; botão "Ecrã inteiro" no PC) uma vez por aparelho; depois o site fica em modo festejo, com o botão "Festejar outra vez". Se o Lula for eleito, aparece apenas uma mensagem sóbria.
+
 ## Recolha
 
 - Janela ativa: de 25/10 às 16h30 de Brasília (19h30 em Lisboa) até todas as disputas terem totalização final. Fora dela não há pedidos ao TSE.

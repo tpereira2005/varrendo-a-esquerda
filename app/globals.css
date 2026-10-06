@@ -216,6 +216,302 @@ details[open] > summary::after {
   animation: fall linear forwards;
 }
 
+/* ---------- PC: duas colunas ---------- */
+
+.colunas,
+.coluna {
+  display: grid;
+  gap: 14px;
+  align-content: start;
+  min-width: 0;
+}
+
+@media (min-width: 1024px) {
+  .wrap {
+    max-width: 1320px;
+    padding: 16px 28px 56px;
+  }
+  .colunas {
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    align-items: start;
+  }
+  .card {
+    padding: 20px;
+  }
+  .toast {
+    left: auto;
+    right: 24px;
+    transform: none;
+    width: 420px;
+    animation: rise-pc 0.25s ease;
+  }
+}
+
+@media (min-width: 1600px) {
+  .wrap {
+    max-width: 1480px;
+  }
+}
+
+html {
+  scrollbar-gutter: stable;
+  scrollbar-color: var(--neutral) transparent;
+}
+
+a,
+button,
+summary,
+select,
+[role='button'] {
+  outline-offset: 3px;
+}
+
+:focus-visible {
+  outline: 3px solid var(--navy);
+}
+
+button {
+  cursor: pointer;
+}
+
+.btn:hover {
+  background: var(--soft);
+}
+
+.btn-forte {
+  background: var(--flavio);
+  border-color: var(--flavio);
+  color: #fff;
+}
+
+.btn-forte:hover {
+  background: var(--flavio);
+  filter: brightness(1.1);
+}
+
+/* mapa: realce ao passar o rato (PC) */
+[role='button'] path {
+  transition: filter 0.15s;
+}
+
+[role='button']:hover path,
+[role='button']:focus-visible path {
+  filter: brightness(1.12) drop-shadow(0 0 4px rgb(0 0 0 / 0.35));
+}
+
+[role='button']:focus {
+  outline: none;
+}
+
+.opcoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 20px;
+  align-items: center;
+}
+
+.opcoes label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  cursor: pointer;
+}
+
+.opcoes input {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--flavio);
+}
+
+/* ---------- barra fixa com o resultado ---------- */
+
+.barra-fixa {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 40;
+  padding: calc(6px + env(safe-area-inset-top)) 12px 6px;
+  background: color-mix(in srgb, var(--card) 88%, transparent);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--line);
+  transform: translateY(-110%);
+  transition: transform 0.25s ease;
+}
+
+.barra-fixa.on {
+  transform: none;
+}
+
+.barra-fixa-in {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 880px;
+  margin: 0 auto;
+  min-height: 36px;
+  font-size: 0.95rem;
+  white-space: nowrap;
+}
+
+/* ---------- modo festejo (Flávio eleito oficialmente) ---------- */
+
+.modo-festejo {
+  --line: color-mix(in srgb, var(--gold) 55%, transparent);
+}
+
+body:has(.modo-festejo) {
+  background:
+    radial-gradient(1200px 500px at 50% -10%, color-mix(in srgb, var(--gold) 28%, transparent), transparent 70%),
+    linear-gradient(180deg, color-mix(in srgb, var(--flavio) 14%, var(--bg)), var(--bg) 600px);
+  background-color: var(--bg);
+}
+
+.faixa-festejo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  color: #fff;
+  border: 0;
+  background: linear-gradient(120deg, #00782f, #009c3b 45%, #c9a800);
+  box-shadow: 0 10px 30px rgb(0 120 47 / 0.3);
+}
+
+.faixa-festejo .btn-forte {
+  background: #ffdf00;
+  border-color: #ffdf00;
+  color: #002776;
+}
+
+.pill-festejo {
+  background: #ffdf00;
+  color: #002776;
+}
+
+.festejo {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  overflow: auto;
+  color: #fff;
+  background:
+    radial-gradient(circle at 50% 40%, rgb(255 223 0 / 0.35), transparent 55%),
+    linear-gradient(160deg, #003d1a, #00792f 45%, #002776);
+  animation: aparecer 0.4s ease;
+}
+
+.festejo-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.festejo-conteudo {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  padding: 24px 16px calc(24px + env(safe-area-inset-bottom));
+  text-align: center;
+  max-width: 900px;
+}
+
+.festejo-boneco {
+  width: clamp(120px, 22vmin, 220px);
+  height: auto;
+  filter: drop-shadow(0 10px 25px rgb(0 0 0 / 0.4));
+  animation: saltar 1.1s ease-in-out infinite;
+}
+
+.festejo-sobre {
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  opacity: 0.85;
+}
+
+.festejo-titulo {
+  font-size: clamp(2.4rem, 8vw, 6rem);
+  font-weight: 900;
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+  color: #ffdf00;
+  text-shadow: 0 4px 0 #00521f, 0 10px 30px rgb(0 0 0 / 0.45);
+}
+
+.festejo-titulo span {
+  display: block;
+  margin-top: 10px;
+  font-size: clamp(1.1rem, 3.4vw, 2.4rem);
+  color: #fff;
+  letter-spacing: 0.02em;
+}
+
+.festejo-numeros {
+  font-size: clamp(1.2rem, 3vw, 1.8rem);
+  font-weight: 800;
+}
+
+.festejo-numeros small {
+  font-size: 0.6em;
+  font-weight: 600;
+  opacity: 0.85;
+}
+
+.festejo-varrida {
+  font-size: clamp(1.1rem, 2.6vw, 1.6rem);
+  font-weight: 800;
+}
+
+.festejo-botoes {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.festejo .btn {
+  background: rgb(255 255 255 / 0.12);
+  border-color: rgb(255 255 255 / 0.35);
+  color: #fff;
+  backdrop-filter: blur(6px);
+}
+
+.festejo .btn-forte {
+  background: #ffdf00;
+  border-color: #ffdf00;
+  color: #002776;
+}
+
+@keyframes saltar {
+  50% {
+    transform: translateY(-14px) rotate(-3deg);
+  }
+}
+
+@keyframes aparecer {
+  from {
+    opacity: 0;
+    transform: scale(1.04);
+  }
+}
+
+@keyframes rise-pc {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
 @keyframes fall {
   to {
     transform: translateY(110vh) rotate(720deg);
