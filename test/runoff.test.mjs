@@ -127,15 +127,20 @@ test('resultado oficial: celebração para o Flávio, mensagem sóbria para o Lu
 
 test('"para virar": estimativa com os votos válidos da 1.ª volta nas secções por apurar', () => {
   const states = RACES.filter((r) => r.cargo === 1 && r.uf !== 'BR').map((r) => ({ ...r, parsed: { pctSections: 50 } }));
-  const remaining = Math.round(states.reduce((n, s) => n + s.r1.validos * 0.5, 0));
+  const statesValid = states.reduce((n, s) => n + s.r1.validos, 0);
+  const abroad = RACES[0].r1.validos - statesValid;
+  assert.ok(abroad > 100_000 && abroad < 2_000_000, `votos do estrangeiro: ${abroad}`);
+  const remaining = Math.round(statesValid * 0.5 + abroad * 0.5);
   const national = parseRunoff(round2File('BR', 1, { pct: 50, a: 30_000_000, b: 31_000_000 }), BR);
-  const f = toFlip(national, states);
+  const f = toFlip(national, states, RACES[0].r1.validos);
   assert.equal(f.trailing, 0);
   assert.equal(f.remaining, remaining);
   assert.ok(Math.abs(f.needPct - (100 * (1_000_000 + remaining)) / (2 * remaining)) < 1e-9);
   assert.equal(f.impossible, false);
   const done = states.map((s) => ({ ...s, parsed: { pctSections: 100 } }));
   assert.equal(toFlip(national, done).impossible, true);
+  // Estados todos contados mas o estrangeiro ainda não: ainda há votos por apurar.
+  assert.ok(toFlip(national, done, RACES[0].r1.validos).remaining > 0);
 });
 
 test('boneco: reage ao que o candidato atrás precisaria para virar (diferença + o que falta contar)', () => {
@@ -146,7 +151,7 @@ test('boneco: reage ao que o candidato atrás precisaria para virar (diferença 
     const counted = Math.round(valid * (done / 100));
     const a = Math.round(counted * (0.5 + lead / 2));
     const n = parseRunoff(round2File('BR', 1, { pct: done, a, b: counted - a, st }), BR);
-    return moodFor(n, toFlip(n, states(done))).label;
+    return moodFor(n, toFlip(n, states(done), RACES[0].r1.validos)).label;
   };
   assert.equal(moodFor(null, null).label, 'A aguardar');
   assert.equal(at(10), 'Esperança');

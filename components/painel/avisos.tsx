@@ -5,6 +5,7 @@ import { timeLisbon } from './format';
 
 const LIMIT = 8;
 const TONE = { good: 'var(--good)', bad: 'var(--bad)', neutral: 'var(--muted)' } as const;
+const ICON: Record<Notice['kind'], string> = { virada: '⇅', marco: '%', estado: '✓', 'estado-virou': '↻', eleito: '★' };
 
 export function Avisos({ events, corrections }: { events: Notice[]; corrections: Notice[] }) {
   const [all, setAll] = useState(false);
@@ -19,10 +20,17 @@ export function Avisos({ events, corrections }: { events: Notice[]; corrections:
     <div className="grid gap-2">
       <ul className="grid gap-2">
         {list.map((e) => (
-          <li key={e.id} className="rounded-xl p-3" style={{ background: 'var(--soft)', borderLeft: `5px solid ${TONE[e.tone]}` }}>
-            <div className="font-bold" style={{ color: e.tone === 'neutral' ? undefined : TONE[e.tone] }}>{e.title}</div>
-            <div className="hint">
-              {e.detail} · {timeLisbon(e.at ?? e.noticedAt)}
+          <li key={e.id} className="aviso">
+            <span className="aviso-icone" style={{ background: TONE[e.tone] }} aria-hidden="true">
+              {ICON[e.kind]}
+            </span>
+            <div>
+              <div className="font-bold leading-snug" style={{ color: e.tone === 'neutral' ? undefined : TONE[e.tone] }}>
+                {e.title}
+              </div>
+              <div className="hint">
+                {e.detail} · {timeLisbon(e.at ?? e.noticedAt)}
+              </div>
             </div>
           </li>
         ))}

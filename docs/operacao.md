@@ -32,6 +32,10 @@ Painel Flávio Bolsonaro (PL, 22) × Lula (PT, 13), do ponto de vista de quem to
 - Barra fixa no topo com o resultado quando o placar sai do ecrã; título do separador com o resultado em direto (visível na barra de tarefas do Windows).
 - Em segundo plano (outro separador), a página continua a atualizar a cada 15 s e mostra notificações do sistema, se autorizadas.
 - Opções no rodapé: avisos no ecrã, som (avisos e fanfarra; o browser só deixa tocar depois de um clique na página), manter o ecrã ligado.
+- **Boneco:** reage à percentagem dos votos por apurar de que o candidato atrás precisaria para virar (a mesma conta do "para virar"), que junta a diferença e o que falta contar. Flávio à frente: < 50,5% Esperança · 50,5–52 Confiante · 52–55 Barba cheia · 55–60 Chad · ≥ 60 Giga Chad. Lula à frente: Tensão · Abalado · Lágrimas · Choro · Desespero, com os mesmos limiares. Resultado oficial: Giga Chad ou Desespero.
+- **"Face à 1.ª volta":** compara a quota de cada finalista contando só os dois (1.ª volta: Flávio 51,0% × Lula 49,0% no Brasil), para que o que um ganha o outro perca.
+- **Mapa:** a intensidade da cor depende da diferença e da percentagem já contada no estado.
+- **Animações:** números que deslizam e brilham quando mudam, boneco que reage, entrada dos cartões; desligáveis na opção "Animações" e automaticamente com "reduzir movimento" do sistema.
 - **Modo festejo:** só quando o TSE declara oficialmente o Flávio eleito. Abre um festejo em ecrã inteiro (fogo de artifício, confetes, boneco, fanfarra se o som estiver ativo; botão "Ecrã inteiro" no PC) uma vez por aparelho; depois o site fica em modo festejo, com o botão "Festejar outra vez". Se o Lula for eleito, aparece apenas uma mensagem sóbria.
 
 ## Recolha

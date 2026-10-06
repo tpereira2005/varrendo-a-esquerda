@@ -1,7 +1,7 @@
 'use client';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Notice, Snapshot } from '@/lib/types';
-import { Duelo } from './duelo';
+import { Marcador } from './marcador';
 import { Evolucao } from './evolucao';
 import { Mapa, stateView } from './mapa';
 import { Placar, Crescimento, DetalheEstado, Governadores } from './estados';
@@ -9,7 +9,7 @@ import { Avisos } from './avisos';
 import { Arquivo } from './arquivo';
 import { Festejo } from './festejo';
 import { chime, keepAwake, reacquireAwake, unlockAudio } from './efeitos';
-import { compact, countdown, pct, timeBrasilia, timeLisbon, FLAVIO } from './format';
+import { compact, pct, timeBrasilia, timeLisbon, FLAVIO } from './format';
 
 const read = (k: string) => {
   try {
@@ -40,6 +40,7 @@ export default function Painel({ initial }: { initial: Snapshot | null }) {
   const [alerts, setAlerts] = useState(true);
   const [sound, setSound] = useState(false);
   const [awake, setAwake] = useState(false);
+  const [motion, setMotion] = useState(true);
   const [party, setParty] = useState(false);
   const seen = useRef<Set<string> | null>(null);
   const skew = useRef(0);
@@ -54,6 +55,7 @@ export default function Painel({ initial }: { initial: Snapshot | null }) {
     setUf(read('estado') ?? 'SP');
     setAlerts(read('avisos') !== '0');
     setSound(read('som') === '1');
+    setMotion(read('animacoes') !== '0');
     setNow(Date.now() + skew.current);
     /* eslint-enable react-hooks/set-state-in-effect */
     const t = setInterval(() => setNow(Date.now() + skew.current), 1000);
@@ -192,7 +194,7 @@ export default function Painel({ initial }: { initial: Snapshot | null }) {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/emoji/humor-10.png" alt="" width={84} height={84} className="shrink-0" />
             <div className="grow">
-              <div className="text-2xl lg:text-3xl font-extrabold">FLÁVIO BOLSONARO ELEITO PRESIDENTE!</div>
+              <div className="titulo-festejo">Flávio Bolsonaro eleito Presidente!</div>
               <div className="font-semibold opacity-90">
                 Resultado oficial do TSE · {pct(winner.pct, 2)} dos votos válidos · a esquerda foi varrida! 🧹
               </div>
@@ -208,35 +210,10 @@ export default function Painel({ initial }: { initial: Snapshot | null }) {
           </section>
         ))}
 
+      <Marcador data={data} now={now} />
+
       <div className="colunas">
         <div className="coluna">
-          <section className="card" aria-labelledby="t-pres" id="placar">
-            <div className="flex items-start justify-between gap-3 mb-3">
-              <div>
-                <h2 id="t-pres">Presidente · Brasil</h2>
-                <p className="hint">Flávio Bolsonaro (PL, 22) × Lula (PT, 13)</p>
-              </div>
-              <figure className="text-center shrink-0">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={data.mood.src} alt={`Boneco: ${data.mood.label}`} width={72} height={72} className="boneco" />
-                <figcaption className="hint font-semibold">{data.mood.label}</figcaption>
-              </figure>
-            </div>
-            <Duelo race={national} now={now} />
-            {data.phase === 'antes' && (
-              <p className="mt-3 rounded-xl p-3 text-sm" style={{ background: 'var(--soft)' }}>
-                As urnas fecham às <b>{timeLisbon(data.pollsCloseAt)} em Lisboa</b> ({timeBrasilia(data.pollsCloseAt)} em Brasília), domingo, 25 de
-                outubro.
-                {now < data.pollsCloseAt && (
-                  <>
-                    {' '}
-                    Faltam <b>{countdown(data.pollsCloseAt, now)}</b>.
-                  </>
-                )}
-              </p>
-            )}
-          </section>
-
           {data.toFlip && p && p.pctSections > 0 && <ParaVirar data={data} />}
 
           {data.timeline.length > 0 && (
@@ -266,7 +243,7 @@ export default function Painel({ initial }: { initial: Snapshot | null }) {
 
           <section className="card">
             <h2 className="mb-2">Detalhe do estado</h2>
-            <DetalheEstado data={data} uf={uf} onSelect={select} now={now} />
+            <DetalheEstado data={data} uf={uf} onSelect={select} />
           </section>
 
           <section className="card">
@@ -279,7 +256,7 @@ export default function Painel({ initial }: { initial: Snapshot | null }) {
       <details className="card">
         <summary>Governadores (7 estados)</summary>
         <div className="mt-3">
-          <Governadores data={data} now={now} />
+          <Governadores data={data} />
         </div>
       </details>
 
@@ -306,6 +283,13 @@ export default function Painel({ initial }: { initial: Snapshot | null }) {
         }}
         awake={awake}
         setAwake={async (v) => setAwake(v && (await keepAwake(v)))}
+        motion={motion}
+        setMotion={(v) => {
+          setMotion(v);
+          write('animacoes', v ? '1' : '0');
+          if (v) delete document.documentElement.dataset.motion;
+          else document.documentElement.dataset.motion = 'off';
+        }}
       />
 
       {toast && (
@@ -324,6 +308,23 @@ export default function Painel({ initial }: { initial: Snapshot | null }) {
   );
 }
 
+function Logo() {
+  return (
+    <svg viewBox="0 0 64 64" className="logo" aria-hidden="true">
+      <defs>
+        <linearGradient id="logo-verde" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#0aa346" />
+          <stop offset="1" stopColor="#05582a" />
+        </linearGradient>
+      </defs>
+      <circle cx="32" cy="32" r="29" fill="url(#logo-verde)" stroke="#ffdf00" strokeWidth="3" />
+      <path d="M45 11 L30 33" stroke="#ffffff" strokeWidth="4.5" strokeLinecap="round" />
+      <path d="M23 29 L36 37 L30 53 Q20 51 13 44 Z" fill="#ffdf00" />
+      <path d="M18 45 L27 39 M22 49 L30 41 M26 52 L33 42" stroke="#b89400" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 function Cabecalho({ data, now, festejo = false }: { data: Snapshot | null; now: number; festejo?: boolean }) {
   const phase = data?.phase ?? 'antes';
   const label = festejo
@@ -333,35 +334,43 @@ function Cabecalho({ data, now, festejo = false }: { data: Snapshot | null; now:
       : phase === 'antes'
         ? 'Antes do fecho das urnas'
         : phase === 'apuramento'
-          ? 'Apuramento em curso'
+          ? 'Apuramento ao vivo'
           : 'Encerrado';
   return (
-    <header className="flex flex-wrap items-end justify-between gap-2 pt-2">
-      <div>
-        <h1 className="text-2xl lg:text-3xl font-extrabold tracking-tight">
-          {festejo ? (
-            <>
-              A <span className="c-lula">esquerda</span> foi varrida! 🧹
-            </>
-          ) : (
-            <>
-              Varrendo a <span className="c-lula">Esquerda</span>
-            </>
-          )}
-        </h1>
-        <p className="hint font-semibold">
-          2.ª volta · <span className="c-flavio">Flávio 22</span> × <span className="c-lula">Lula 13</span>
-        </p>
-      </div>
-      <div className="grid justify-items-start sm:justify-items-end gap-1">
-        <span className={`pill ${phase === 'apuramento' && data?.active ? 'live' : ''} ${festejo ? 'pill-festejo' : ''}`}>{label}</span>
-        {now > 0 && (
-          <span className="hint">
-            <b>{timeLisbon(now, true)}</b> Lisboa · {timeBrasilia(now)} Brasília
+    <>
+      <header className="cabecalho">
+        <div className="marca">
+          <Logo />
+          <div>
+            <h1>
+              {festejo ? (
+                <>
+                  A <span className="c-lula">esquerda</span> foi varrida!
+                </>
+              ) : (
+                <>
+                  Varrendo a <span className="c-lula">Esquerda</span>
+                </>
+              )}
+            </h1>
+            <p>
+              Eleições Brasil 2026 · 2.ª volta · <span className="c-flavio">Flávio 22</span> × <span className="c-lula">Lula 13</span>
+            </p>
+          </div>
+        </div>
+        <div className="relogios">
+          <span className={`pill ${phase === 'apuramento' && data?.active && !festejo ? 'live' : ''} ${festejo ? 'pill-festejo' : ''}`}>
+            {label}
           </span>
-        )}
-      </div>
-    </header>
+          {now > 0 && (
+            <span className="hint">
+              <b>{timeLisbon(now, true)}</b> Lisboa · {timeBrasilia(now)} Brasília
+            </span>
+          )}
+        </div>
+      </header>
+      <div className="faixa-brasil" aria-hidden="true" />
+    </>
   );
 }
 
@@ -383,9 +392,10 @@ function BarraFixa({ data }: { data: Snapshot }) {
     <div className={`barra-fixa ${visible ? 'on' : ''}`} aria-hidden={!visible}>
       <button className="barra-fixa-in" onClick={() => document.getElementById('placar')?.scrollIntoView({ behavior: 'smooth' })} tabIndex={visible ? 0 : -1}>
         <b className="c-flavio">Flávio {pct(a.pct)}</b>
-        <span className="bar grow" style={{ height: 10 }}>
-          <span style={{ width: `${share}%`, background: 'var(--flavio)' }} />
-          <span style={{ width: `${100 - share}%`, background: 'var(--lula)' }} />
+        <span className="barra-duelo grow">
+          <span className="bg-flavio" style={{ width: `${share}%` }} />
+          <span className="bg-lula" style={{ width: `${100 - share}%` }} />
+          <i className="meta-50" />
         </span>
         <b className="c-lula">{pct(b.pct)} Lula</b>
         <span className="hint hidden sm:inline">{pct(p.pctSections, 1)} apurado</span>
@@ -398,21 +408,33 @@ function ParaVirar({ data }: { data: Snapshot }) {
   const f = data.toFlip!;
   const flavioBehind = f.trailing === 0;
   const who = flavioBehind ? 'O Flávio' : 'O Lula';
-  let text: string;
-  if (f.impossible || f.needPct == null) text = `${who} já não tem votos suficientes por apurar para virar.`;
-  else text = `${who} ${flavioBehind ? 'precisa' : 'precisaria'} de ~${pct(f.needPct, 1)} dos votos que faltam apurar para virar.`;
-  const hard = !f.impossible && (f.needPct ?? 0) > 60;
+  const need = f.impossible || f.needPct == null ? null : f.needPct;
+  const text =
+    need == null
+      ? `${who} já não tem votos suficientes por apurar para virar.`
+      : `${who} ${flavioBehind ? 'precisa' : 'precisaria'} de ~${pct(need, 1)} dos votos que faltam.`;
+  // Medidor de 50% (basta empatar o resto) a 100% (precisaria de todos os votos que faltam).
+  const pos = need == null ? 100 : Math.max(0, Math.min(100, ((need - 50) / 50) * 100));
+  const verdict = need == null ? 'impossível' : need > 60 ? 'muito difícil' : need > 55 ? 'difícil' : need > 52 ? 'possível' : 'tudo em aberto';
   return (
-    <section className="card" style={{ borderLeft: `5px solid ${flavioBehind ? 'var(--lula)' : 'var(--flavio)'}` }}>
+    <section className="card" style={{ borderLeft: `6px solid ${flavioBehind ? 'var(--lula)' : 'var(--flavio)'}` }}>
       <div className="flex items-center justify-between gap-2">
         <h2>Para virar</h2>
         <span className="tag">estimativa · não oficial</span>
       </div>
       <p className="font-semibold mt-1">
-        {text} {hard && <span className="hint">(muito difícil)</span>}
+        {text} <span className={flavioBehind ? 'c-lula' : 'c-flavio'}>({verdict})</span>
       </p>
-      <p className="hint mt-1">
-        Faltam ~{compact(f.remaining)} votos válidos, estimados com os votos válidos da 1.ª volta nas secções de cada estado ainda por apurar.
+      <div className="medidor" role="img" aria-label={`Dificuldade de virar: ${verdict}`}>
+        <i className="medidor-marca" style={{ left: `${pos}%` }} />
+      </div>
+      <div className="medidor-legenda">
+        <span>50% · em aberto</span>
+        <span>75%</span>
+        <span>100% · impossível</span>
+      </div>
+      <p className="hint mt-2">
+        Faltam ~{compact(f.remaining)} votos válidos, estimados com os votos da 1.ª volta nas secções ainda por apurar (estados e estrangeiro).
       </p>
     </section>
   );
@@ -427,9 +449,11 @@ type RodapeProps = {
   setSound: (v: boolean) => void;
   awake: boolean;
   setAwake: (v: boolean) => void;
+  motion: boolean;
+  setMotion: (v: boolean) => void;
 };
 
-function Rodape({ data, error, alerts, setAlerts, sound, setSound, awake, setAwake }: RodapeProps) {
+function Rodape({ data, error, alerts, setAlerts, sound, setSound, awake, setAwake, motion, setMotion }: RodapeProps) {
   const [perm, setPerm] = useState<string>('default');
   const [canAwake, setCanAwake] = useState(false);
   useEffect(() => {
@@ -452,6 +476,10 @@ function Rodape({ data, error, alerts, setAlerts, sound, setSound, awake, setAwa
         <label>
           <input type="checkbox" checked={sound} onChange={(e) => setSound(e.target.checked)} />
           Som (avisos e fanfarra)
+        </label>
+        <label>
+          <input type="checkbox" checked={motion} onChange={(e) => setMotion(e.target.checked)} />
+          Animações
         </label>
         {canAwake && (
           <label>

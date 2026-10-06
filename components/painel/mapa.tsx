@@ -11,10 +11,10 @@ const SMALL = new Set(['AL', 'SE', 'PB', 'RN', 'PE', 'ES', 'RJ', 'DF']);
 export function stateView(r: Race) {
   const p = r.parsed;
   const r1Lead = r.finalists[0].r1Votes > r.finalists[1].r1Votes ? 0 : 1;
-  if (!p || p.cands[0].votes + p.cands[1].votes === 0) return { lead: null, margin: 0, flipped: false, r1Lead };
+  if (!p || p.cands[0].votes + p.cands[1].votes === 0) return { lead: null, margin: 0, flipped: false, r1Lead, counted: 0 };
   const [a, b] = p.cands;
   const lead = a.votes === b.votes ? null : a.votes > b.votes ? 0 : 1;
-  return { lead, margin: Math.abs(a.pct - b.pct), flipped: lead != null && lead !== r1Lead, r1Lead };
+  return { lead, margin: Math.abs(a.pct - b.pct), flipped: lead != null && lead !== r1Lead, r1Lead, counted: p.pctSections };
 }
 
 export function Mapa({ states, selected, onSelect }: { states: Race[]; selected: string; onSelect: (uf: string) => void }) {
@@ -24,8 +24,9 @@ export function Mapa({ states, selected, onSelect }: { states: Race[]; selected:
         {states.map((r) => {
           const s = SHAPES[r.uf];
           const v = stateView(r);
-          // Mistura com o cinzento: diferença pequena = cor clara; 25 pp ou mais = cor plena (igual em tema claro e escuro).
-          const strength = Math.round(35 + 65 * Math.min(1, v.margin / 25));
+          // Mistura com o cinzento: a cor só fica plena com diferença grande (25 pp) E boa parte contada (40%).
+          // Um estado com 2% apurado fica claro, mesmo com uma diferença enorme.
+          const strength = Math.round(25 + 75 * Math.min(1, v.margin / 25) * Math.min(1, v.counted / 40));
           const base = v.lead === 0 ? 'var(--flavio)' : 'var(--lula)';
           const fill = v.lead == null ? 'var(--neutral)' : `color-mix(in srgb, ${base} ${strength}%, var(--neutral))`;
           const label = `${s.n}: ${v.lead == null ? 'sem votos' : `${v.lead === 0 ? 'Flávio' : 'Lula'} à frente por ${pct(v.margin)} pontos`}${v.flipped ? ', virou face à 1.ª volta' : ''}`;
@@ -33,7 +34,7 @@ export function Mapa({ states, selected, onSelect }: { states: Race[]; selected:
             <g key={r.uf} role="button" tabIndex={0} aria-label={label} onClick={() => onSelect(r.uf)}
               onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onSelect(r.uf)} className="cursor-pointer">
               <title>{label}</title>
-              <path d={s.d} fill={fill}
+              <path d={s.d} style={{ fill, transition: 'fill 0.8s ease' }}
                 stroke={v.flipped ? 'var(--gold)' : selected === r.uf ? 'var(--ink)' : 'var(--card)'}
                 strokeWidth={v.flipped || selected === r.uf ? 5 : 1.5} />
               <text x={s.c[0]} y={s.c[1]} textAnchor="middle" fontSize={SMALL.has(r.uf) ? 15 : 22} fontWeight="700" fill="var(--ink)"
@@ -48,7 +49,7 @@ export function Mapa({ states, selected, onSelect }: { states: Race[]; selected:
       <figcaption className="hint flex flex-wrap gap-x-4 gap-y-1">
         <span><b className="c-flavio">▲</b> Flávio à frente</span>
         <span><b className="c-lula">●</b> Lula à frente</span>
-        <span>Cor mais forte = maior diferença</span>
+        <span>Cor mais forte = maior diferença e mais votos contados</span>
         <span><b style={{ color: 'var(--gold)' }}>▢</b> virou face à 1.ª volta</span>
       </figcaption>
     </figure>
