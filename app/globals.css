@@ -483,6 +483,23 @@ html[data-theme="dark"] .barra-duelo > .bg-lula {
   height: 10px;
 }
 
+/*
+ * Enquanto não há votos, todas as barras mostram a 1.ª volta entre os dois finalistas:
+ * esbatidas e com um contorno tracejado, para não se confundirem com resultados da 2.ª volta.
+ */
+.barra-duelo.referencia {
+  opacity: 0.4;
+  outline: 1.5px dashed var(--muted);
+  outline-offset: 2px;
+}
+
+.legenda-referencia {
+  margin-top: 8px;
+  font-size: 0.75rem;
+  color: var(--muted);
+  text-align: center;
+}
+
 /* Marca dos 50%: pequeno entalhe no topo da barra. */
 .meta-50 {
   position: absolute;
@@ -1012,13 +1029,9 @@ details[open] > summary::after {
   height: 8px;
 }
 
-.mini-duelo.referencia {
-  opacity: 0.55;
-}
-
-.mini-duelo.referencia .barra-duelo {
-  outline: 1px dashed var(--muted);
-  outline-offset: 1px;
+/* números da 1.ª volta enquanto não há votos */
+.mini-duelo.referencia > span:not(.barra-duelo) {
+  opacity: 0.5;
 }
 
 /* separadores do arquivo */

@@ -17,7 +17,7 @@ function MiniDuelo({ flavio, lula, r1 }: { flavio: number; lula: number; r1?: { 
   return (
     <div className={`mini-duelo ${ref ? 'referencia' : ''}`}>
       <span className="c-flavio">{a + b ? pct(share, 1) : '—'}</span>
-      <span className="barra-duelo fina">
+      <span className={`barra-duelo fina ${ref ? 'referencia' : ''}`}>
         <span className="bg-flavio" style={{ width: `${share}%` }} />
         <span className="bg-lula" style={{ width: `${100 - share}%` }} />
         <i className="meta-50" />
@@ -52,7 +52,7 @@ function Pais({ c, open, toggle }: { c: ExteriorCountry; open: boolean; toggle: 
           {c.cidades.map((x) => (
             <li key={x.cidade} className="ext-cidade">
               <span>{x.cidade}</span>
-              <MiniDuelo flavio={x.flavio} lula={x.lula} />
+              <MiniDuelo flavio={x.flavio} lula={x.lula} r1={x.r1} />
               <span className="hint">{x.has ? `${int(x.flavio + x.lula)} votos · ${pct(x.pctSections, 0)} apurado` : 'sem votos ainda'}</span>
             </li>
           ))}

@@ -10,7 +10,8 @@ export function Duelo({ race }: { race: Race }) {
   const a = p?.cands[0] ?? { ...fa, votes: 0, pct: 0 };
   const b = p?.cands[1] ?? { ...fb, votes: 0, pct: 0 };
   const total = a.votes + b.votes;
-  const share = total ? (100 * a.votes) / total : 50;
+  // Sem votos: a barra mostra a 1.ª volta entre os dois finalistas, esbatida e tracejada.
+  const share = total ? (100 * a.votes) / total : (100 * fa.r1Votes) / (fa.r1Votes + fb.r1Votes);
   // Duelo interno (mesmo agrupamento): cores neutras, sem "lado" a torcer.
   const colorA = race.internal ? 'navy' : 'flavio';
   const colorB = race.internal ? 'neutral' : 'lula';
@@ -35,7 +36,7 @@ export function Duelo({ race }: { race: Race }) {
         ))}
       </div>
 
-      <div className="barra-duelo fina" role="img" aria-label={`${shortName(a, race.cargo)} ${pct(share)} · ${shortName(b, race.cargo)} ${pct(100 - share)}`}>
+      <div className={`barra-duelo fina ${total ? '' : 'referencia'}`} role="img" aria-label={`${shortName(a, race.cargo)} ${pct(share)} · ${shortName(b, race.cargo)} ${pct(100 - share)}`}>
         <span style={{ width: `${share}%`, background: `var(--${colorA})` }} />
         <span style={{ width: `${100 - share}%`, background: `var(--${colorB})` }} />
         <i className="meta-50" aria-hidden="true" />
@@ -55,7 +56,7 @@ export function Duelo({ race }: { race: Race }) {
           <span className="hint">{pct(p.pctSections, 2)} das secções</span>
         </div>
       ) : (
-        <div className="hint">A aguardar os primeiros votos do TSE</div>
+        <div className="hint">A aguardar os primeiros votos do TSE · barra: 1.ª volta entre os dois</div>
       )}
       {p?.warnings.map((w) => (
         <div key={w} className="hint">⚠ {w}</div>

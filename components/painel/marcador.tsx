@@ -53,7 +53,9 @@ export function Marcador({ data, now }: { data: Snapshot; now: number }) {
   const b: Finalist & Partial<Cand> = p?.cands[1] ?? fb;
   const total = (a.votes ?? 0) + (b.votes ?? 0);
   const counted = !!p && total > 0;
-  const share = counted ? (100 * (a.votes ?? 0)) / total : 50;
+  // Sem votos: a barra mostra a 1.ª volta entre os dois finalistas, esbatida e tracejada.
+  const r1Share = (100 * fa.r1Votes) / (fa.r1Votes + fb.r1Votes);
+  const share = counted ? (100 * (a.votes ?? 0)) / total : r1Share;
   const diff = (a.votes ?? 0) - (b.votes ?? 0);
   const leader: Side | null = !counted || diff === 0 ? null : diff > 0 ? 'flavio' : 'lula';
   const winner: Side | null = p?.winner == null ? null : p.winner === 0 ? 'flavio' : 'lula';
@@ -94,12 +96,21 @@ export function Marcador({ data, now }: { data: Snapshot; now: number }) {
         <Lado side="lula" c={b} counted={counted} />
       </div>
 
-      <div className="barra-duelo" role="img" aria-label={`Flávio ${pct(share)} · Lula ${pct(100 - share)}`}>
+      <div
+        className={`barra-duelo ${counted ? '' : 'referencia'}`}
+        role="img"
+        aria-label={`${counted ? '' : '1.ª volta: '}Flávio ${pct(share)} · Lula ${pct(100 - share)}`}
+      >
         <span className="bg-flavio" style={{ width: `${share}%` }} />
         <span className="bg-lula" style={{ width: `${100 - share}%` }} />
         <i className="meta-50" aria-hidden="true" />
       </div>
 
+      {!counted && (
+        <p className="legenda-referencia">
+          Barra: 1.ª volta contando só os dois · Flávio {pct(r1Share, 1)} × Lula {pct(100 - r1Share, 1)}
+        </p>
+      )}
       {counted ? (
         <div className="apuramento">
           <div className="apuramento-linha">

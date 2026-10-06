@@ -93,7 +93,7 @@ export type ExteriorCountry = {
   sections: number;
   counted: number;
   r1: { flavio: number; lula: number } | null;
-  cidades: { cidade: string; flavio: number; lula: number; pctSections: number; has: boolean }[];
+  cidades: { cidade: string; flavio: number; lula: number; pctSections: number; has: boolean; r1: { flavio: number; lula: number } | null }[];
 };
 
 export type ExteriorArchive = {
