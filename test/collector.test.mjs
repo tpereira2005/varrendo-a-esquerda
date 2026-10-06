@@ -1,40 +1,189 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {DatabaseSync} from 'node:sqlite';
-import {readFileSync} from 'node:fs';
-import {D1Store,collectStep,snapshot} from '../lib/collector.mjs';
-import {normalize,jobs,officialTime} from '../lib/election.mjs';
-import {collectionPlan} from '../lib/collector.mjs';
-function database(){const db=new DatabaseSync(':memory:');for(const file of ['0000_lyrical_silver_centurion.sql','0001_eager_ink.sql','0002_medical_black_queen.sql'])db.exec(readFileSync(new URL('../drizzle/'+file,import.meta.url),'utf8'));const wrap=(sql,args=[])=>({bind:(...a)=>wrap(sql,a),async first(){return db.prepare(sql).get(...args)||null;},async all(){return {results:db.prepare(sql).all(...args)};},run(){const r=db.prepare(sql).run(...args);return {meta:{changes:r.changes}};}});return {prepare:wrap,async batch(stmts){db.exec('BEGIN');try{const r=[];for(const s of stmts)r.push(s.run());db.exec('COMMIT');return r;}catch(e){db.exec('ROLLBACK');throw e;}}};}
-const fixture=name=>JSON.parse(readFileSync(new URL('fixtures/'+name+'.json',import.meta.url),'utf8'));
-function candidates(j){return j.carg.flatMap(c=>c.agr.flatMap(a=>a.par.flatMap(p=>p.cand)));}
-function forJob(job){const name=job.cargo===1?'BR-presidente':job.cargo===3?'SP-governador':job.cargo===5?'SP-senador':job.cargo===6?'SP-deputado-federal':job.cargo===8?'DF-distrital':'SP-deputado-estadual';const j=fixture(name);j.cdabr=job.uf.toLowerCase();return j;}
-const job=jobs[0],now=()=>1801600000000,headers=new Headers({etag:'"one"'}),sleep=async()=>{};
-test('pausa administrativa não consulta o TSE nem altera resultados guardados',async()=>{const store=new D1Store(database()),j=forJob(job);await store.success(job,null,j,normalize(j,job),'saved',headers,now());const before=await store.get(job.key);const result=await collectStep(store,{paused:true,foreground:true,fetchImpl:()=>{throw Error('não consultar');}});assert.equal(result.paused,true);assert.equal(result.processed,0);assert.deepEqual(await store.get(job.key),before);const s=await snapshot(store,now()+86400000,{uf:'BR',cargo:1},true);assert.equal(s.collectionPaused,true);assert.equal(s.areas.BR.records[0].stale,false);assert.equal(s.areas.BR.records[0].checkedAt,before.checked_at);});
-test('ficheiros oficiais de todos os cargos e duas vagas no Senado',()=>{for(const j of jobs)assert.doesNotThrow(()=>normalize(forJob(j),j));assert.equal(normalize(fixture('SP-senador'),jobs.find(j=>j.uf==='SP'&&j.cargo===5)).slots,2);assert.equal(officialTime('04/10/2026','17:00:00'),Date.parse('2026-10-04T20:00:00Z'));});
-test('100% sem flag oficial não declara vencedor; segunda volta e votos anulados',()=>{const j=forJob(job);j.s.pst='100,00';const cs=candidates(j);cs[0].vap='100';assert.equal(normalize(j,job).race.decided,false);assert.equal(normalize(j,job).events.length,0);cs[0].st='2º turno';j.md='s';assert.equal(normalize(j,job).runoff,true);assert.equal(normalize(j,job).events.length,0);cs[0].dvt='Anulado sub judice';assert.equal(normalize(j,job).votesRight,0);});
-test('Senado com só um eleito não fecha a disputa; proporcionais usam estado oficial',()=>{const sen=jobs.find(j=>j.uf==='SP'&&j.cargo===5),j=forJob(sen);candidates(j)[0].e='s';candidates(j)[0].st='Eleito';assert.equal(normalize(j,sen).race.decided,false);assert.equal(normalize(j,sen).electedCount,1);const dep=jobs.find(j=>j.uf==='SP'&&j.cargo===6),d=forJob(dep);candidates(d)[0].e='s';candidates(d)[0].st='Eleito por QP';assert.equal(normalize(d,dep).candidates[0].status,'Eleito por QP');});
-test('regra original: PL à direita, PSD e partido desconhecido à esquerda',()=>{const j=forJob(job);candidates(j)[0].vap='100';candidates(j)[1].vap='150';let p=normalize(j,job);assert.equal(p.votesRight,100);assert.equal(p.votesLeft,150);j.carg[0].agr[1].par[0].sg='DESCONHECIDO';candidates(j)[1].n='999';p=normalize(j,job);assert.equal(p.votesLeft,150);assert.equal(p.candidates[1].classified,false);});
-test('identidade, secções e votos inválidos são rejeitados',()=>{for(const mutate of [j=>j.ele='1',j=>j.t='2',j=>j.cdabr='sp',j=>j.s.pst='101',j=>candidates(j)[0].vap='oops']){const j=forJob(job);mutate(j);assert.throws(()=>normalize(j,job));}});
-test('uma única recolha concorrente e limite de oito chamadas',async()=>{const db=database(),store=new D1Store(db);let calls=0;const fetchImpl=async url=>{calls++;return Response.json(forJob(jobs.find(j=>j.url===url)));};const results=await Promise.all([collectStep(store,{fetchImpl,now,sleep}),collectStep(new D1Store(db),{fetchImpl,now,sleep})]);assert.equal(calls,8);assert.equal(results.filter(r=>r.busy).length,1);assert.equal((await store.state()).cursor,8);assert.equal((await snapshot(new D1Store(db),now())).source.records,8);});
-test('limite de chamadas também perante erros de rede',async()=>{const store=new D1Store(database());await store.lock('seed',now());await store.control('seed',{cursor:1});let calls=0;await collectStep(store,{now,sleep,fetchImpl:async()=>{calls++;throw Error('rede');}});assert.equal(calls,8);assert.equal((await store.queue()).length,8);});
-test('403 e 429 interrompem e impõem pausa global de pelo menos dez minutos',async()=>{for(const status of [403,429]){const db=database(),store=new D1Store(db);let calls=0;await collectStep(store,{now,sleep,fetchImpl:async()=>{calls++;return new Response('',{status,headers:{'retry-after':'900'}});}});assert.equal(calls,1);assert.equal((await store.state()).pause_until,now()+900000);const blocked=await collectStep(new D1Store(db),{now,sleep,fetchImpl:()=>{throw Error('não consultar');}});assert.equal(blocked.busy,true);}});
-test('falha conserva resultado, 304 renova verificação sem apagar dados',async()=>{const store=new D1Store(database()),j=forJob(job),p=normalize(j,job);await store.success(job,null,j,p,'one',headers,now());await store.failure(job,await store.get(job.key),'HTTP 500',now()+1000,now()+2000);assert.equal(JSON.parse((await store.get(job.key)).parsed).status,p.status);await store.unchanged(job,now()+3000);assert.equal((await store.get(job.key)).success_at,now()+3000);assert.equal((await store.get(job.key)).error,null);});
-test('persistência, revisão com votos a diminuir, avisos sem duplicação e correção',async()=>{const db=database(),store=new D1Store(db),j=forJob(job),c=candidates(j)[0];c.vap='100';c.e='s';c.st='Eleito';const p=normalize(j,job);assert.equal(p.events.length,1);await store.success(job,null,j,p,'one',headers,now());c.vap='90';await store.success(job,await store.get(job.key),j,normalize(j,job),'two',headers,now()+1000);let s=await snapshot(new D1Store(db),now()+1000);assert.equal(s.events.length,1);assert.equal(s.events[0].at,now());assert.equal(s.national.votesRight,90);c.e='n';c.st='';await store.success(job,await store.get(job.key),j,normalize(j,job),'three',headers,now()+2000);s=await snapshot(new D1Store(db),now()+2000);assert.equal(s.events.length,0);assert.equal(s.corrections.length,1);assert.equal(s.corrections[0].at,now()+2000);});
-test('ficheiro mais antigo não substitui revisão guardada',async()=>{const store=new D1Store(database()),j=forJob(job);await store.success(job,null,j,normalize(j,job),'one',headers,now());await seedChecked(store,now(),[job.key]);await store.db.prepare('UPDATE results SET checked_at=? WHERE key=?').bind(now()-30000,job.key).run();j.dg='01/10/2026';const r=await collectStep(store,{now,sleep,fetchImpl:async()=>Response.json(j)});assert.equal(r.processed,1);assert.match((await store.get(job.key)).error,/anterior/);assert.equal((await store.get(job.key)).hash,'one');});
-async function seedChecked(store,at,except=[]){await store.db.batch(jobs.filter(j=>!except.includes(j.key)).map(j=>store.db.prepare('INSERT INTO results(key,uf,cargo,url,checked_at,success_at) VALUES(?,?,?,?,?,?) ON CONFLICT(key) DO UPDATE SET checked_at=excluded.checked_at').bind(j.key,j.uf,j.cargo,j.url,at,at)));}
+import { readFileSync } from 'node:fs';
+import { D1Store } from '../lib/store.mjs';
+import { collectStep, snapshot, collectionPlan, INTERVALS } from '../lib/collector.mjs';
+import { jobsFor, ROUND } from '../lib/rounds.mjs';
+import { parseRunoff } from '../lib/runoff.mjs';
+import { round2File, database } from './round2-files.mjs';
 
- test('visitantes partilham a verificação sem repetir pedidos dentro do intervalo',async()=>{const store=new D1Store(database());await seedChecked(store,now(),[jobs.at(-1).key]);let calls=0;const fetchImpl=async url=>{calls++;return Response.json(forJob(jobs.find(j=>j.url===url)));};const r=await collectStep(store,{now,sleep,fetchImpl});assert.equal(r.complete,true);for(let i=0;i<10;i++)assert.equal((await collectStep(new D1Store(store.db),{now,sleep,fetchImpl,foreground:true})).processed,0);assert.equal(calls,1);});
-test('nacional e seleção aos 30 segundos; restantes apenas aos 120 segundos',async()=>{const store=new D1Store(database()),base=now();await seedChecked(store,base);await store.prioritize({uf:'SP',cargo:5},base);const calls=[];const fetchImpl=async url=>{const j=jobs.find(j=>j.url===url);calls.push(j.key);return Response.json(forJob(j));};
-  let time=base+29999;await collectStep(store,{now:()=>time,sleep,fetchImpl,foreground:true});assert.equal(calls.length,0);
-  time=base+30000;await collectStep(store,{now:()=>time,sleep,fetchImpl,foreground:true});assert.deepEqual(new Set(calls),new Set(['2026:1:BR:1','2026:1:SP:1','2026:1:SP:5']));
-  calls.length=0;time=base+119999;await store.prioritize({uf:'SP',cargo:5},time);await collectStep(store,{now:()=>time,sleep,fetchImpl,foreground:true});assert.deepEqual(new Set(calls),new Set(['2026:1:BR:1','2026:1:SP:1','2026:1:SP:5']));
-  calls.length=0;time=base+120000;await collectStep(store,{now:()=>time,sleep,fetchImpl,foreground:true});assert.equal(calls.length,8);assert.equal(calls.some(k=>k.startsWith('2026:1:AC:')),true);
+const jobs = jobsFor();
+const BR = jobs[0];
+const T0 = ROUND.pollsCloseAt + 3_600_000;
+const now = () => T0;
+const sleep = async () => {};
+const config = JSON.parse(readFileSync(new URL('fixtures/config-2026-10-06.json', import.meta.url), 'utf8'));
+
+/** Simula o TSE: configuração + ficheiros da 2.ª volta para qualquer disputa. */
+function fakeTse({ votes = () => [10, 5], pct = 50, calls = [] } = {}) {
+  return async (url) => {
+    calls.push(url);
+    if (url.endsWith('ele-c.json')) return Response.json(config);
+    const job = jobs.find((j) => j.url === url);
+    const [a, b] = votes(job);
+    return Response.json(round2File(job.uf, job.cargo, { pct, a, b, numbers: job.finalists.map((f) => f.number) }), {
+      headers: { etag: '"x"' },
+    });
+  };
+}
+
+// Só há ficheiro de exemplo de governador para o RJ; os outros respondem 404 como antes da publicação.
+const govSafe = (job) => job.cargo === 1 || job.uf === 'RJ';
+
+test('antes das 16h30 de Brasília de 25/10 não há pedidos ao TSE', async () => {
+  const store = new D1Store(database());
+  const r = await collectStep(store, { now: () => ROUND.opensAt - 1, sleep, fetchImpl: () => assert.fail('não consultar') });
+  assert.equal(r.inactive, true);
+  const s = await snapshot(store, ROUND.opensAt - 1);
+  assert.equal(s.phase, 'antes');
+  assert.equal(s.active, false);
+  assert.equal(s.mood.label, 'A aguardar');
 });
-test('nova seleção recebe prioridade imediatamente; anterior regressa ao intervalo normal',async()=>{const store=new D1Store(database()),base=now();await seedChecked(store,base);await store.prioritize({uf:'SP',cargo:5},base);await store.prioritize({uf:'RJ',cargo:3},base+70000);const plan=collectionPlan(await store.queue(),base+70000);assert.equal(plan.due.some(p=>p.job.key==='2026:1:SP:5'),false);assert.equal(plan.due.some(p=>p.job.key==='2026:1:RJ:3'&&p.priority),true);await assert.rejects(store.prioritize({uf:'BR',cargo:8},base));});
-test('prioridade partilhada entre visitantes e concorrência limitada a quatro',async()=>{const db=database(),store=new D1Store(db);await Promise.all([store.prioritize({uf:'SP',cargo:5},now()),new D1Store(db).prioritize({uf:'SP',cargo:5},now())]);let active=0,peak=0,calls=0;
-  const fetchImpl=async url=>{active++;peak=Math.max(peak,active);calls++;await new Promise(r=>setTimeout(r,1));active--;return Response.json(forJob(jobs.find(j=>j.url===url)));};
-  await Promise.all([collectStep(store,{now,sleep,fetchImpl,foreground:true,limit:32}),collectStep(new D1Store(db),{now,sleep,fetchImpl,foreground:true,limit:32})]);assert.equal(calls,32);assert.ok(peak<=4);assert.ok(peak>1);
+
+test('pausa administrativa não consulta o TSE', async () => {
+  const r = await collectStep(new D1Store(database()), { now, paused: true, fetchImpl: () => assert.fail('não consultar') });
+  assert.equal(r.paused, true);
 });
-test('prioridade não contorna Retry-After nem pausa global',async()=>{const store=new D1Store(database());await store.prioritize({uf:'SP',cargo:5},now());let calls=0;await collectStep(store,{now,sleep,foreground:true,fetchImpl:async()=>{calls++;return new Response('',{status:429});}});await store.prioritize({uf:'RJ',cargo:3},now()+30000);assert.equal((await collectStep(store,{now:()=>now()+30000,sleep,foreground:true,fetchImpl:()=>{throw Error('não consultar');}})).busy,true);assert.equal(calls,1);});
-test('limite de execução termina o lote antes de expirar a concessão',async()=>{const store=new D1Store(database());let time=now(),calls=0;const result=await collectStep(store,{now:()=>time,sleep,limit:32,foreground:true,fetchImpl:async url=>{calls++;time+=8000;return Response.json(forJob(jobs.find(j=>j.url===url)));}});assert.ok(calls<32);assert.equal(result.complete,false);assert.equal((await store.state()).lease_until,0);});
+
+test('lê a configuração e depois só a cada 10 minutos; guarda os IDs esperados até o TSE publicar', async () => {
+  const db = database();
+  const store = new D1Store(db);
+  const calls = [];
+  await collectStep(store, { now, sleep, limit: 1, fetchImpl: fakeTse({ calls }) });
+  assert.equal(calls[0].endsWith('ele-c.json'), true);
+  const round = await store.round();
+  assert.equal(round.federal, 6258);
+  assert.equal(round.confirmed_at, null);
+  calls.length = 0;
+  await collectStep(store, { now: () => T0 + 20_000, sleep, limit: 1, fetchImpl: fakeTse({ calls }) });
+  assert.equal(calls.some((u) => u.endsWith('ele-c.json')), false);
+});
+
+test('uma recolha de cada vez e limite de pedidos por lote', async () => {
+  const db = database();
+  const calls = [];
+  const fetchImpl = fakeTse({ calls });
+  const results = await Promise.all([
+    collectStep(new D1Store(db), { now, sleep, fetchImpl }),
+    collectStep(new D1Store(db), { now, sleep, fetchImpl }),
+  ]);
+  assert.equal(results.filter((r) => r.busy).length, 1);
+  assert.equal(calls.filter((u) => !u.endsWith('ele-c.json')).length, 8);
+});
+
+test('403 e 429 param o lote e impõem pausa global de pelo menos dez minutos', async () => {
+  for (const status of [403, 429]) {
+    const db = database();
+    const store = new D1Store(db);
+    await store.saveRound({ federal: 6258, estadual: 6260, confirmed: true }, T0);
+    let calls = 0;
+    await collectStep(store, {
+      now, sleep,
+      fetchImpl: async () => {
+        calls++;
+        return new Response('', { status, headers: { 'retry-after': '900' } });
+      },
+    });
+    assert.equal(calls, 1);
+    assert.equal((await store.state()).pause_until, T0 + 900_000);
+    const blocked = await collectStep(new D1Store(db), { now, sleep, foreground: true, fetchImpl: () => assert.fail('não consultar') });
+    assert.equal(blocked.busy, true);
+  }
+});
+
+test('ficheiro ainda não publicado (404) volta a ser tentado ao ritmo normal', async () => {
+  const store = new D1Store(database());
+  await store.saveRound({ federal: 6258, estadual: 6260, confirmed: true }, T0);
+  await collectStep(store, { now, sleep, limit: 1, fetchImpl: async () => new Response('', { status: 404 }) });
+  const row = await store.get(BR.key);
+  assert.equal(row.retry_at, T0 + INTERVALS.normal);
+  assert.match(row.error, /404/);
+});
+
+test('guarda, aceita 304, recusa revisões mais antigas e conserva o último resultado bom', async () => {
+  const store = new D1Store(database());
+  const json = round2File('BR', 1, { pct: 30, a: 100, b: 90 });
+  await store.success(BR, null, json, parseRunoff(json, BR), 'h1', new Headers({ etag: '"1"' }), T0);
+  await store.unchanged(BR, T0 + 1000);
+  assert.equal((await store.get(BR.key)).success_at, T0 + 1000);
+  await store.failure(BR, await store.get(BR.key), 'HTTP 500', T0 + 2000, T0 + 3000);
+  assert.equal(JSON.parse((await store.get(BR.key)).parsed).cands[0].votes, 100);
+
+  await store.saveRound({ federal: 6258, estadual: 6260, confirmed: true }, T0 + 10 * INTERVALS.config);
+  const older = round2File('BR', 1, { pct: 20, a: 1, b: 1, time: new Date(T0 - 7_200_000) });
+  await collectStep(store, { now: () => T0 + 120_000, sleep, limit: 1, fetchImpl: async () => Response.json(older) });
+  assert.match((await store.get(BR.key)).error, /anterior/);
+  assert.equal((await store.get(BR.key)).hash, 'h1');
+});
+
+test('linha temporal, avisos sem duplicação e correção quando o TSE retira um eleito', async () => {
+  const db = database();
+  const store = new D1Store(db);
+  const save = async (i, opts, hash) => {
+    const json = round2File('BR', 1, { time: new Date(T0 + i * 60_000), ...opts });
+    await store.success(BR, await store.get(BR.key), json, parseRunoff(json, BR), hash, new Headers(), T0 + i * 60_000);
+  };
+  await save(0, { pct: 30, a: 100, b: 110 }, 'a');
+  await save(1, { pct: 40, a: 130, b: 120 }, 'b');
+  await save(2, { pct: 50, a: 160, b: 140 }, 'c');
+  await save(2, { pct: 50, a: 160, b: 140 }, 'c'); // mesmo ficheiro: nada muda
+  let s = await snapshot(store, T0 + 180_000);
+  assert.equal(s.timeline.length, 3);
+  assert.deepEqual(s.events.map((e) => e.kind).sort(), ['marco', 'marco', 'virada']);
+  assert.equal(s.events.find((e) => e.kind === 'virada').title, 'Flávio passou à frente!');
+
+  await save(3, { pct: 100, a: 200, b: 150, st: ['Eleito', 'Não eleito'] }, 'd');
+  s = await snapshot(store, T0 + 240_000);
+  assert.equal(s.phase, 'encerrado');
+  assert.equal(s.events.some((e) => e.kind === 'eleito'), true);
+  assert.equal(s.mood.label, 'Giga Chad');
+
+  await save(4, { pct: 100, a: 200, b: 150 }, 'e');
+  s = await snapshot(store, T0 + 300_000);
+  assert.equal(s.events.some((e) => e.kind === 'eleito'), false);
+  assert.equal(s.corrections.length, 1);
+  assert.equal(s.corrections[0].title, 'FLÁVIO BOLSONARO ELEITO PRESIDENTE!');
+});
+
+test('BR e estado visto a cada 15 s; restantes a cada 45 s; disputas finais deixam de ser pedidas', async () => {
+  const store = new D1Store(database());
+  await store.db.batch(
+    jobs.map((j) =>
+      store.db
+        .prepare('INSERT INTO results(key,uf,cargo,url,turn,checked_at,success_at) VALUES(?,?,?,?,2,?,?)')
+        .bind(j.key, j.uf, j.cargo, j.url, T0, T0),
+    ),
+  );
+  await store.prioritize(jobs, 'SP', T0);
+  let plan = collectionPlan(jobs, await store.queue(), T0 + INTERVALS.priority);
+  assert.deepEqual(plan.due.map((p) => p.job.key).sort(), ['2026:2:BR:1', '2026:2:SP:1']);
+  plan = collectionPlan(jobs, await store.queue(), T0 + INTERVALS.normal);
+  assert.equal(plan.due.length, jobs.length);
+
+  const json = round2File('BR', 1, { pct: 100, a: 2, b: 1, final: true });
+  await store.success(BR, await store.get(BR.key), json, parseRunoff(json, BR), 'f', new Headers(), T0);
+  plan = collectionPlan(jobs, await store.queue(), T0 + 3_600_000);
+  assert.equal(plan.due.some((p) => p.job.key === BR.key), false);
+});
+
+test('recolha completa das 35 disputas e estado da noite', async () => {
+  const db = database();
+  let t = T0;
+  const fetchImpl = fakeTse({ votes: (j) => (j.uf === 'SC' ? [70, 30] : [48, 52]), pct: 100 });
+  for (let i = 0; i < 10; i++) {
+    await collectStep(new D1Store(db), { now: () => t, sleep, limit: 32, foreground: true, fetchImpl: async (u) => {
+      const job = jobs.find((j) => j.url === u);
+      if (job && !govSafe(job)) return new Response('', { status: 404 });
+      return fetchImpl(u);
+    } });
+    t += 1000;
+  }
+  const s = await snapshot(new D1Store(db), t);
+  assert.equal(s.states.filter((x) => x.parsed).length, 27);
+  assert.equal(s.score.flavio, 1);
+  assert.equal(s.score.lula, 26);
+  assert.equal(s.mood.label, 'Tensão');
+  assert.equal(s.phase, 'apuramento');
+  assert.equal(s.toFlip.impossible, true);
+  assert.ok(s.events.some((e) => e.kind === 'estado' || e.kind === 'estado-virou'));
+});

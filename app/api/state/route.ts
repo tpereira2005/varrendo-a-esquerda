@@ -1,11 +1,25 @@
-import {env,waitUntil} from 'cloudflare:workers';
-import {D1Store,collectStep,snapshot} from '../../../lib/collector.mjs';
-import {jobs} from '../../../lib/election.mjs';
-export async function GET(request:Request){
-  const url=new URL(request.url),uf=(url.searchParams.get('uf')||'BR').toUpperCase(),cargo=Number(url.searchParams.get('cargo')||1);
-  if(!jobs.some(j=>j.uf===uf&&j.cargo===cargo))return Response.json({error:'Filtro inválido'},{status:400});
-  try {const store=new D1Store(env.DB!),paused=(env as unknown as {COLLECTION_PAUSED?:string}).COLLECTION_PAUSED==='1';if(!paused){await store.prioritize({uf,cargo},Date.now());waitUntil(collectStep(store,{limit:32,foreground:true}).catch(error=>console.error('Background collector:',error)));}const data=await snapshot(store,Date.now(),{uf,cargo},paused);
-    for(const [area,value] of Object.entries(data.areas))value.candidates=area===uf&&value.candidates[cargo]?{[cargo]:value.candidates[cargo]}:{};
-    return Response.json(data,{headers:{'cache-control':'no-store'}});}
-  catch(error){console.error('State:',error);return Response.json({error:'Não foi possível consultar os resultados guardados.'},{status:503});}
+import { waitUntil } from 'cloudflare:workers';
+import { collectStep, snapshot, currentIds } from '../../../lib/collector.mjs';
+import { jobsFor } from '../../../lib/rounds.mjs';
+import { UFS } from '../../../lib/tse.mjs';
+import { store, flags } from '../../../lib/runtime';
+
+export async function GET(request: Request) {
+  const uf = (new URL(request.url).searchParams.get('uf') || 'BR').toUpperCase();
+  if (uf !== 'BR' && !UFS.includes(uf)) return Response.json({ error: 'Estado inválido' }, { status: 400 });
+  try {
+    const db = store();
+    const f = flags();
+    const now = Date.now();
+    const data = await snapshot(db, now, f);
+    if (data.active && !f.paused) {
+      // Quem tem a página aberta mantém a recolha viva; a concessão garante uma recolha de cada vez.
+      await db.prioritize(jobsFor(await currentIds(db), f.base), uf, now);
+      waitUntil(collectStep(db, { ...f, limit: 32, foreground: true }).catch((e) => console.error('Recolha:', e)));
+    }
+    return Response.json(data, { headers: { 'cache-control': 'no-store' } });
+  } catch (error) {
+    console.error('Estado:', error);
+    return Response.json({ error: 'Não foi possível ler os resultados guardados.' }, { status: 503 });
+  }
 }
