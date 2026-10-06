@@ -13,10 +13,7 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
-  themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#f4f5f1' },
-    { media: '(prefers-color-scheme: dark)', color: '#0d1015' },
-  ],
+  themeColor: '#f3f4ef',
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -31,10 +28,11 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           rel="stylesheet"
           href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600;700;800&display=swap"
         />
-        {/* Aplica a preferência "Animações" antes de pintar a página. */}
+        {/* Aplica as preferências (tema e animações) antes de pintar a página, sem piscar. */}
         <script
           dangerouslySetInnerHTML={{
-            __html: "try{if(localStorage.getItem('varrendo.animacoes')==='0')document.documentElement.dataset.motion='off'}catch(e){}",
+            __html:
+              "try{var d=document.documentElement;if(localStorage.getItem('varrendo.tema')==='escuro')d.dataset.theme='dark';if(localStorage.getItem('varrendo.animacoes')==='0')d.dataset.motion='off'}catch(e){}",
           }}
         />
       </head>

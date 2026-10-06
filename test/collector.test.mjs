@@ -146,7 +146,7 @@ test('linha temporal, avisos sem duplicação e correção quando o TSE retira u
   assert.equal(s.corrections[0].title, 'FLÁVIO BOLSONARO ELEITO PRESIDENTE!');
 });
 
-test('BR e estado visto a cada 15 s; restantes a cada 45 s; disputas finais deixam de ser pedidas', async () => {
+test('ritmo: nacional a cada 10 s, estado visto a cada 20 s, restantes a cada 60 s; finais deixam de ser pedidos', async () => {
   const store = new D1Store(database());
   await store.db.batch(
     jobs.map((j) =>
@@ -156,15 +156,40 @@ test('BR e estado visto a cada 15 s; restantes a cada 45 s; disputas finais deix
     ),
   );
   await store.prioritize(jobs, 'SP', T0);
-  let plan = collectionPlan(jobs, await store.queue(), T0 + INTERVALS.priority);
-  assert.deepEqual(plan.due.map((p) => p.job.key).sort(), ['2026:2:BR:1', '2026:2:SP:1']);
-  plan = collectionPlan(jobs, await store.queue(), T0 + INTERVALS.normal);
-  assert.equal(plan.due.length, jobs.length);
+  const due = async (t, changed = 0) => collectionPlan(jobs, await store.queue(), t, changed).due.map((p) => p.job.key).sort();
+  assert.deepEqual(await due(T0 + INTERVALS.national), ['2026:2:BR:1']);
+  assert.deepEqual(await due(T0 + INTERVALS.priority), ['2026:2:BR:1', '2026:2:SP:1']);
+  assert.equal((await due(T0 + INTERVALS.normal)).length, jobs.length);
 
   const json = round2File('BR', 1, { pct: 100, a: 2, b: 1, final: true });
   await store.success(BR, await store.get(BR.key), json, parseRunoff(json, BR), 'f', new Headers(), T0);
-  plan = collectionPlan(jobs, await store.queue(), T0 + 3_600_000);
+  const plan = collectionPlan(jobs, await store.queue(), T0 + 3_600_000);
   assert.equal(plan.due.some((p) => p.job.key === BR.key), false);
+});
+
+test('nova geração nacional: todos os outros ficheiros ficam logo pendentes e entram no mesmo lote', async () => {
+  const db = database();
+  const store = new D1Store(db);
+  await store.saveRound({ federal: 6258, estadual: 6260, confirmed: true }, T0);
+  await store.db.batch(
+    jobs.map((j) =>
+      store.db
+        .prepare('INSERT INTO results(key,uf,cargo,url,turn,checked_at,success_at) VALUES(?,?,?,?,2,?,?)')
+        .bind(j.key, j.uf, j.cargo, j.url, T0, T0),
+    ),
+  );
+  // 11 s depois: só o nacional estaria pendente; ele traz uma geração nova.
+  const calls = [];
+  let t = T0 + 11_000;
+  await collectStep(store, { now: () => t, sleep, limit: 40, foreground: true, fetchImpl: fakeTse({ calls }) });
+  const results = calls.filter((u) => u.includes('-c0'));
+  assert.equal(results[0].includes('/br/'), true);
+  assert.equal(results.length, jobs.length);
+  // Sem nova geração, 11 s depois só volta a pedir o nacional.
+  calls.length = 0;
+  t += 11_000;
+  await collectStep(store, { now: () => t, sleep, limit: 40, foreground: true, fetchImpl: fakeTse({ calls }) });
+  assert.deepEqual(calls.filter((u) => u.includes('-c0')).map((u) => u.includes('/br/')), [true]);
 });
 
 test('recolha completa das 35 disputas e estado da noite', async () => {

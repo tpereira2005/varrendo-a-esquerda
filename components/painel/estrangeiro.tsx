@@ -32,7 +32,7 @@ function Pais({ c, open, toggle }: { c: ExteriorCountry; open: boolean; toggle: 
   const r1Share = c.r1 && c.r1.flavio + c.r1.lula ? (100 * c.r1.flavio) / (c.r1.flavio + c.r1.lula) : null;
   const swing = total && r1Share != null ? (100 * c.flavio) / total - r1Share : null;
   return (
-    <li className={`ext-pais ${c.pais === PORTUGAL ? 'ext-portugal' : ''}`}>
+    <li className="ext-pais">
       <button className="ext-linha" onClick={toggle} aria-expanded={open}>
         <span className="ext-nome">
           <span className="ext-seta" aria-hidden="true">{open ? '▾' : '▸'}</span>

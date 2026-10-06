@@ -27,25 +27,24 @@
   color-scheme: light;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #0a0e17;
-    --card: #121826;
-    --ink: #eef1f6;
-    --muted: #9aa4b4;
-    --line: #232c3d;
-    --soft: #192132;
-    --sombra: 0 1px 2px rgb(0 0 0 / 0.4), 0 10px 30px rgb(0 0 0 / 0.35);
-    --flavio: #2fc266;
-    --flavio-forte: #5fd98a;
-    --flavio-soft: #12301f;
-    --gold: #ffd43b;
-    --navy: #8fb0ff;
-    --lula: #ff5c70;
-    --lula-soft: #3a1620;
-    --neutral: #364052;
-    color-scheme: dark;
-  }
+/* Tema escuro: só quando escolhido no botão do cabeçalho (o claro é o predefinido). */
+html[data-theme="dark"] {
+  --bg: #0a0e17;
+  --card: #121826;
+  --ink: #eef1f6;
+  --muted: #9aa4b4;
+  --line: #232c3d;
+  --soft: #192132;
+  --sombra: 0 1px 2px rgb(0 0 0 / 0.4), 0 10px 30px rgb(0 0 0 / 0.35);
+  --flavio: #2fc266;
+  --flavio-forte: #5fd98a;
+  --flavio-soft: #12301f;
+  --gold: #ffd43b;
+  --navy: #8fb0ff;
+  --lula: #ff5c70;
+  --lula-soft: #3a1620;
+  --neutral: #364052;
+  color-scheme: dark;
 }
 
 html {
@@ -220,6 +219,33 @@ body {
   animation: pulse 1.4s infinite;
 }
 
+.botao-tema {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--ink);
+  box-shadow: var(--sombra);
+  transition: transform 0.2s;
+}
+
+.botao-tema:hover {
+  transform: rotate(-15deg);
+}
+
+.botao-tema svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 .pill-festejo {
   background: #ffdf00;
   color: #002776;
@@ -306,10 +332,10 @@ body {
   box-shadow: inset 0 -3px 0 #ffdf00;
 }
 
-/* segunda cor: faixa amarela no Flávio (Brasil), faixa branca no Lula (estrela do PT) */
+/* segunda cor: faixa amarela no Flávio (Brasil), faixa bordô no Lula (visível em fundo claro e escuro) */
 .lado-lula .dorsal {
   background: linear-gradient(135deg, #e0213f, #a10f29);
-  box-shadow: inset 0 -3px 0 #ffffff;
+  box-shadow: inset 0 -3px 0 #5c0a18;
 }
 
 .lado-nome {
@@ -325,6 +351,10 @@ body {
   line-height: 0.9;
   letter-spacing: -0.01em;
   margin-top: 8px;
+}
+
+.lado-pct .fantasma {
+  opacity: 0.22;
 }
 
 .lado-flavio .lado-pct { color: var(--flavio); }
@@ -395,39 +425,56 @@ body {
 .barra-duelo {
   position: relative;
   display: flex;
-  height: 26px;
-  border-radius: 999px;
-  overflow: hidden;
-  background: var(--soft);
-  box-shadow: inset 0 1px 3px rgb(0 0 0 / 0.12);
+  gap: 4px;
+  height: 18px;
 }
 
-.barra-duelo.fina {
-  height: 12px;
-}
-
+/* Dois segmentos arredondados com um degradé plano na cor de cada candidato (sem brilhos nem animações). */
 .barra-duelo > span {
+  min-width: 0;
+  border-radius: 999px;
   transition: width 0.8s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* Cores lisas: um degradé criava uma falsa terceira faixa junto à divisão. */
 .barra-duelo > .bg-flavio {
-  background: var(--flavio);
+  background: linear-gradient(90deg, #067a33, #10b04f);
 }
 
 .barra-duelo > .bg-lula {
-  background: var(--lula);
+  background: linear-gradient(90deg, #e8334f, #b3112e);
 }
 
-/* Marca dos 50%: pequenos entalhes em cima e em baixo, sem cortar a barra. */
+html[data-theme="dark"] .barra-duelo > .bg-flavio {
+  background: linear-gradient(90deg, #1f9e52, #3ad072);
+}
+
+html[data-theme="dark"] .barra-duelo > .bg-lula {
+  background: linear-gradient(90deg, #ff6b7d, #e0334c);
+}
+
+.barra-duelo.fina {
+  height: 10px;
+  gap: 3px;
+}
+
+/* Marca dos 50%: pequeno triângulo por cima da barra. */
 .meta-50 {
   position: absolute;
   left: 50%;
-  top: 0;
-  bottom: 0;
-  width: 2px;
-  margin-left: -1px;
-  background: linear-gradient(var(--card) 0 28%, transparent 28% 72%, var(--card) 72%);
+  top: -7px;
+  width: 0;
+  height: 0;
+  margin-left: -5px;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid var(--muted);
+  opacity: 0.6;
+}
+
+.barra-duelo.fina .meta-50 {
+  top: -6px;
+  margin-left: -4px;
+  border-width: 5px 4px 0;
 }
 
 .apuramento {
@@ -456,10 +503,8 @@ body {
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, var(--navy), #3b82f6, var(--navy));
-  background-size: 200% 100%;
+  background: linear-gradient(90deg, var(--navy), #3b82f6);
   transition: width 0.8s ease;
-  animation: brilho 2.4s linear infinite;
 }
 
 .contagem {
@@ -866,11 +911,6 @@ details[open] > summary::after {
   color: var(--muted);
 }
 
-.ext-portugal > .ext-linha {
-  background: color-mix(in srgb, var(--gold) 16%, transparent);
-  box-shadow: inset 4px 0 0 var(--gold);
-}
-
 @media (min-width: 768px) {
   .ext-cabecalho,
   .ext-linha {
@@ -1184,12 +1224,6 @@ body:has(.modo-festejo) {
 @keyframes desenhar {
   to {
     stroke-dashoffset: 0;
-  }
-}
-
-@keyframes brilho {
-  to {
-    background-position: -200% 0;
   }
 }
 

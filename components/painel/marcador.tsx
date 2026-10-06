@@ -16,7 +16,9 @@ function Lado({ side, c, counted }: { side: Side; c: Finalist & Partial<Cand>; c
           <div className="hint">{c.party} · {c.number}</div>
         </div>
       </div>
-      <div className="lado-pct">{counted ? <Numero value={c.pct ?? 0} format={(v) => pct(v, 2)} /> : '—'}</div>
+      <div className="lado-pct">
+        {counted ? <Numero value={c.pct ?? 0} format={(v) => pct(v, 2)} /> : <span className="fantasma" title="1.ª volta">{pct(c.r1Pct, 2)}</span>}
+      </div>
       <div className="lado-votos">
         {counted ? (
           <>

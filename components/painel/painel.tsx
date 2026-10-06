@@ -29,7 +29,7 @@ const write = (k: string, v: string) => {
 function pollDelay(data: Snapshot | null) {
   const hidden = typeof document !== 'undefined' && document.visibilityState !== 'visible';
   if (!data?.active) return hidden ? 300_000 : 60_000;
-  return hidden ? 15_000 : 5000;
+  return hidden ? 15_000 : 4000;
 }
 
 export default function Painel({ initial }: { initial: Snapshot | null }) {
@@ -328,6 +328,38 @@ function Logo() {
   );
 }
 
+/** Botão claro/escuro. O claro é o predefinido; a escolha fica guardada neste browser. */
+function BotaoTema() {
+  const [dark, setDark] = useState(false);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setDark(document.documentElement.dataset.theme === 'dark');
+  }, []);
+  const toggle = () => {
+    const next = !dark;
+    setDark(next);
+    const root = document.documentElement;
+    if (next) root.dataset.theme = 'dark';
+    else delete root.dataset.theme;
+    write('tema', next ? 'escuro' : 'claro');
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', next ? '#0a0e17' : '#f3f4ef');
+  };
+  return (
+    <button className="botao-tema" onClick={toggle} aria-label={dark ? 'Mudar para o modo claro' : 'Mudar para o modo escuro'} title={dark ? 'Modo claro' : 'Modo escuro'}>
+      {dark ? (
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="4.5" />
+          <path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8" />
+        </svg>
+      ) : (
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a8.5 8.5 0 1 0 11 11Z" />
+        </svg>
+      )}
+    </button>
+  );
+}
+
 function Cabecalho({ data, now, festejo = false }: { data: Snapshot | null; now: number; festejo?: boolean }) {
   const phase = data?.phase ?? 'antes';
   const label = festejo
@@ -362,9 +394,12 @@ function Cabecalho({ data, now, festejo = false }: { data: Snapshot | null; now:
           </div>
         </div>
         <div className="relogios">
+          <div className="flex items-center gap-2">
+            <BotaoTema />
           <span className={`pill ${phase === 'apuramento' && data?.active && !festejo ? 'live' : ''} ${festejo ? 'pill-festejo' : ''}`}>
             {label}
           </span>
+          </div>
           {now > 0 && (
             <span className="hint">
               <b>{timeLisbon(now, true)}</b> Lisboa · {timeBrasilia(now)} Brasília
@@ -507,8 +542,9 @@ function Rodape({ data, error, alerts, setAlerts, sound, setSound, awake, setAwa
         , não do TSE.
       </p>
       <p className="hint">
-        Durante a noite, a página atualiza a cada 5 s (15 s em segundo plano); o TSE é consultado no máximo a cada 15 s (Brasil e estado escolhido) ou
-        45 s (restantes). Deixa a página aberta para a recolha continuar.
+        Durante a noite, a página atualiza a cada 4 s (15 s em segundo plano). O ficheiro nacional do TSE é verificado a cada 10 s e, quando
+        muda, todos os outros são lidos logo a seguir (sem mudanças: estado escolhido a cada 20 s, restantes a cada 60 s). Deixa a página aberta para
+        a recolha continuar.
       </p>
     </footer>
   );
