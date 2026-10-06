@@ -29,6 +29,13 @@
       "when": 1791311112772,
       "tag": "0003_segunda_volta",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1791318527799,
+      "tag": "0004_estrangeiro",
+      "breakpoints": true
     }
   ]
 }

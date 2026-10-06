@@ -19,6 +19,7 @@ function fakeTse({ votes = () => [10, 5], pct = 50, calls = [] } = {}) {
   return async (url) => {
     calls.push(url);
     if (url.endsWith('ele-c.json')) return Response.json(config);
+    if (url.endsWith('-ab.json')) return Response.json({ ele: '6258', t: '2', abr: [] });
     const job = jobs.find((j) => j.url === url);
     const [a, b] = votes(job);
     return Response.json(round2File(job.uf, job.cargo, { pct, a, b, numbers: job.finalists.map((f) => f.number) }), {
@@ -68,7 +69,7 @@ test('uma recolha de cada vez e limite de pedidos por lote', async () => {
     collectStep(new D1Store(db), { now, sleep, fetchImpl }),
   ]);
   assert.equal(results.filter((r) => r.busy).length, 1);
-  assert.equal(calls.filter((u) => !u.endsWith('ele-c.json')).length, 8);
+  assert.equal(calls.filter((u) => u.includes('-c0')).length, 8);
 });
 
 test('403 e 429 param o lote e impõem pausa global de pelo menos dez minutos', async () => {

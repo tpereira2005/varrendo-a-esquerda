@@ -33,6 +33,7 @@ export function round2File(uf, cargo, o = {}) {
     esae: 'n',
   });
   base.s.pst = pt(o.pct ?? 0);
+  if (base.s.ts) base.s.st = String(Math.round((Number(base.s.ts) * (o.pct ?? 0)) / 100));
   base.v.vvc = String(total);
   const node = base.carg.find((c) => Number(c.cd) === cargo);
   let extra = o.extra ? 1 : 0;

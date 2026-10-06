@@ -6,6 +6,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { round2File } from '../test/round2-files.mjs';
 import { RACES } from '../lib/rounds.mjs';
+import { CITIES } from '../lib/exterior.mjs';
 
 const arg = (name, fallback) => process.argv.find((a) => a.startsWith(`--${name}=`))?.split('=')[1] ?? fallback;
 const STEP_S = Number(arg('passo', 20));
@@ -67,11 +68,44 @@ function file(race, s) {
 
 const config = JSON.parse(readFileSync(join(DIR, 'ele-c.json'), 'utf8'));
 config.pl.find((p) => p.c === 'ele2026').e.push({ cd: '6258', t: '2', nm: 'Simulação 2.º turno federal' }, { cd: '6260', t: '2', nm: 'Simulação 2.º turno estadual' });
+// Estrangeiro: resumo (abrangências) e um ficheiro por cidade, a partir dos ficheiros da 1.ª volta.
+const zz = RACES.find((r) => r.uf === 'ZZ');
+const citySource = (cd) => JSON.parse(readFileSync(join(DIR, '..', 'exterior', 'cidades', `zz${cd}-c0001-e006257-u.json`), 'utf8'));
+function cityVotes(cd, s) {
+  const src = citySource(cd);
+  const get = (n) => src.carg[0].agr.flatMap((a) => a.par.flatMap((p) => p.cand)).find((c) => c.n === n)?.vap ?? 0;
+  const f = Number(get('22'));
+  const l = Number(get('13'));
+  const share = f + l ? Math.max(0.05, Math.min(0.95, f / (f + l) + swing)) : 0.5;
+  const p = progress(zz, s);
+  const total = Math.round((f + l) * 1.05 * p);
+  return { src, a: Math.round(total * share), b: total - Math.round(total * share), pct: 100 * p };
+}
+function abFile(s) {
+  const time = new Date(Date.parse('2026-10-25T20:00:00Z') + s * 5 * 60_000);
+  const hh = new Date(time.getTime() - 3 * 3_600_000).toISOString().slice(11, 19);
+  return {
+    ele: '6258', t: '2', f: 'o', dg: '25/10/2026', hg: hh,
+    abr: Object.keys(CITIES).map((cd) => ({
+      tpabr: 'mun', cdabr: cd, dt: '25/10/2026', ht: hh,
+      s: { st: String(Math.round(progress(zz, s) * 10)), pst: (100 * progress(zz, s)).toFixed(2).replace('.', ',') },
+    })),
+  };
+}
+
 let blocked = false;
 
 createServer((req, res) => {
   const url = new URL(req.url, 'http://x');
   if (url.pathname.endsWith('/config/ele-c.json')) return send(res, config);
+  if (url.pathname.endsWith('/dados/zz/zz-e006258-ab.json')) return send(res, abFile(step()));
+  const c = url.pathname.match(/\/dados\/zz\/zz(\d+)-c0001-e006258-u\.json$/);
+  if (c && CITIES[c[1]]) {
+    const s = step();
+    const v = cityVotes(c[1], s);
+    const time = new Date(Date.parse('2026-10-25T20:00:00Z') + s * 5 * 60_000);
+    return send(res, round2File(c[1], 1, { source: v.src, numbers: ['22', '13'], a: v.a, b: v.b, pct: s >= STEPS ? 100 : v.pct, final: s >= STEPS, time }));
+  }
   const m = url.pathname.match(/^\/oficial\/ele2026\/(\d+)\/dados\/([a-z]{2})\/[a-z]{2}-c(\d{4})-e\d{6}-u\.json$/);
   const race = m && RACES.find((r) => r.uf === m[2].toUpperCase() && r.cargo === Number(m[3]));
   if (!race) return send(res, { erro: 'não encontrado' }, 404);

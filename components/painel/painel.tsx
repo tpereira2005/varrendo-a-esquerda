@@ -7,6 +7,7 @@ import { Mapa, stateView } from './mapa';
 import { Placar, Crescimento, DetalheEstado, Governadores } from './estados';
 import { Avisos } from './avisos';
 import { Arquivo } from './arquivo';
+import { Estrangeiro } from './estrangeiro';
 import { Festejo } from './festejo';
 import { chime, keepAwake, reacquireAwake, unlockAudio } from './efeitos';
 import { compact, pct, timeBrasilia, timeLisbon, FLAVIO } from './format';
@@ -252,6 +253,8 @@ export default function Painel({ initial }: { initial: Snapshot | null }) {
           </section>
         </div>
       </div>
+
+      <Estrangeiro data={data} now={now} />
 
       <details className="card">
         <summary>Governadores (7 estados)</summary>

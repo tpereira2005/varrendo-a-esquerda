@@ -38,6 +38,14 @@ Painel Flávio Bolsonaro (PL, 22) × Lula (PT, 13), do ponto de vista de quem to
 - **Animações:** números que deslizam e brilham quando mudam, boneco que reage, entrada dos cartões; desligáveis na opção "Animações" e automaticamente com "reduzir movimento" do sistema.
 - **Modo festejo:** só quando o TSE declara oficialmente o Flávio eleito. Abre um festejo em ecrã inteiro (fogo de artifício, confetes, boneco, fanfarra se o som estiver ativo; botão "Ecrã inteiro" no PC) uma vez por aparelho; depois o site fica em modo festejo, com o botão "Festejar outra vez". Se o Lula for eleito, aparece apenas uma mensagem sóbria.
 
+## Estrangeiro
+
+- O TSE publica o total do estrangeiro (ficheiro `zz`, tratado como a disputa `ZZ`), um ficheiro por cidade com posto consular (186 cidades) e um resumo com o progresso de todas (`zz-e006258-ab.json`).
+- O país de cada cidade vem de `lib/exterior.json` (o TSE não o indica). Portugal = Lisboa, Porto e Faro, e aparece sempre primeiro.
+- Recolha: o resumo é lido no máximo a cada 45 s; só se pedem os ficheiros das cidades com votos novos (no máximo 8 por lote, Portugal primeiro). O "para virar" usa o progresso real do estrangeiro.
+- Arquivo da 1.ª volta por país: `data/exterior-turno1.json`, gerado por `scripts/build-turno1.mjs` a partir dos 186 ficheiros oficiais (a soma confere com o total oficial: 330 882 votos válidos).
+- Migração `drizzle/0004_estrangeiro.sql` (tabela `exterior`), aditiva.
+
 ## Recolha
 
 - Janela ativa: de 25/10 às 16h30 de Brasília (19h30 em Lisboa) até todas as disputas terem totalização final. Fora dela não há pedidos ao TSE.

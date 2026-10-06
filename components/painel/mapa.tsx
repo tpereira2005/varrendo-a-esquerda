@@ -17,13 +17,24 @@ export function stateView(r: Race) {
   return { lead, margin: Math.abs(a.pct - b.pct), flipped: lead != null && lead !== r1Lead, r1Lead, counted: p.pctSections };
 }
 
+/**
+ * Camadas: (1) cores dos estados, (2) fronteiras finas iguais para todos, (3) contornos de destaque
+ * desenhados só por dentro de cada estado (recortados pela própria forma), (4) siglas.
+ * Assim um contorno nunca fica tapado pelo estado vizinho e tem sempre a mesma espessura.
+ */
 export function Mapa({ states, selected, onSelect }: { states: Race[]; selected: string; onSelect: (uf: string) => void }) {
+  const views = states.map((r) => ({ r, s: SHAPES[r.uf], v: stateView(r) }));
   return (
     <figure>
-      <svg viewBox="0 0 1000 971" className="w-full h-auto max-h-[520px]" role="group" aria-label="Mapa: quem vai à frente em cada estado">
-        {states.map((r) => {
-          const s = SHAPES[r.uf];
-          const v = stateView(r);
+      <svg viewBox="0 0 1000 971" className="mapa w-full h-auto max-h-[520px]" role="group" aria-label="Mapa: quem vai à frente em cada estado">
+        <defs>
+          {views.map(({ r, s }) => (
+            <clipPath key={r.uf} id={`mapa-${r.uf}`}>
+              <path d={s.d} />
+            </clipPath>
+          ))}
+        </defs>
+        {views.map(({ r, s, v }) => {
           // Mistura com o cinzento: a cor só fica plena com diferença grande (25 pp) E boa parte contada (40%).
           // Um estado com 2% apurado fica claro, mesmo com uma diferença enorme.
           const strength = Math.round(25 + 75 * Math.min(1, v.margin / 25) * Math.min(1, v.counted / 40));
@@ -31,26 +42,40 @@ export function Mapa({ states, selected, onSelect }: { states: Race[]; selected:
           const fill = v.lead == null ? 'var(--neutral)' : `color-mix(in srgb, ${base} ${strength}%, var(--neutral))`;
           const label = `${s.n}: ${v.lead == null ? 'sem votos' : `${v.lead === 0 ? 'Flávio' : 'Lula'} à frente por ${pct(v.margin)} pontos`}${v.flipped ? ', virou face à 1.ª volta' : ''}`;
           return (
-            <g key={r.uf} role="button" tabIndex={0} aria-label={label} onClick={() => onSelect(r.uf)}
-              onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onSelect(r.uf)} className="cursor-pointer">
+            <g key={r.uf} role="button" tabIndex={0} aria-label={label} aria-pressed={selected === r.uf} className="estado"
+              onClick={() => onSelect(r.uf)} onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onSelect(r.uf)}>
               <title>{label}</title>
-              <path d={s.d} style={{ fill, transition: 'fill 0.8s ease' }}
-                stroke={v.flipped ? 'var(--gold)' : selected === r.uf ? 'var(--ink)' : 'var(--card)'}
-                strokeWidth={v.flipped || selected === r.uf ? 5 : 1.5} />
-              <text x={s.c[0]} y={s.c[1]} textAnchor="middle" fontSize={SMALL.has(r.uf) ? 15 : 22} fontWeight="700" fill="var(--ink)"
-                style={{ paintOrder: 'stroke', stroke: 'var(--card)', strokeWidth: 4 }}>
-                {r.uf}
-                {v.lead === 0 ? ' ▲' : v.lead === 1 ? ' ●' : ''}
-              </text>
+              <path d={s.d} style={{ fill, transition: 'fill 0.8s ease' }} />
             </g>
           );
         })}
+        <g className="fronteiras" aria-hidden="true">
+          {views.map(({ r, s }) => (
+            <path key={r.uf} d={s.d} />
+          ))}
+        </g>
+        <g aria-hidden="true" pointerEvents="none">
+          {views.map(({ r, s, v }) => (
+            <g key={r.uf} clipPath={`url(#mapa-${r.uf})`}>
+              {/* escolhido: faixa larga por dentro; virou: dourado junto à fronteira, por cima */}
+              {selected === r.uf && <path d={s.d} className="contorno-escolhido" />}
+              {v.flipped && <path d={s.d} className="contorno-virou" />}
+            </g>
+          ))}
+          {views.map(({ r, s, v }) => (
+            <text key={r.uf} x={s.c[0]} y={s.c[1]} textAnchor="middle" fontSize={SMALL.has(r.uf) ? 15 : 22} className="sigla">
+              {r.uf}
+              {v.lead === 0 ? ' ▲' : v.lead === 1 ? ' ●' : ''}
+            </text>
+          ))}
+        </g>
       </svg>
       <figcaption className="hint flex flex-wrap gap-x-4 gap-y-1">
         <span><b className="c-flavio">▲</b> Flávio à frente</span>
         <span><b className="c-lula">●</b> Lula à frente</span>
         <span>Cor mais forte = maior diferença e mais votos contados</span>
         <span><b style={{ color: 'var(--gold)' }}>▢</b> virou face à 1.ª volta</span>
+        <span><b>▢</b> estado escolhido</span>
       </figcaption>
     </figure>
   );

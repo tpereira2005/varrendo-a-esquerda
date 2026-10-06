@@ -2,7 +2,9 @@
 // Uso: node scripts/build-turno1.mjs <pasta-com-os-ficheiros-tse>
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
+import { readdirSync } from 'node:fs';
 import { UFS, candidatesOf, turnoutOf, officialTime, pct } from '../lib/tse.mjs';
+import { parseCity, byCountry } from '../lib/exterior.mjs';
 
 const dir = process.argv[2] ?? '../../outputs/backup-turno1/tse';
 const GOVERNOR_RUNOFF = ['AC', 'AM', 'DF', 'ES', 'RJ', 'RN', 'TO'];
@@ -26,6 +28,7 @@ function read(uf, cargo, ele) {
 
 const president = { BR: read('BR', 1, 6257) };
 for (const uf of UFS) president[uf] = read(uf, 1, 6257);
+president.ZZ = read('ZZ', 1, 6257);
 
 const governor = {};
 for (const uf of GOVERNOR_RUNOFF) {
@@ -44,3 +47,27 @@ writeFileSync(
   JSON.stringify({ source: 'TSE, totalização final da 1.ª volta (eleições 6257 e 6259)', president, governor }),
 );
 console.log('data/turno1.json:', Object.keys(president).length, 'presidência;', Object.keys(governor).length, 'governadores');
+
+// Estrangeiro por país: um ficheiro oficial por cidade (pasta exterior/cidades ao lado da pasta tse).
+const citiesDir = join(dir, '..', 'exterior', 'cidades');
+const cities = {};
+for (const f of readdirSync(citiesDir)) {
+  const cd = f.match(/^zz(\d+)-c0001/)?.[1];
+  if (cd) cities[cd] = parseCity(JSON.parse(readFileSync(join(citiesDir, f), 'utf8')), { ele: 6257, turn: 1, cd });
+}
+const numbers = president.ZZ.candidates.map((c) => c.number);
+const countries = byCountry(cities, numbers);
+const sumCities = countries.reduce((n, c) => n + numbers.reduce((m, k) => m + c.votes[k], 0), 0);
+const sumZZ = president.ZZ.candidates.reduce((n, c) => n + c.votes, 0);
+if (Object.keys(cities).length !== 186 || sumCities !== sumZZ) {
+  throw new Error(`Estrangeiro incoerente: ${Object.keys(cities).length} cidades, ${sumCities} vs ${sumZZ}`);
+}
+writeFileSync(
+  'data/exterior-turno1.json',
+  JSON.stringify({
+    source: 'TSE, totalização final da 1.ª volta no estrangeiro (eleição 6257), por cidade com posto consular',
+    candidates: president.ZZ.candidates.map(({ number, name, party }) => ({ number, name, party })),
+    countries: countries.map((c) => ({ pais: c.pais, votes: c.votes, cidades: c.cidades.map(({ cd, cidade, votes }) => ({ cd, cidade, votes })) })),
+  }),
+);
+console.log('data/exterior-turno1.json:', countries.length, 'países;', sumCities, 'votos válidos (igual ao total do estrangeiro)');

@@ -61,6 +61,21 @@ export const rounds = sqliteTable('rounds', {
   checkedAt: integer('checked_at').notNull().default(0),
 });
 
+/** Voto no estrangeiro, por cidade com posto consular. `cd = 'ab'` guarda a última leitura do resumo. */
+export const exterior = sqliteTable(
+  'exterior',
+  {
+    turn: integer('turn').notNull(),
+    cd: text('cd').notNull(),
+    want: text('want'),
+    stamp: text('stamp'),
+    parsed: text('parsed'),
+    checkedAt: integer('checked_at').notNull().default(0),
+    error: text('error'),
+  },
+  (t) => [primaryKey({ columns: [t.turn, t.cd] })],
+);
+
 /** Um ponto por cada nova geração oficial de um ficheiro: alimenta o gráfico e os avisos. */
 export const timeline = sqliteTable(
   'timeline',

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { RACES, jobsFor, round2FromConfig, ROUND } from '../lib/rounds.mjs';
 import { parseRunoff, eventsFor, toFlip, moodFor } from '../lib/runoff.mjs';
-import { candidatesOf, isElected } from '../lib/tse.mjs';
+import { candidatesOf, isElected, UFS } from '../lib/tse.mjs';
 import { round2File } from './round2-files.mjs';
 
 const jobs = jobsFor();
@@ -11,8 +11,9 @@ const job = (uf, cargo = 1) => jobs.find((j) => j.uf === uf && j.cargo === cargo
 const BR = job('BR');
 const fixture = (n) => JSON.parse(readFileSync(new URL(`fixtures/${n}.json`, import.meta.url), 'utf8'));
 
-test('disputas: Presidente no BR e nos 27 estados, Governador em 7 estados, Flávio sempre primeiro', () => {
-  assert.equal(RACES.length, 35);
+test('disputas: Presidente no BR, nos 27 estados e no estrangeiro, Governador em 7 estados, Flávio sempre primeiro', () => {
+  assert.equal(RACES.length, 36);
+  assert.equal(job('ZZ').url, 'https://resultados.tse.jus.br/oficial/ele2026/6258/dados/zz/zz-c0001-e006258-u.json');
   assert.deepEqual(RACES.filter((r) => r.cargo === 3).map((r) => r.uf), ['AC', 'AM', 'DF', 'ES', 'RJ', 'RN', 'TO']);
   for (const r of RACES.filter((r) => r.cargo === 1)) assert.deepEqual(r.finalists.map((f) => f.number), ['22', '13']);
   assert.equal(BR.url, 'https://resultados.tse.jus.br/oficial/ele2026/6258/dados/br/br-c0001-e006258-u.json');
@@ -126,7 +127,7 @@ test('resultado oficial: celebração para o Flávio, mensagem sóbria para o Lu
 });
 
 test('"para virar": estimativa com os votos válidos da 1.ª volta nas secções por apurar', () => {
-  const states = RACES.filter((r) => r.cargo === 1 && r.uf !== 'BR').map((r) => ({ ...r, parsed: { pctSections: 50 } }));
+  const states = RACES.filter((r) => r.cargo === 1 && UFS.includes(r.uf)).map((r) => ({ ...r, parsed: { pctSections: 50 } }));
   const statesValid = states.reduce((n, s) => n + s.r1.validos, 0);
   const abroad = RACES[0].r1.validos - statesValid;
   assert.ok(abroad > 100_000 && abroad < 2_000_000, `votos do estrangeiro: ${abroad}`);
@@ -144,7 +145,7 @@ test('"para virar": estimativa com os votos válidos da 1.ª volta nas secções
 });
 
 test('boneco: reage ao que o candidato atrás precisaria para virar (diferença + o que falta contar)', () => {
-  const states = (done) => RACES.filter((r) => r.cargo === 1 && r.uf !== 'BR').map((r) => ({ ...r, parsed: { pctSections: done } }));
+  const states = (done) => RACES.filter((r) => r.cargo === 1 && UFS.includes(r.uf)).map((r) => ({ ...r, parsed: { pctSections: done } }));
   const valid = states(0).reduce((n, s) => n + s.r1.validos, 0);
   // Flávio 2 pontos à frente durante toda a noite (mesmos exemplos da proposta).
   const at = (done, lead = 0.02, st) => {

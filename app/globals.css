@@ -306,8 +306,10 @@ body {
   box-shadow: inset 0 -3px 0 #ffdf00;
 }
 
+/* segunda cor: faixa amarela no Flávio (Brasil), faixa branca no Lula (estrela do PT) */
 .lado-lula .dorsal {
   background: linear-gradient(135deg, #e0213f, #a10f29);
+  box-shadow: inset 0 -3px 0 #ffffff;
 }
 
 .lado-nome {
@@ -408,23 +410,24 @@ body {
   transition: width 0.8s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+/* Cores lisas: um degradé criava uma falsa terceira faixa junto à divisão. */
 .barra-duelo > .bg-flavio {
-  background: linear-gradient(90deg, #066b2d, var(--flavio));
+  background: var(--flavio);
 }
 
 .barra-duelo > .bg-lula {
-  background: linear-gradient(90deg, var(--lula), #a10f29);
+  background: var(--lula);
 }
 
+/* Marca dos 50%: pequenos entalhes em cima e em baixo, sem cortar a barra. */
 .meta-50 {
   position: absolute;
   left: 50%;
   top: 0;
   bottom: 0;
-  width: 3px;
-  margin-left: -1.5px;
-  background: var(--card);
-  opacity: 0.9;
+  width: 2px;
+  margin-left: -1px;
+  background: linear-gradient(var(--card) 0 28%, transparent 28% 72%, var(--card) 72%);
 }
 
 .apuramento {
@@ -472,17 +475,27 @@ body {
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--gold) 60%, transparent), var(--sombra);
 }
 
-/* números que mudam */
+/* números que mudam: brilho dourado no próprio texto, sem caixa à volta */
 .num {
   display: inline-block;
-  border-radius: 6px;
-  transition: background-color 0.9s ease, box-shadow 0.9s ease;
 }
 
 .num.flash {
-  background-color: color-mix(in srgb, var(--gold) 35%, transparent);
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--gold) 35%, transparent);
-  transition: none;
+  animation: brilhar 0.9s ease-out;
+}
+
+@keyframes brilhar {
+  0% {
+    text-shadow: 0 0 0 transparent;
+  }
+  25% {
+    text-shadow: 0 0 14px color-mix(in srgb, var(--gold) 85%, transparent), 0 0 2px var(--gold);
+    transform: scale(1.03);
+  }
+  100% {
+    text-shadow: 0 0 0 transparent;
+    transform: none;
+  }
 }
 
 .pct-medio {
@@ -578,18 +591,53 @@ body {
   transition: width 0.8s ease;
 }
 
-/* mapa: realce ao passar o rato (PC) */
-[role="button"] path {
+/* ---------- mapa ---------- */
+
+.mapa .estado {
+  cursor: pointer;
+  outline: none;
+}
+
+.mapa .estado path {
   transition: filter 0.15s;
 }
 
-[role="button"]:hover path,
-[role="button"]:focus-visible path {
-  filter: brightness(1.12) drop-shadow(0 0 4px rgb(0 0 0 / 0.35));
+.mapa .estado:hover path,
+.mapa .estado:focus-visible path {
+  filter: brightness(1.1) saturate(1.1);
 }
 
-[role="button"]:focus {
-  outline: none;
+/* fronteiras: a mesma linha fina em todos os estados */
+.mapa .fronteiras path {
+  fill: none;
+  stroke: var(--card);
+  stroke-width: 1.6;
+  stroke-linejoin: round;
+}
+
+/* destaques recortados pela forma do estado: a espessura visível é metade do stroke-width, só por dentro */
+.mapa .contorno-virou {
+  fill: none;
+  stroke: var(--gold);
+  stroke-width: 10;
+  stroke-linejoin: round;
+}
+
+.mapa .contorno-escolhido {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 16;
+  stroke-linejoin: round;
+  opacity: 0.85;
+}
+
+.mapa .sigla {
+  font-weight: 700;
+  fill: var(--ink);
+  paint-order: stroke;
+  stroke: var(--card);
+  stroke-width: 4px;
+  stroke-linejoin: round;
 }
 
 /* ---------- elementos comuns ---------- */
@@ -763,6 +811,164 @@ details[open] > summary::after {
   stroke-dasharray: 1;
   stroke-dashoffset: 1;
   animation: desenhar 1.4s ease forwards;
+}
+
+/* ---------- estrangeiro ---------- */
+
+.ext-procura {
+  text-align: left;
+  font-weight: 500;
+}
+
+.ext-cabecalho,
+.ext-linha {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+  gap: 4px 14px;
+  align-items: center;
+}
+
+.ext-cabecalho > :nth-child(n + 3) {
+  display: none;
+}
+
+.ext-linha {
+  width: 100%;
+  text-align: left;
+  padding: 8px 10px;
+  border-radius: 12px;
+  min-height: 44px;
+}
+
+.ext-linha:hover {
+  background: var(--soft);
+}
+
+.ext-info,
+.ext-desloc {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.ext-desloc {
+  font-weight: 700;
+}
+
+.ext-nome {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+}
+
+.ext-seta {
+  width: 1em;
+  color: var(--muted);
+}
+
+.ext-portugal > .ext-linha {
+  background: color-mix(in srgb, var(--gold) 16%, transparent);
+  box-shadow: inset 4px 0 0 var(--gold);
+}
+
+@media (min-width: 768px) {
+  .ext-cabecalho,
+  .ext-linha {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.6fr) minmax(0, 1.1fr) minmax(0, 0.9fr);
+  }
+  .ext-cabecalho > :nth-child(n + 3) {
+    display: block;
+  }
+  .ext-cabecalho {
+    padding: 0 10px;
+  }
+  .ext-desloc {
+    text-align: right;
+  }
+}
+
+.ext-cabecalho > :last-child {
+  text-align: right;
+}
+
+.ext-cidades {
+  display: grid;
+  gap: 2px;
+  margin: 2px 0 8px 28px;
+}
+
+.ext-cidade {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+  gap: 2px 14px;
+  align-items: center;
+  font-size: 0.85rem;
+  padding: 4px 10px;
+  border-left: 2px solid var(--line);
+}
+
+.ext-cidade > .hint {
+  grid-column: 2;
+}
+
+@media (min-width: 768px) {
+  .ext-cidade {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr) minmax(0, 1.4fr);
+  }
+  .ext-cidade > .hint {
+    grid-column: auto;
+  }
+}
+
+.mini-duelo {
+  display: grid;
+  grid-template-columns: 3.4em 1fr 3.4em;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.mini-duelo > :last-child {
+  text-align: right;
+}
+
+.mini-duelo .barra-duelo {
+  height: 8px;
+}
+
+.mini-duelo.referencia {
+  opacity: 0.55;
+}
+
+.mini-duelo.referencia .barra-duelo {
+  outline: 1px dashed var(--muted);
+  outline-offset: 1px;
+}
+
+/* separadores do arquivo */
+.separadores {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 14px;
+  background: var(--soft);
+  justify-self: start;
+}
+
+.separadores button {
+  min-height: 38px;
+  padding: 0 14px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.88rem;
+  color: var(--muted);
+}
+
+.separadores button[aria-selected="true"] {
+  background: var(--card);
+  color: var(--ink);
+  box-shadow: var(--sombra);
 }
 
 /* ---------- barra fixa com o resultado ---------- */

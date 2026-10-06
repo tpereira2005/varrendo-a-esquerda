@@ -72,6 +72,11 @@ export type Snapshot = {
   national: Race;
   states: Race[];
   governors: Race[];
+  exterior: {
+    race: Race;
+    checkedAt: number;
+    countries: ExteriorCountry[];
+  };
   score: { flavio: number; lula: number; pending: number };
   toFlip: { trailing: 0 | 1; remaining: number; needPct: number | null; impossible: boolean } | null;
   mood: { label: string; src: string };
@@ -81,8 +86,25 @@ export type Snapshot = {
   collector: { refreshedAt: number; pauseUntil: number; lastError: string | null };
 };
 
+export type ExteriorCountry = {
+  pais: string;
+  flavio: number;
+  lula: number;
+  sections: number;
+  counted: number;
+  r1: { flavio: number; lula: number } | null;
+  cidades: { cidade: string; flavio: number; lula: number; pctSections: number; has: boolean }[];
+};
+
+export type ExteriorArchive = {
+  source: string;
+  candidates: { number: string; name: string; party: string }[];
+  countries: { pais: string; votes: Record<string, number>; cidades: { cd: string; cidade: string; votes: Record<string, number> }[] }[];
+};
+
 export type Archive = {
   source: string;
   president: Record<string, { generatedAt: number; pctSections: number; turnout: Turnout; candidates: { number: string; name: string; party: string; votes: number; pct: number; st: string }[] }>;
   governor: Archive['president'];
+  exterior: ExteriorArchive;
 };
