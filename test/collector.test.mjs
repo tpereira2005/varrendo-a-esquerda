@@ -182,7 +182,7 @@ test('recolha completa das 35 disputas e estado da noite', async () => {
   assert.equal(s.states.filter((x) => x.parsed).length, 27);
   assert.equal(s.score.flavio, 1);
   assert.equal(s.score.lula, 26);
-  assert.equal(s.mood.label, 'Tensão');
+  assert.equal(s.mood.label, 'Desespero'); // tudo contado, Lula à frente, ainda sem indicação oficial
   assert.equal(s.phase, 'apuramento');
   assert.equal(s.toFlip.impossible, true);
   assert.ok(s.events.some((e) => e.kind === 'estado' || e.kind === 'estado-virou'));

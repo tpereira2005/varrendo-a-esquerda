@@ -138,15 +138,32 @@ test('"para virar": estimativa com os votos válidos da 1.ª volta nas secções
   assert.equal(toFlip(national, done).impossible, true);
 });
 
-test('boneco: mesmos limiares do original aplicados à percentagem do Flávio', () => {
-  const at = (a, b, st) => moodFor(parseRunoff(round2File('BR', 1, { pct: 50, a, b, st }), BR)).label;
-  assert.equal(moodFor(null).label, 'A aguardar');
-  assert.equal(at(62, 38), 'Giga Chad');
-  assert.equal(at(51, 49), 'Esperança');
-  assert.equal(at(48, 52), 'Tensão');
-  assert.equal(at(30, 70), 'Desespero');
-  assert.equal(at(40, 60, ['Eleito', 'Não eleito']), 'Giga Chad');
-  assert.equal(at(60, 40, ['Não eleito', 'Eleito']), 'Desespero');
+test('boneco: reage ao que o candidato atrás precisaria para virar (diferença + o que falta contar)', () => {
+  const states = (done) => RACES.filter((r) => r.cargo === 1 && r.uf !== 'BR').map((r) => ({ ...r, parsed: { pctSections: done } }));
+  const valid = states(0).reduce((n, s) => n + s.r1.validos, 0);
+  // Flávio 2 pontos à frente durante toda a noite (mesmos exemplos da proposta).
+  const at = (done, lead = 0.02, st) => {
+    const counted = Math.round(valid * (done / 100));
+    const a = Math.round(counted * (0.5 + lead / 2));
+    const n = parseRunoff(round2File('BR', 1, { pct: done, a, b: counted - a, st }), BR);
+    return moodFor(n, toFlip(n, states(done))).label;
+  };
+  assert.equal(moodFor(null, null).label, 'A aguardar');
+  assert.equal(at(10), 'Esperança');
+  assert.equal(at(50), 'Confiante');
+  assert.equal(at(80), 'Barba cheia');
+  assert.equal(at(95), 'Giga Chad');
+  // Lula 2 pontos à frente: o espelho.
+  assert.equal(at(10, -0.02), 'Tensão');
+  assert.equal(at(50, -0.02), 'Abalado');
+  assert.equal(at(80, -0.02), 'Lágrimas');
+  assert.equal(at(95, -0.02), 'Desespero');
+  // Muito à frente cedo não chega para euforia; pouco à frente quase no fim já é "Chad" ou mais.
+  assert.equal(at(5, 0.1), 'Esperança');
+  assert.equal(at(90, 0.005), 'Barba cheia');
+  // Resultado oficial manda sempre.
+  assert.equal(at(100, -0.1, ['Eleito', 'Não eleito']), 'Giga Chad');
+  assert.equal(at(100, 0.1, ['Não eleito', 'Eleito']), 'Desespero');
 });
 
 test('janela da noite eleitoral começa às 16h30 de Brasília', () => {
