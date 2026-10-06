@@ -66,6 +66,10 @@ test('vitória só com indicação oficial; 100% sem totalização final não ch
   assert.equal(p.winner, 0);
   p = parseRunoff(round2File('BR', 1, { pct: 100, a: 40, b: 60, final: true }), BR);
   assert.equal(p.winner, 1);
+  // Um estado na Presidência nunca elege ninguém, mesmo com totalização final.
+  p = parseRunoff(round2File('SP', 1, { pct: 100, a: 60, b: 40, final: true, st: ['Eleito', 'Não eleito'] }), job('SP'));
+  assert.equal(p.winner, null);
+  assert.equal(eventsFor(RACES.find((r) => r.uf === 'SP'), p, []).some((e) => e.kind === 'eleito'), false);
 });
 
 test('finalista substituído pelo TSE é aceite com aviso', () => {
@@ -89,9 +93,9 @@ test('viradas: só depois de 20% e confirmadas por duas gerações seguidas', ()
   assert.equal(eventsFor(RACES.find((r) => r.uf === 'SP'), null, p).length, 0);
 });
 
-test('marcos nacionais aos 25, 50, 75, 90 e 99% sem repetição', () => {
-  const ev = eventsFor(RACES[0], null, pts([26, 10, 12], [30, 11, 12], [55, 30, 25], [99.5, 60, 50]));
-  assert.deepEqual(ev.filter((e) => e.kind === 'marco').map((e) => e.id.split(':').pop()), ['25', '50', '75', '90', '99']);
+test('marcos nacionais sem repetição; marcos ultrapassados de uma vez não geram aviso', () => {
+  const ev = eventsFor(RACES[0], null, pts([26, 10, 12], [30, 11, 12], [55, 30, 25], [80, 40, 30], [99.5, 60, 50]));
+  assert.deepEqual(ev.filter((e) => e.kind === 'marco').map((e) => e.id.split(':').pop()), ['25', '50', '75', '99']);
   assert.match(ev.find((e) => e.id.endsWith('marco:25')).title, /Lula à frente/);
   assert.equal(ev.find((e) => e.id.endsWith('marco:50')).tone, 'good');
 });

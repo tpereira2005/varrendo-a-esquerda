@@ -15,7 +15,7 @@ function read(uf, cargo, ele) {
   const candidates = candidatesOf(json, cargo)
     .filter((c) => c.valid)
     .sort((a, b) => b.votes - a.votes)
-    .map(({ valid, ...c }) => c);
+    .map((c) => ({ number: c.number, name: c.name, party: c.party, votes: c.votes, pct: c.pct, st: c.st }));
   return {
     generatedAt: officialTime(json.dg, json.hg),
     pctSections: pct(json.s?.pst),

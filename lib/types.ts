@@ -1,0 +1,88 @@
+// Forma dos dados devolvidos por snapshot() (lib/collector.mjs) e usados pela página.
+
+export type Group = 'direita' | 'esquerda';
+
+export type Finalist = {
+  number: string;
+  name: string;
+  party: string;
+  group: Group;
+  r1Votes: number;
+  r1Pct: number;
+};
+
+export type Turnout = {
+  eleitores: number | null;
+  comparecimento: number | null;
+  abstencao: number | null;
+  abstencaoPct: number | null;
+  validos: number | null;
+  brancos: number | null;
+  nulos: number | null;
+};
+
+export type Cand = Finalist & { votes: number; pct: number; elected: boolean; st: string };
+
+export type Parsed = {
+  key: string;
+  uf: string;
+  cargo: number;
+  generatedAt: number | null;
+  pctSections: number;
+  final: boolean;
+  winner: 0 | 1 | null;
+  cands: [Cand, Cand];
+  turnout: Turnout;
+  warnings: string[];
+};
+
+export type Race = {
+  key: string;
+  uf: string;
+  cargo: 1 | 3;
+  internal: boolean;
+  finalists: [Finalist, Finalist];
+  r1: Turnout;
+  parsed: Parsed | null;
+  meta: { generatedAt: number | null; checkedAt: number | null; successAt: number | null; error: string | null; stale: boolean };
+};
+
+export type Notice = {
+  id: string;
+  key: string;
+  kind: 'virada' | 'marco' | 'estado' | 'estado-virou' | 'eleito';
+  uf: string;
+  cargo: number;
+  tone: 'good' | 'bad' | 'neutral';
+  title: string;
+  detail: string;
+  at?: number;
+  winner?: string;
+  noticedAt: number;
+};
+
+export type Snapshot = {
+  serverNow: number;
+  phase: 'antes' | 'apuramento' | 'encerrado';
+  active: boolean;
+  paused: boolean;
+  ids: { federal: number; estadual: number; confirmedAt: number | null };
+  opensAt: number;
+  pollsCloseAt: number;
+  national: Race;
+  states: Race[];
+  governors: Race[];
+  score: { flavio: number; lula: number; pending: number };
+  toFlip: { trailing: 0 | 1; remaining: number; needPct: number | null; impossible: boolean } | null;
+  mood: { label: string; src: string };
+  timeline: { generatedAt: number; pctSections: number; votesA: number; votesB: number }[];
+  events: Notice[];
+  corrections: Notice[];
+  collector: { refreshedAt: number; pauseUntil: number; lastError: string | null };
+};
+
+export type Archive = {
+  source: string;
+  president: Record<string, { generatedAt: number; pctSections: number; turnout: Turnout; candidates: { number: string; name: string; party: string; votes: number; pct: number; st: string }[] }>;
+  governor: Archive['president'];
+};

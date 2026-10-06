@@ -1,4 +1,12 @@
-# vinext-starter
+# Varrendo a Esquerda · 2.ª volta 2026
+
+Painel Flávio Bolsonaro × Lula com os resultados oficiais do TSE. Operação, estrutura e ensaio local: [docs/operacao.md](docs/operacao.md).
+
+Testes: `node --test test/*.test.mjs`.
+
+---
+
+## Base técnica (vinext-starter)
 
 A clean full-stack starter running on [vinext](https://github.com/cloudflare/vinext), with optional Cloudflare D1 and Drizzle support.
 

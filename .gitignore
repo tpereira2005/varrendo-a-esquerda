@@ -44,3 +44,6 @@ next-env.d.ts
 /.codex/
 /outputs/
 /work/
+
+# segredos e variáveis locais do Worker
+.dev.vars

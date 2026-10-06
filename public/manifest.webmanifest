@@ -1,0 +1,10 @@
+{
+  "name": "Varrendo a Esquerda · 2.ª volta",
+  "short_name": "Varrendo",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f4f5f1",
+  "theme_color": "#0a8a3a",
+  "lang": "pt-PT",
+  "icons": [{ "src": "/emoji/humor-10.png", "sizes": "any", "type": "image/png" }]
+}
