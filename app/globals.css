@@ -469,9 +469,11 @@ html[data-theme="dark"] .barra-duelo > .bg-lula {
   border-top: 6px solid var(--card);
 }
 
-.barra-duelo.fina .meta-50 {
-  margin-left: -4px;
-  border-width: 4px 4px 0;
+/* Barras finas (10 px): entalhe proporcional, cerca de um quarto da altura. */
+.barra-duelo.fina .meta-50,
+.barra-fixa .meta-50 {
+  margin-left: -3px;
+  border-width: 3px 3px 0;
 }
 
 .apuramento {
