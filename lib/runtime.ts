@@ -9,6 +9,11 @@ type SiteEnv = {
   COLLECTION_FORCE?: string;
   /** Só para desenvolvimento: endereço do simulador local do TSE. */
   TSE_BASE?: string;
+  /** Notificações (Web Push): chave pública (não secreta) e privada (segredo). Ver scripts/vapid-keys.mjs. */
+  VAPID_PUBLIC_KEY?: string;
+  VAPID_PRIVATE_KEY?: string;
+  /** Contacto exigido pelos serviços de push (mailto: ou https:). */
+  VAPID_SUBJECT?: string;
 };
 
 const siteEnv = env as unknown as SiteEnv;
@@ -18,11 +23,19 @@ export function store() {
   return new D1Store(siteEnv.DB);
 }
 
+/** Chaves das notificações, ou null se ainda não estiverem configuradas no Sites. */
+export function pushKeys() {
+  const { VAPID_PUBLIC_KEY: publicKey, VAPID_PRIVATE_KEY: privateKey } = siteEnv;
+  if (!publicKey || !privateKey) return null;
+  return { publicKey, privateKey, subject: siteEnv.VAPID_SUBJECT || 'https://varrendo-eleicoes-brasil-2026.tomaspereira.chatgpt.site' };
+}
+
 export function flags() {
   const local = /^http:\/\/(127\.0\.0\.1|localhost)(:\d+)?$/.test(siteEnv.TSE_BASE ?? '');
   return {
     paused: siteEnv.COLLECTION_PAUSED === '1',
     force: siteEnv.COLLECTION_FORCE === '1',
+    push: pushKeys(),
     ...(local ? { base: siteEnv.TSE_BASE } : {}),
   };
 }

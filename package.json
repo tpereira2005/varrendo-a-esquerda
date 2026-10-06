@@ -17,7 +17,8 @@
     "simulador": "node scripts/fake-tse.mjs",
     "dados:1a-volta": "node scripts/build-turno1.mjs",
     "db:generate": "drizzle-kit generate",
-    "install:ci": "node scripts/install-ci.mjs"
+    "install:ci": "node scripts/install-ci.mjs",
+    "chaves:vapid": "node scripts/vapid-keys.mjs"
   },
   "dependencies": {
     "drizzle-orm": "0.45.2",

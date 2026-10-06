@@ -277,6 +277,125 @@ body {
   color: #002776;
 }
 
+/* estado da ligação ao TSE, por baixo do cabeçalho */
+.estado-tse {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-top: -6px;
+}
+
+.estado-tse i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--neutral);
+  flex-shrink: 0;
+}
+
+.estado-ok i { background: var(--flavio); }
+.estado-aviso i { background: var(--gold); }
+.estado-erro i { background: var(--lula); }
+.estado-erro { color: var(--lula); font-weight: 600; }
+
+.partilhar-linha {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: -6px;
+}
+
+/* projeção */
+.projecao-veredito {
+  display: grid;
+  gap: 2px;
+}
+
+.projecao-veredito strong {
+  font-family: var(--font-placar);
+  font-size: 1.9rem;
+  font-weight: 800;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.projecao-veredito span {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.detalhes-pequenos > summary {
+  min-height: 32px;
+  font-family: var(--font-texto);
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--muted);
+  justify-content: flex-start;
+  gap: 6px;
+}
+
+/* onde faltam votos */
+.faltam-linha {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "nome falta"
+    "barra barra"
+    "agora deve";
+  gap: 3px 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.faltam-linha > :nth-child(1) { grid-area: nome; }
+.faltam-linha > :nth-child(2) { grid-area: barra; }
+.faltam-linha > :nth-child(3) { grid-area: falta; }
+.faltam-linha > :nth-child(4) { grid-area: agora; }
+.faltam-linha > :nth-child(5) { grid-area: deve; }
+
+.faltam-barra {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--soft);
+  overflow: hidden;
+}
+
+.faltam-barra > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--navy), #3b82f6);
+  transition: width 0.8s ease;
+}
+
+.lista-faltam {
+  display: grid;
+  column-gap: 28px;
+}
+
+@media (min-width: 1024px) {
+  .lista-faltam {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+
+.para-virar-embutido {
+  padding: 4px 0 8px 14px;
+}
+
+/* notificações */
+.notificacoes {
+  display: grid;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--soft);
+}
+
 /* ---------- placar principal ---------- */
 
 .hero {

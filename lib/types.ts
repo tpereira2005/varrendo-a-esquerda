@@ -50,7 +50,7 @@ export type Race = {
 export type Notice = {
   id: string;
   key: string;
-  kind: 'virada' | 'marco' | 'estado' | 'estado-virou' | 'eleito';
+  kind: 'virada' | 'marco' | 'estado' | 'estado-virou' | 'eleito' | 'projecao';
   uf: string;
   cargo: number;
   tone: 'good' | 'bad' | 'neutral';
@@ -79,11 +79,36 @@ export type Snapshot = {
   };
   score: { flavio: number; lula: number; pending: number };
   toFlip: { trailing: 0 | 1; remaining: number; needPct: number | null; impossible: boolean } | null;
+  projection: Projection | null;
   mood: { label: string; src: string };
   timeline: { generatedAt: number; pctSections: number; votesA: number; votesB: number }[];
   events: Notice[];
   corrections: Notice[];
   collector: { refreshedAt: number; pauseUntil: number; lastError: string | null };
+};
+
+export type Projection = {
+  flavio: number;
+  lula: number;
+  low: number;
+  high: number;
+  sd: number;
+  probFlavio: number;
+  margin: number;
+  remaining: number;
+  remainingFraction: number;
+  nationalSwing: number;
+  statesFlavio: number;
+  statesLula: number;
+  perRegion: {
+    uf: string;
+    remaining: number;
+    pctSections: number;
+    shareNow: number | null;
+    shareRemaining: number;
+    finalShare: number;
+    netFlavio: number;
+  }[];
 };
 
 export type ExteriorCountry = {

@@ -76,6 +76,22 @@ export const exterior = sqliteTable(
   (t) => [primaryKey({ columns: [t.turn, t.cd] })],
 );
 
+/** Subscrições de notificações (Web Push). Só o endereço do serviço de push e as chaves públicas do aparelho. */
+export const pushSubs = sqliteTable('push_subs', {
+  endpoint: text('endpoint').primaryKey(),
+  p256dh: text('p256dh').notNull(),
+  auth: text('auth').notNull(),
+  createdAt: integer('created_at').notNull(),
+  lastOk: integer('last_ok'),
+  failures: integer('failures').notNull().default(0),
+});
+
+/** Até onde já foram enviadas notificações (instante do último aviso enviado). */
+export const pushState = sqliteTable('push_state', {
+  id: integer('id').primaryKey(),
+  lastAt: integer('last_at').notNull().default(0),
+});
+
 /** Um ponto por cada nova geração oficial de um ficheiro: alimenta o gráfico e os avisos. */
 export const timeline = sqliteTable(
   'timeline',

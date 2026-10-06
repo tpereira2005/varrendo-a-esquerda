@@ -38,6 +38,29 @@ Painel Flávio Bolsonaro (PL, 22) × Lula (PT, 13), do ponto de vista de quem to
 - **Animações:** números que deslizam e brilham quando mudam, boneco que reage, entrada dos cartões; desligáveis na opção "Animações" e automaticamente com "reduzir movimento" do sistema.
 - **Modo festejo:** só quando o TSE declara oficialmente o Flávio eleito. Abre um festejo em ecrã inteiro (fogo de artifício, confetes, boneco, fanfarra se o som estiver ativo; botão "Ecrã inteiro" no PC) uma vez por aparelho; depois o site fica em modo festejo, com o botão "Festejar outra vez". Se o Lula for eleito, aparece apenas uma mensagem sóbria.
 
+## Projeção (não oficial)
+
+- `lib/projecao.mjs`: em cada estado e no estrangeiro, os votos por apurar (votos válidos esperados − contados) são repartidos pela quota do Flávio na 1.ª volta entre os dois, corrigida pela deslocação observada nesse estado (com poucos votos contados, encolhe para a deslocação média do país). Assim a ordem de contagem dos estados não engana a projeção.
+- Incerteza (desvio-padrão): ~3,75 pp antes dos votos, ~2,2 pp com 40% contado, ~0,8 pp com 80%, ~0,3 pp no fim. Probabilidade de vitória pela distribuição normal; nunca mostra 100% (">99%").
+- Avisos "Projeção: o X deve ganhar" (≥ 90%) e "vai ganhar" (≥ 99%), só a partir de 10% apurado, uma vez por nível. Chave própria (`2026:2:PROJ`), por isso nunca são "corrigidos" pelos ficheiros oficiais.
+- Desaparece quando o TSE declara o vencedor. A vitória oficial (e o festejo) continua a depender só do TSE.
+- "Onde faltam votos": estados com mais votos por apurar e o saldo que devem dar a cada candidato, com o "para virar".
+
+## Notificações com o site fechado (Web Push)
+
+- Push vazio assinado com VAPID (`lib/webpush.mjs`); o service worker (`public/sw.js`) pede `/api/push/ultimo` e mostra o aviso mais recente.
+- Enviam-se: viradas, marcos e resultado oficial do Presidente, e os avisos da projeção. No máximo uma notificação por lote de recolha.
+- APIs: `GET/POST/DELETE /api/push` (chave pública e subscrições; só serviços de push conhecidos), `POST /api/push/teste` (teste, 1 por minuto), `GET /api/push/ultimo`.
+- **Configuração no Sites (uma vez):** segredos `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` e `VAPID_SUBJECT`. Os valores estão em `segredos/vapid-producao.txt` (fora do repositório; para gerar outros: `npm run chaves:vapid`). Sem estes segredos, o painel de notificações simplesmente não aparece.
+- **iPhone (iOS 16.4+):** Partilhar → Adicionar ao ecrã principal → abrir pelo ícone → Ativar notificações → Enviar teste.
+- Migração `drizzle/0005_notificacoes.sql` (tabelas `push_subs` e `push_state`), aditiva.
+
+## Página: atualização e estado
+
+- O relógio das atualizações corre num Web Worker: num separador escondido, o Chrome não o abranda como os temporizadores normais (sem Worker, usa-se `setTimeout`).
+- Por baixo do cabeçalho: estado da ligação ao TSE (última leitura, último erro, pausas pedidas pelo TSE).
+- "Partilhar o resultado": imagem 1080×1350 desenhada no browser (folha de partilha no telemóvel; descarga no PC).
+
 ## Estrangeiro
 
 - O TSE publica o total do estrangeiro (ficheiro `zz`, tratado como a disputa `ZZ`), um ficheiro por cidade com posto consular (186 cidades) e um resumo com o progresso de todas (`zz-e006258-ab.json`).

@@ -36,6 +36,13 @@
       "when": 1791318527799,
       "tag": "0004_estrangeiro",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1791330353896,
+      "tag": "0005_notificacoes",
+      "breakpoints": true
     }
   ]
 }

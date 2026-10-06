@@ -108,7 +108,7 @@ function Fogo() {
 }
 
 /** Festejo em ecrã inteiro quando o TSE declara o Flávio eleito. */
-export function Festejo({ winner, other, sound, onClose }: { winner: Cand; other: Cand; sound: boolean; onClose: () => void }) {
+export function Festejo({ winner, other, sound, onClose, onShare }: { winner: Cand; other: Cand; sound: boolean; onClose: () => void; onShare?: () => void }) {
   const close = useRef<HTMLButtonElement>(null);
   const [full, setFull] = useState(false);
   const [canFull, setCanFull] = useState(false);
@@ -158,6 +158,11 @@ export function Festejo({ winner, other, sound, onClose }: { winner: Cand; other
             </button>
           )}
           <button className="btn" onClick={() => void fanfare()}>Tocar fanfarra</button>
+          {onShare && (
+            <button className="btn" onClick={onShare}>
+              Partilhar a vitória
+            </button>
+          )}
           <button ref={close} className="btn btn-forte" onClick={onClose}>
             Ver resultados
           </button>

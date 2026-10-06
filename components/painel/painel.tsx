@@ -9,8 +9,11 @@ import { Avisos } from './avisos';
 import { Arquivo } from './arquivo';
 import { Estrangeiro } from './estrangeiro';
 import { Festejo } from './festejo';
+import { Projecao, OndeFaltam } from './projecao';
+import { Notificacoes } from './notificacoes';
+import { shareResult } from './partilhar';
 import { chime, keepAwake, reacquireAwake, unlockAudio } from './efeitos';
-import { compact, pct, shortName, timeBrasilia, timeLisbon, FLAVIO } from './format';
+import { ago, compact, pct, shortName, timeBrasilia, timeLisbon, FLAVIO } from './format';
 
 const read = (k: string) => {
   try {
@@ -132,10 +135,28 @@ export default function Painel({ initial }: { initial: Snapshot | null }) {
   }, [data, alerts, sound]);
 
   // Atualização contínua; ao voltar ao separador, atualiza logo.
+  // O relógio que marca as atualizações corre num Web Worker: o Chrome abranda muito os temporizadores
+  // de um separador escondido (até 1 por minuto), mas não os de um worker. Sem worker, usa setTimeout.
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout>;
     let stopped = false;
+    let worker: Worker | null = null;
+    try {
+      const code = 'let t;onmessage=(e)=>{clearTimeout(t);t=setTimeout(()=>postMessage(0),e.data)}';
+      worker = new Worker(URL.createObjectURL(new Blob([code], { type: 'text/javascript' })));
+    } catch {
+      worker = null;
+    }
+    const schedule = (ms: number) => {
+      if (stopped) return;
+      if (worker) worker.postMessage(ms);
+      else timer = setTimeout(tick, ms);
+    };
+    if (worker) worker.onmessage = () => void tick();
+    let running = false;
     const tick = async () => {
+      if (running) return;
+      running = true;
       try {
         const r = await fetch(`/api/state?uf=${encodeURIComponent(uf)}`, { cache: 'no-store' });
         if (!r.ok) throw new Error(((await r.json().catch(() => null)) as { error?: string } | null)?.error ?? 'Sem ligação');
@@ -146,9 +167,10 @@ export default function Painel({ initial }: { initial: Snapshot | null }) {
       } catch (e) {
         setError(e instanceof Error ? e.message : 'Sem ligação');
       }
-      if (!stopped) timer = setTimeout(tick, pollDelay(dataRef.current));
+      running = false;
+      schedule(pollDelay(dataRef.current));
     };
-    timer = setTimeout(tick, dataRef.current ? pollDelay(dataRef.current) : 0);
+    schedule(dataRef.current ? pollDelay(dataRef.current) : 0);
     const wake = () => {
       if (document.visibilityState !== 'visible') return;
       reacquireAwake();
@@ -159,11 +181,22 @@ export default function Painel({ initial }: { initial: Snapshot | null }) {
     return () => {
       stopped = true;
       clearTimeout(timer);
+      worker?.terminate();
       document.removeEventListener('visibilitychange', wake);
     };
   }, [uf]);
 
   const closeParty = useCallback(() => setParty(false), []);
+  const [sharing, setSharing] = useState(false);
+  const share = useCallback(async () => {
+    if (!data) return;
+    setSharing(true);
+    try {
+      await shareResult(data);
+    } finally {
+      setSharing(false);
+    }
+  }, [data]);
 
   if (!data || !national) {
     return (
@@ -187,6 +220,7 @@ export default function Painel({ initial }: { initial: Snapshot | null }) {
   return (
     <main className={`wrap ${festejo ? 'modo-festejo' : ''}`}>
       <Cabecalho data={data} now={now} festejo={festejo} />
+      <EstadoTSE data={data} now={now} error={error} />
       <BarraFixa data={data} />
 
       {winner &&
@@ -200,9 +234,14 @@ export default function Painel({ initial }: { initial: Snapshot | null }) {
                 Resultado oficial do TSE · {pct(winner.pct, 2)} dos votos válidos · a esquerda foi varrida! 🧹
               </div>
             </div>
-            <button className="btn btn-forte shrink-0" onClick={() => (sound && unlockAudio(), setParty(true))}>
-              🎉 Festejar outra vez
-            </button>
+            <div className="flex flex-wrap gap-2 shrink-0">
+              <button className="btn btn-forte" onClick={() => (sound && unlockAudio(), setParty(true))}>
+                🎉 Festejar outra vez
+              </button>
+              <button className="btn" onClick={share} disabled={sharing}>
+                {sharing ? 'A preparar…' : 'Partilhar a vitória'}
+              </button>
+            </div>
           </section>
         ) : (
           <section className="card text-center">
@@ -220,9 +259,15 @@ export default function Painel({ initial }: { initial: Snapshot | null }) {
         um vazio enorme quando um lado tinha poucos cartões, por exemplo antes do fecho das urnas).
         Telemóvel: tudo numa coluna, pela mesma ordem.
       */}
-      {((data.toFlip && p && p.pctSections > 0) || data.timeline.length > 0) && (
+      <div className="partilhar-linha">
+        <button className="btn" onClick={share} disabled={sharing}>
+          {sharing ? 'A preparar a imagem…' : '📤 Partilhar o resultado'}
+        </button>
+      </div>
+
+      {(data.projection || data.timeline.length > 0) && (
         <div className="par">
-          {data.toFlip && p && p.pctSections > 0 && <ParaVirar data={data} />}
+          {data.projection && <Projecao data={data} />}
           {data.timeline.length > 0 && (
             <section className="card">
               <h2>Evolução da noite</h2>
@@ -230,6 +275,13 @@ export default function Painel({ initial }: { initial: Snapshot | null }) {
             </section>
           )}
         </div>
+      )}
+
+      {/* "Para virar" e "Onde faltam votos" falam do mesmo: os votos por apurar. */}
+      {data.projection && p && p.pctSections > 0 ? (
+        <OndeFaltam data={data}>{data.toFlip && <ParaVirar data={data} embedded />}</OndeFaltam>
+      ) : (
+        data.toFlip && p && p.pctSections > 0 && <ParaVirar data={data} />
       )}
 
       <section className="card">
@@ -249,18 +301,16 @@ export default function Painel({ initial }: { initial: Snapshot | null }) {
           <Mapa states={data.states} selected={uf} onSelect={select} />
         </section>
 
-        <div className="pilha">
-          <section className="card">
-            <h2 className="mb-2">Detalhe do estado</h2>
-            <DetalheEstado data={data} uf={uf} onSelect={select} />
-          </section>
-
-          <section className="card">
-            <h2 className="mb-2">Face à 1.ª volta</h2>
-            <Crescimento states={data.states} onSelect={select} />
-          </section>
-        </div>
+        <section className="card">
+          <h2 className="mb-2">Detalhe do estado</h2>
+          <DetalheEstado data={data} uf={uf} onSelect={select} />
+        </section>
       </div>
+
+      <section className="card">
+        <h2 className="mb-2">Face à 1.ª volta</h2>
+        <Crescimento states={data.states} onSelect={select} />
+      </section>
 
       <Estrangeiro data={data} now={now} />
 
@@ -314,7 +364,7 @@ export default function Painel({ initial }: { initial: Snapshot | null }) {
           <div className="text-sm opacity-90">{toast.detail}</div>
         </div>
       )}
-      {party && festejo && winner && p && <Festejo winner={winner} other={p.cands[1]} sound={sound} onClose={closeParty} />}
+      {party && festejo && winner && p && <Festejo winner={winner} other={p.cands[1]} sound={sound} onClose={closeParty} onShare={share} />}
     </main>
   );
 }
@@ -423,6 +473,42 @@ function Cabecalho({ data, now, festejo = false }: { data: Snapshot | null; now:
   );
 }
 
+/** Estado da ligação ao TSE: última leitura, erros e pausas, para se perceber logo se algo falhou. */
+function EstadoTSE({ data, now, error }: { data: Snapshot; now: number; error: string | null }) {
+  const success = Math.max(0, ...[data.national, ...data.states].map((r) => r.meta.successAt ?? 0));
+  const paused = data.collector.pauseUntil > data.serverNow;
+  let tone: 'ok' | 'aviso' | 'erro' | 'neutro' = 'neutro';
+  let text: string;
+  if (error) {
+    tone = 'erro';
+    text = `Sem ligação ao site (${error})`;
+  } else if (data.paused) {
+    text = 'Recolha em pausa · a mostrar os resultados guardados';
+  } else if (!data.active) {
+    text = data.phase === 'encerrado' ? 'Recolha terminada · resultados guardados' : `Recolha começa às ${timeLisbon(data.opensAt)} em Lisboa (25 de outubro)`;
+  } else if (paused) {
+    tone = 'erro';
+    text = `O TSE pediu uma pausa · nova consulta às ${timeLisbon(data.collector.pauseUntil)}`;
+  } else if (!success) {
+    tone = 'aviso';
+    text = 'A aguardar os primeiros ficheiros do TSE';
+  } else {
+    const age = now - success;
+    tone = age > 120_000 ? 'aviso' : 'ok';
+    text = `TSE: última leitura ${ago(success, now)}`;
+    if (data.collector.lastError) {
+      tone = 'aviso';
+      text += ` · último erro: ${data.collector.lastError}`;
+    }
+  }
+  return (
+    <div className={`estado-tse estado-${tone}`} role="status">
+      <i aria-hidden="true" />
+      {text}
+    </div>
+  );
+}
+
 /** Resumo fixo no topo, visível quando o placar principal sai do ecrã. */
 function BarraFixa({ data }: { data: Snapshot }) {
   const [visible, setVisible] = useState(false);
@@ -453,7 +539,7 @@ function BarraFixa({ data }: { data: Snapshot }) {
   );
 }
 
-function ParaVirar({ data }: { data: Snapshot }) {
+function ParaVirar({ data, embedded = false }: { data: Snapshot; embedded?: boolean }) {
   const f = data.toFlip!;
   const flavioBehind = f.trailing === 0;
   const cands = data.national.parsed!.cands;
@@ -466,10 +552,14 @@ function ParaVirar({ data }: { data: Snapshot }) {
   // Medidor de 50% (basta empatar o resto) a 100% (precisaria de todos os votos que faltam).
   const pos = need == null ? 100 : Math.max(0, Math.min(100, ((need - 50) / 50) * 100));
   const verdict = need == null ? 'impossível' : need > 60 ? 'muito difícil' : need > 55 ? 'difícil' : need > 52 ? 'possível' : 'tudo em aberto';
+  const Wrapper = embedded ? 'div' : 'section';
   return (
-    <section className="card" style={{ borderLeft: `6px solid ${flavioBehind ? 'var(--lula)' : 'var(--flavio)'}` }}>
+    <Wrapper
+      className={embedded ? 'para-virar-embutido' : 'card'}
+      style={{ borderLeft: `6px solid ${flavioBehind ? 'var(--lula)' : 'var(--flavio)'}` }}
+    >
       <div className="flex items-center justify-between gap-2">
-        <h2>Para virar</h2>
+        {embedded ? <h3 className="font-bold">Para virar</h3> : <h2>Para virar</h2>}
         <span className="tag">estimativa · não oficial</span>
       </div>
       <p className="font-semibold mt-1">
@@ -483,10 +573,24 @@ function ParaVirar({ data }: { data: Snapshot }) {
         <span>75%</span>
         <span>100% · impossível</span>
       </div>
+      {data.projection && (() => {
+        // Liga o "para virar" à projeção: não basta a percentagem necessária, importa onde estão os votos que faltam.
+        const net = data.projection.perRegion.reduce((n, r) => n + r.netFlavio, 0);
+        const helps = (net >= 0) === flavioBehind ? 'ajudam' : 'dificultam';
+        return (
+          <p className="text-sm mt-2">
+            Pela projeção, os votos que faltam {helps} {flavioBehind ? 'o Flávio' : 'o Lula'}: devem dar{' '}
+            <b className={net >= 0 ? 'c-flavio' : 'c-lula'}>
+              +{compact(Math.abs(net))} ao {net >= 0 ? 'Flávio' : 'Lula'}
+            </b>
+            , por estarem sobretudo em estados onde {net >= 0 ? 'ele' : 'o Lula'} vai à frente.
+          </p>
+        );
+      })()}
       <p className="hint mt-2">
         Faltam ~{compact(f.remaining)} votos válidos, estimados com os votos da 1.ª volta nas secções ainda por apurar (estados e estrangeiro).
       </p>
-    </section>
+    </Wrapper>
   );
 }
 
@@ -504,11 +608,9 @@ type RodapeProps = {
 };
 
 function Rodape({ data, error, alerts, setAlerts, sound, setSound, awake, setAwake, motion, setMotion }: RodapeProps) {
-  const [perm, setPerm] = useState<string>('default');
   const [canAwake, setCanAwake] = useState(false);
   useEffect(() => {
     /* eslint-disable react-hooks/set-state-in-effect */
-    setPerm(typeof Notification === 'undefined' ? 'unsupported' : Notification.permission);
     setCanAwake('wakeLock' in navigator);
     /* eslint-enable react-hooks/set-state-in-effect */
   }, []);
@@ -518,6 +620,7 @@ function Rodape({ data, error, alerts, setAlerts, sound, setSound, awake, setAwa
       {data.collector.pauseUntil > data.serverNow && (
         <p className="c-lula">O TSE pediu uma pausa; nova consulta às {timeLisbon(data.collector.pauseUntil)}.</p>
       )}
+      <Notificacoes />
       <div className="opcoes">
         <label>
           <input type="checkbox" checked={alerts} onChange={(e) => setAlerts(e.target.checked)} />
@@ -537,12 +640,7 @@ function Rodape({ data, error, alerts, setAlerts, sound, setSound, awake, setAwa
             Manter o ecrã ligado
           </label>
         )}
-        {perm === 'default' && (
-          <button className="btn" onClick={() => Notification.requestPermission().then(setPerm)}>
-            Ativar notificações do sistema
-          </button>
-        )}
-        {perm === 'granted' && <span className="hint self-center">Notificações ativas quando o separador estiver em segundo plano.</span>}
+
       </div>
       <p className="hint">
         Dados: Tribunal Superior Eleitoral (eleições {data.ids.federal} e {data.ids.estadual}

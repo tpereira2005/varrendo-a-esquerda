@@ -9,7 +9,9 @@ Inspirado no projeto [ODevLibertario/varrendo-a-esquerda](https://github.com/ODe
 ## O que mostra
 
 - **Placar nacional** com o boneco do projeto original, que reage ao que o candidato atrás precisaria para virar.
-- **"Para virar"**: percentagem dos votos por apurar de que o candidato atrás precisaria (estimativa identificada como tal).
+- **"Para virar"** e **"Onde faltam votos"**: o que o candidato atrás precisaria e onde estão os votos por apurar.
+- **Projeção** do resultado final com margem de erro e probabilidade de vitória (estimativa estatística, sempre identificada como não oficial).
+- **Notificações no telemóvel com o site fechado** (Web Push, também no iPhone com o site no ecrã principal) e **imagem para partilhar** o resultado.
 - **Evolução da noite**, **mapa** por estado (com os estados que viraram face à 1.ª volta) e **detalhe de cada estado**.
 - **Voto no estrangeiro** por país e cidade com consulado, com Portugal no topo.
 - **Governadores** nos 7 estados com 2.ª volta e **arquivo da 1.ª volta** (estados e estrangeiro por país).
@@ -44,6 +46,7 @@ npm run dev            # site local em http://localhost:5173
 npm test               # testes
 npm run simulador      # simulador do TSE para ensaiar a noite (ver docs/operacao.md)
 npm run dados:1a-volta # regenera o arquivo da 1.ª volta a partir de data/fontes
+npm run chaves:vapid   # gera chaves para as notificações (guardar a privada só no Sites)
 npm run lint
 npm run build
 ```

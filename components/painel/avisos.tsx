@@ -5,7 +5,7 @@ import { timeLisbon } from './format';
 
 const LIMIT = 8;
 const TONE = { good: 'var(--good)', bad: 'var(--bad)', neutral: 'var(--muted)' } as const;
-const ICON: Record<Notice['kind'], string> = { virada: '⇅', marco: '%', estado: '✓', 'estado-virou': '↻', eleito: '★' };
+const ICON: Record<Notice['kind'], string> = { virada: '⇅', marco: '%', estado: '✓', 'estado-virou': '↻', eleito: '★', projecao: '◎' };
 
 export function Avisos({ events, corrections }: { events: Notice[]; corrections: Notice[] }) {
   const [all, setAll] = useState(false);
