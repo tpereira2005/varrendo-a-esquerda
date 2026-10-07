@@ -75,7 +75,8 @@ Painel Flávio Bolsonaro (PL, 22) × Lula (PT, 13), do ponto de vista de quem to
 - Ritmo: o ficheiro nacional é verificado a cada 10 s (pedido condicional). Quando muda, todos os outros ficheiros entram logo no lote; sem mudanças, o estado escolhido é verificado a cada 20 s e os restantes a cada 60 s. Um ficheiro final deixa de ser pedido. A página atualiza a cada 4 s (15 s em segundo plano).
 - A configuração `ele-c.json` é lida no máximo a cada 10 minutos. Os IDs 6258/6260 (campo `cdt2` da 1.ª volta) ficam "confirmados" quando o TSE publicar as eleições com `t=2`.
 - 404 (ficheiro ainda não publicado): nova tentativa ao ritmo normal. 403/429: pausa global de pelo menos 10 minutos (ou o `Retry-After`).
-- A recolha é feita pelos pedidos de quem tem a página **aberta e visível**. A tarefa horária do Sites (`POST /api/collect`) é só uma rede de segurança.
+- A recolha avança com cada pedido a `/api/state` (de quem tem a página aberta). **Com o site fechado**, o workflow do GitHub Actions `.github/workflows/noite-eleitoral.yml` faz esse pedido a cada 15 s: arranca sozinho a 25/10 às 19h20 UTC (19h20 em Lisboa) e dura até 1 h depois do resultado oficial (máx. ~5h45). Pode ser lançado à mão: GitHub → Actions → "Noite eleitoral" → Run workflow. Não precisa de segredos.
+- A tarefa agendada do Sites (`POST /api/collect`, no máximo 1 vez por hora) é só uma rede de segurança extra.
 
 ## Variáveis
 

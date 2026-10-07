@@ -1,0 +1,55 @@
+# Mantém a recolha do TSE ativa na noite da eleição, mesmo sem ninguém com o site aberto.
+#
+# O site só lê o TSE quando recebe pedidos (cada visita a /api/state avança a recolha, com uma
+# concessão que impede recolhas sobrepostas). Este workflow faz esse pedido a cada 15 s, como um
+# visitante: não precisa de segredos e não fala diretamente com o TSE.
+#
+# Arranque automático: domingo, 25/10/2026, às 19h20 UTC (= 19h20 em Lisboa, já em hora de inverno;
+# 16h20 em Brasília), 10 minutos antes de a recolha abrir. Também se pode lançar à mão
+# (separador Actions → "Noite eleitoral" → Run workflow).
+name: Noite eleitoral
+
+on:
+  schedule:
+    - cron: '20 19 25 10 *'
+  workflow_dispatch:
+    inputs:
+      minutos:
+        description: 'Durante quantos minutos manter a recolha ativa (máx. 345)'
+        default: '345'
+
+permissions: {}
+
+concurrency:
+  group: noite-eleitoral
+  cancel-in-progress: false
+
+jobs:
+  manter-recolha:
+    runs-on: ubuntu-latest
+    timeout-minutes: 355
+    env:
+      SITE: https://varrendo-eleicoes-brasil-2026.tomaspereira.chatgpt.site
+      MINUTOS: ${{ github.event.inputs.minutos || '345' }}
+    steps:
+      - name: Pedir o estado a cada 15 segundos
+        run: |
+          if [ "${{ github.event_name }}" = "schedule" ] && [ "$(date -u +%Y)" != "2026" ]; then
+            echo "Só para a eleição de 2026."; exit 0
+          fi
+          fim=$(( $(date +%s) + MINUTOS * 60 ))
+          encerrado_desde=0
+          while [ "$(date +%s)" -lt "$fim" ]; do
+            resposta=$(curl -sS -m 25 "$SITE/api/state?uf=BR" || echo '{}')
+            fase=$(echo "$resposta" | jq -r '.phase // "?"' 2>/dev/null || echo '?')
+            ativo=$(echo "$resposta" | jq -r '.active // false' 2>/dev/null || echo false)
+            erro=$(echo "$resposta" | jq -r '.collector.lastError // ""' 2>/dev/null || echo '')
+            pct=$(echo "$resposta" | jq -r '.national.parsed.pctSections // 0' 2>/dev/null || echo 0)
+            echo "$(date -u +%H:%M:%S) fase=$fase ativo=$ativo apurado=${pct}% ${erro:+erro=$erro}"
+            # Depois do resultado oficial, continua 60 min (governadores, estrangeiro, correções) e termina.
+            if [ "$fase" = "encerrado" ]; then
+              [ "$encerrado_desde" -eq 0 ] && encerrado_desde=$(date +%s)
+              if [ $(( $(date +%s) - encerrado_desde )) -gt 3600 ]; then echo "Resultado oficial há mais de 1 hora: fim."; break; fi
+            fi
+            sleep 15
+          done
