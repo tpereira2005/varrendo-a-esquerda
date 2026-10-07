@@ -46,9 +46,16 @@ export function Mercado({ data, now }: { data: Snapshot; now: number }) {
 
   return (
     <section className="card grid gap-3">
-      <div className="flex items-center justify-between gap-2">
-        <h2>Mercado de apostas</h2>
-        <span className="tag">{m.stale ? 'desatualizado · não oficial' : 'não oficial'}</span>
+      <div className="flex items-start justify-between gap-2">
+        {/* Título e fonte; no telemóvel, se não couber, a fonte desce para debaixo do título. */}
+        <div className="mercado-titulo">
+          <h2>Mercado de apostas</h2>
+          <span className="mercado-fonte">
+            <LogoPolymarket />
+            Polymarket
+          </span>
+        </div>
+        <span className="tag shrink-0">{m.stale ? 'desatualizado · não oficial' : 'não oficial'}</span>
       </div>
 
       {/* PC: números à esquerda, gráfico à direita. Telemóvel: tudo numa coluna. */}
@@ -112,10 +119,20 @@ export function Mercado({ data, now }: { data: Snapshot; now: number }) {
       </div>
 
       <p className="hint">
-        Não é sondagem nem resultado oficial. {m.volume > 0 && <>{compact(Math.round(m.volume))} US$ apostados · </>}
+        Fonte: Polymarket · não é sondagem nem resultado oficial · {m.volume > 0 && <>{compact(Math.round(m.volume))} US$ apostados · </>}
         atualizado {ago(m.at, now)}.
       </p>
     </section>
+  );
+}
+
+/** Ícone simplificado do Polymarket (desenhado aqui, para não depender do site deles, bloqueado em Portugal). */
+function LogoPolymarket() {
+  return (
+    <svg viewBox="0 0 24 24" className="logo-polymarket" aria-hidden="true">
+      <rect width="24" height="24" rx="6" fill="#1652f0" />
+      <path d="M12 4.6 18.4 8.3v7.4L12 19.4 5.6 15.7V8.3Z M5.6 8.3 12 12l6.4-3.7M12 12v7.4" fill="none" stroke="#fff" strokeWidth="1.7" strokeLinejoin="round" />
+    </svg>
   );
 }
 

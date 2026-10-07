@@ -412,6 +412,26 @@ body {
 }
 
 /* mercado de apostas (Polymarket) */
+.mercado-titulo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  min-width: 0;
+}
+.mercado-fonte {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+.logo-polymarket {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
 .mercado-corpo {
   display: grid;
   gap: 16px;
