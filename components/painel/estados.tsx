@@ -72,7 +72,7 @@ export function Crescimento({ states, onSelect }: { states: Race[]; onSelect: (u
         {lula.length ? <Ranking rows={lula} k="lula" onSelect={onSelect} /> : <p className="hint">Ainda em nenhum estado.</p>}
       </div>
       <p className="hint sm:col-span-2">
-        Quota de cada um contando só os dois finalistas: 2.ª volta (apuramento em curso) comparada com a 1.ª volta. O que um ganha, o outro perde.
+        Face à 1.ª volta, contando só os dois finalistas.
       </p>
     </div>
   );

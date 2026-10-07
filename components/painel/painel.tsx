@@ -595,7 +595,7 @@ function ParaVirar({ data, embedded = false }: { data: Snapshot; embedded?: bool
         );
       })()}
       <p className="hint mt-2">
-        Faltam ~{compact(f.remaining)} votos válidos, estimados com os votos da 1.ª volta nas secções ainda por apurar (estados e estrangeiro).
+        Faltam ~{compact(f.remaining)} votos válidos por apurar (estimativa).
       </p>
     </Wrapper>
   );

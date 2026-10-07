@@ -14,7 +14,7 @@ export function Avisos({ events, corrections }: { events: Notice[]; corrections:
   const sorted = [...events].sort((a, b) => (b.at ?? b.noticedAt) - (a.at ?? a.noticedAt) || weight(b) - weight(a));
   const list = all ? sorted : sorted.slice(0, LIMIT);
   if (!list.length && !corrections.length) {
-    return <p className="hint">Viradas, marcos do apuramento, estados decididos e o resultado oficial vão aparecer aqui.</p>;
+    return <p className="hint">Os avisos da noite aparecem aqui.</p>;
   }
   return (
     <div className="grid gap-2">

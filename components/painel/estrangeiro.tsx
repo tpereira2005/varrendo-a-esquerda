@@ -104,7 +104,7 @@ export function Estrangeiro({ data, now }: { data: Snapshot; now: number }) {
         )}
       </div>
       <p className="hint">
-        Antes de haver votos, a barra mostra a 1.ª volta entre os dois (a tracejado). Toca num país para ver as cidades. Portugal aparece sempre primeiro.
+        Toca num país para ver as cidades.
       </p>
     </section>
   );

@@ -113,8 +113,7 @@ export function OndeFaltam({ data, children }: { data: Snapshot; children?: Reac
         })}
       </ol>
       <p className="hint">
-        Votos por apurar estimados com os votos válidos esperados em cada estado; “deve dar” é a diferença que esses votos devem acrescentar, segundo a
-        projeção.
+        “Deve dar”: a vantagem que os votos por apurar devem acrescentar, segundo a projeção.
       </p>
     </section>
   );

@@ -63,7 +63,7 @@ export function Evolucao({ data }: { data: Snapshot }) {
         <circle cx={sx(last.x)} cy={sy(last.y)} r="4.5" fill={last.y >= 0 ? 'var(--flavio)' : 'var(--lula)'} />
       </svg>
       <figcaption className="hint mt-1">
-        Acima de zero, o Flávio vai à frente; abaixo, o Lula. Eixo horizontal: secções apuradas. ● dourado = virada.
+        Acima de zero, o Flávio vai à frente; abaixo, o Lula. ● dourado = virada.
       </figcaption>
     </figure>
   );
