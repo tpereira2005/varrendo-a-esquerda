@@ -176,14 +176,17 @@ test('contagem desequilibrada (estados do Flávio contados primeiro): mais incer
   assert.ok(extraEven < 0.01 && extraEven < p.sd / without.sd - 1, String(extraEven));
 });
 
-test('noite real (2.ª volta de 2022, estado a estado): resultado sempre dentro do intervalo e nunca confiante no lado errado', async () => {
-  const { at2022, moments2022, truth2022 } = await import('../scripts/backtest-2022.mjs');
-  const truth = truth2022(); // Bolsonaro 49,10%: ganhou o Lula
-  for (const m of moments2022()) {
-    const { regions, histories } = at2022(m.t);
-    const p = project(regions, histories);
-    assert.ok(truth >= p.low && truth <= p.high, `${m.target}: ${p.low}–${p.high} não contém ${truth}`);
-    assert.ok(Math.abs(p.flavio - truth) < 1, `${m.target}: erro ${p.flavio - truth}`);
-    assert.ok(p.probFlavio < 0.5, `${m.target}: deu o Bolsonaro como favorito (${p.probFlavio})`);
+test('noites reais (2.ª volta de 2022 e 1.ª volta de 2026, estado a estado): resultado sempre no intervalo, nunca confiante no lado errado', async () => {
+  const { NOITES } = await import('../scripts/backtest.mjs');
+  for (const n of NOITES) {
+    const truth = n.truth();
+    for (const m of n.moments()) {
+      const { regions, histories } = n.at(m.t);
+      const p = project(regions, histories);
+      const tag = `${n.name} ${m.target}`;
+      assert.ok(truth >= p.low && truth <= p.high, `${tag}: ${p.low}–${p.high} não contém ${truth}`);
+      assert.ok(!((p.probFlavio >= 0.9 && truth < 50) || (p.probFlavio <= 0.1 && truth > 50)), `${tag}: confiante no lado errado`);
+      if (m.target >= 0.5) assert.ok(Math.abs(p.flavio - truth) < 1, `${tag}: erro ${p.flavio - truth}`);
+    }
   }
 });

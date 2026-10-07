@@ -20,7 +20,7 @@
     "install:ci": "node scripts/install-ci.mjs",
     "chaves:vapid": "node scripts/vapid-keys.mjs",
     "projecao:simular": "node scripts/avaliar-projecao.mjs 500",
-    "projecao:2022": "node scripts/backtest-2022.mjs"
+    "projecao:real": "node scripts/backtest.mjs"
   },
   "dependencies": {
     "drizzle-orm": "0.45.2",
