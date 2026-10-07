@@ -11,6 +11,7 @@ Inspirado no projeto [ODevLibertario/varrendo-a-esquerda](https://github.com/ODe
 - **Placar nacional** com o boneco do projeto original, que reage ao que o candidato atrás precisaria para virar.
 - **"Para virar"** e **"Onde faltam votos"**: o que o candidato atrás precisaria e onde estão os votos por apurar.
 - **Projeção** do resultado final com margem de erro e probabilidade de vitória (estimativa estatística, sempre identificada como não oficial).
+- **Mercado de apostas** (Polymarket): probabilidade de vitória segundo as apostas, com o gráfico da campanha e das últimas 24 h, comparada com a projeção do site (não oficial).
 - **Notificações no telemóvel com o site fechado** (Web Push, também no iPhone com o site no ecrã principal) e **imagem para partilhar** o resultado.
 - **Evolução da noite**, **mapa** por estado (com os estados que viraram face à 1.ª volta) e **detalhe de cada estado**.
 - **Voto no estrangeiro** por país e cidade com consulado, com Portugal no topo.

@@ -105,3 +105,15 @@ export const timeline = sqliteTable(
   },
   (t) => [primaryKey({ columns: [t.key, t.generatedAt] })],
 );
+
+/** Mercado de previsões (Polymarket): a última leitura boa e as séries de preços do Flávio. Nunca é resultado oficial. */
+export const mercado = sqliteTable('mercado', {
+  id: integer('id').primaryKey(),
+  payload: text('payload'),
+  recent: text('recent'),
+  campaign: text('campaign'),
+  campaignAt: integer('campaign_at').notNull().default(0),
+  checkedAt: integer('checked_at').notNull().default(0),
+  successAt: integer('success_at'),
+  error: text('error'),
+});

@@ -10,6 +10,7 @@ import { Arquivo } from './arquivo';
 import { Estrangeiro } from './estrangeiro';
 import { Festejo } from './festejo';
 import { Projecao, OndeFaltam } from './projecao';
+import { Mercado } from './mercado';
 import { Notificacoes } from './notificacoes';
 import { shareResult } from './partilhar';
 import { chime, keepAwake, reacquireAwake, unlockAudio } from './efeitos';
@@ -270,6 +271,9 @@ export default function Painel({ initial }: { initial: Snapshot | null }) {
           )}
         </div>
       )}
+
+      {/* Mercado de apostas: a toda a largura, com o gráfico ao lado dos números no PC. */}
+      {data.market && <Mercado data={data} now={now} />}
 
       {/* "Para virar" e "Onde faltam votos" falam do mesmo: os votos por apurar. */}
       {data.projection && p && p.pctSections > 0 ? (

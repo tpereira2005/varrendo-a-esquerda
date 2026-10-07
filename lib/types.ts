@@ -80,6 +80,7 @@ export type Snapshot = {
   score: { flavio: number; lula: number; pending: number };
   toFlip: { trailing: 0 | 1; remaining: number; needPct: number | null; impossible: boolean } | null;
   projection: Projection | null;
+  market: Market | null;
   mood: { label: string; src: string };
   timeline: { generatedAt: number; pctSections: number; votesA: number; votesB: number }[];
   events: Notice[];
@@ -109,6 +110,20 @@ export type Projection = {
     finalShare: number;
     netFlavio: number;
   }[];
+};
+
+/** Mercado de previsões (Polymarket). Percentagens 0–100; séries em [instante ms, % do Flávio]. */
+export type Market = {
+  flavio: number;
+  lula: number;
+  change24h: number;
+  volume: number;
+  closed: boolean;
+  at: number;
+  stale: boolean;
+  error: string | null;
+  recent: [number, number][];
+  campaign: [number, number][];
 };
 
 export type ExteriorCountry = {

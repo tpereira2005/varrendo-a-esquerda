@@ -46,6 +46,14 @@ Painel Flávio Bolsonaro (PL, 22) × Lula (PT, 13), do ponto de vista de quem to
 - Desaparece quando o TSE declara o vencedor. A vitória oficial (e o festejo) continua a depender só do TSE.
 - "Onde faltam votos": estados com mais votos por apurar e o saldo que devem dar a cada candidato, com o "para virar".
 
+## Mercado de apostas (Polymarket, não oficial)
+
+- `lib/mercado.mjs`: lê o evento público `brazil-presidential-election` (API Gamma) e o histórico de preços do Flávio (API CLOB). Sem chave nem conta.
+- Quem pede `/api/state` (página aberta ou workflow da noite eleitoral) dispara a leitura em segundo plano: de minuto a minuto na janela da noite eleitoral, de 10 em 10 minutos fora dela; o histórico da campanha de 6 em 6 horas. A base garante um pedido de cada vez.
+- Se o Polymarket falhar, a página continua a mostrar a última leitura boa, com a hora; passa a "desatualizado" ao fim de 10 min (noite) ou 3 h (resto).
+- Nunca entra nos avisos, nas notificações, no festejo nem no "Eleito": só o TSE decide.
+- Migração `drizzle/0006_mercado.sql` (tabela `mercado`), aditiva.
+
 ## Notificações com o site fechado (Web Push)
 
 - Push vazio assinado com VAPID (`lib/webpush.mjs`); o service worker (`public/sw.js`) pede `/api/push/ultimo` e mostra o aviso mais recente.

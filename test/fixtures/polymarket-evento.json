@@ -1,0 +1,55 @@
+[
+ {
+  "id": "45915",
+  "slug": "brazil-presidential-election",
+  "title": "Brazil Presidential Election",
+  "active": true,
+  "closed": false,
+  "volume": 174921478.612336,
+  "markets": [
+   {
+    "id": "601818",
+    "question": "Will Tarcisio de Freitas win the 2026 Brazilian presidential election?",
+    "groupItemTitle": "Tarcisio de Freitas",
+    "outcomes": "[\"Yes\", \"No\"]",
+    "outcomePrices": "[\"0\", \"1\"]",
+    "lastTradePrice": 0.001,
+    "bestAsk": 0.001,
+    "closed": true,
+    "active": true,
+    "volume": "14956503.143295998",
+    "clobTokenIds": "[\"52634616068523389389514492087655237014427439869589807217055529923225131895030\", \"106302272146511626715366732538958019243031587527887799373406690681902311718700\"]"
+   },
+   {
+    "id": "601819",
+    "question": "Will Luiz Inácio Lula da Silva win the 2026 Brazilian presidential election?",
+    "groupItemTitle": "Luiz Inácio Lula da Silva",
+    "outcomes": "[\"Yes\", \"No\"]",
+    "outcomePrices": "[\"0.145\", \"0.855\"]",
+    "lastTradePrice": 0.15,
+    "bestBid": 0.14,
+    "bestAsk": 0.15,
+    "closed": false,
+    "active": true,
+    "oneDayPriceChange": -0.01,
+    "volume": "18626162.146337993",
+    "clobTokenIds": "[\"30630994248667897740988010928640156931882346081873066002335460180076741328029\", \"79191939610100241429039499950443680906623179487184628479206155805558220344190\"]"
+   },
+   {
+    "id": "601826",
+    "question": "Will Flávio Bolsonaro win the 2026 Brazilian presidential election?",
+    "groupItemTitle": "Flávio Bolsonaro",
+    "outcomes": "[\"Yes\", \"No\"]",
+    "outcomePrices": "[\"0.8485\", \"0.1515\"]",
+    "lastTradePrice": 0.849,
+    "bestBid": 0.848,
+    "bestAsk": 0.849,
+    "closed": false,
+    "active": true,
+    "oneDayPriceChange": 0.001,
+    "volume": "17843788.190317005",
+    "clobTokenIds": "[\"109876868437950584369987384406356259939519193117253465815665152916226511121427\", \"38310927461258927563020508025396887688249787380193911540547071417200646834355\"]"
+   }
+  ]
+ }
+]

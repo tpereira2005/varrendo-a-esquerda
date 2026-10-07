@@ -411,6 +411,100 @@ body {
   padding: 4px 0 8px 14px;
 }
 
+/* mercado de apostas (Polymarket) */
+.mercado-corpo {
+  display: grid;
+  gap: 16px;
+}
+@media (min-width: 1024px) {
+  .mercado-corpo {
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+    gap: 28px;
+  }
+}
+.mercado-variacao {
+  margin-top: 4px;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+.mercado-variacao.sobe { color: var(--flavio); }
+.mercado-variacao.desce { color: var(--lula); }
+
+.seletor {
+  display: inline-flex;
+  justify-self: start;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 999px;
+  background: var(--soft);
+}
+.seletor button {
+  min-height: 30px;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--muted);
+  transition: background 0.2s ease, color 0.2s ease;
+}
+.seletor button[aria-selected='true'] {
+  background: var(--ink);
+  color: var(--card);
+}
+
+.mercado-grafico svg {
+  touch-action: pan-y;
+  cursor: crosshair;
+}
+.mercado-pulso {
+  opacity: 0.25;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: mercado-pulso 2s ease-out infinite;
+}
+@keyframes mercado-pulso {
+  from { transform: scale(0.5); opacity: 0.45; }
+  to { transform: scale(1.6); opacity: 0; }
+}
+html[data-motion='off'] .mercado-pulso { animation: none; }
+
+.mercado-resumo {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+@media (min-width: 520px) {
+  .mercado-resumo { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
+}
+.mercado-resumo span {
+  display: grid;
+  padding: 6px 10px;
+  border-radius: 12px;
+  background: var(--soft);
+}
+.mercado-resumo b {
+  font-family: var(--font-placar);
+  font-size: 1.15rem;
+  color: var(--ink);
+}
+.mercado-resumo b.c-flavio { color: var(--flavio); }
+.mercado-resumo b.c-lula { color: var(--lula); }
+.mercado-resumo small { font-size: 0.72rem; }
+
+.mercado-comparar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 14px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: var(--soft);
+  font-size: 0.88rem;
+}
+.mercado-comparar .hint { flex-basis: 100%; font-size: 0.75rem; }
+
 /* notificações */
 .notificacoes {
   display: grid;

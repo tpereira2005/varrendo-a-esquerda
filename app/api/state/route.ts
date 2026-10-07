@@ -2,6 +2,7 @@ import { waitUntil } from 'cloudflare:workers';
 import { collectStep, snapshot, currentIds } from '../../../lib/collector.mjs';
 import { jobsFor } from '../../../lib/rounds.mjs';
 import { UFS } from '../../../lib/tse.mjs';
+import { refreshMarket } from '../../../lib/mercado.mjs';
 import { store, flags } from '../../../lib/runtime';
 
 export async function GET(request: Request) {
@@ -17,6 +18,8 @@ export async function GET(request: Request) {
       await db.prioritize(jobsFor(await currentIds(db), f.base), uf, now);
       waitUntil(collectStep(db, { ...f, limit: 32, foreground: true }).catch((e) => console.error('Recolha:', e)));
     }
+    // Mercado de previsões: lido em segundo plano, ao seu próprio ritmo (a base garante um pedido de cada vez).
+    waitUntil(refreshMarket(db, { active: data.active }).catch((e) => console.error('Mercado:', e)));
     return Response.json(data, { headers: { 'cache-control': 'no-store' } });
   } catch (error) {
     console.error('Estado:', error);
