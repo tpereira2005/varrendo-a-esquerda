@@ -591,6 +591,7 @@ html[data-motion='off'] .mercado-pulso { animation: none; }
 }
 .volume input[type='range'] {
   flex: 1;
+  height: 32px;
   max-width: 180px;
   accent-color: var(--flavio);
 }
@@ -1135,6 +1136,13 @@ select.btn {
   width: 100%;
 }
 
+/* iPhone: campos com letra < 16 px fazem o Safari aproximar a página ao tocar */
+input.btn,
+select.btn,
+textarea {
+  font-size: 16px;
+}
+
 button {
   cursor: pointer;
 }
@@ -1251,6 +1259,10 @@ details[open] > summary::after {
 .interruptor:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 
 .link-botao {
+  /* alvo de toque confortável no telemóvel, sem mudar o aspeto de link */
+  min-height: 32px;
+  padding: 0 4px;
+  margin: -6px -4px;
   font-weight: 700;
   color: var(--flavio);
   text-decoration: underline;

@@ -67,11 +67,19 @@ export default function Painel({ initial }: { initial: Snapshot | null }) {
     /* eslint-enable react-hooks/set-state-in-effect */
     const t = setInterval(() => setNow(Date.now() + skew.current), 1000);
     // O áudio só fica disponível depois de um clique na página.
-    const unlock = () => read('som') === '1' && unlockAudio();
-    addEventListener('pointerdown', unlock, { once: true });
+    // No iPhone só conta um toque completo (touchend/click), não o início do toque.
+    const unlock = () => {
+      if (read('som') !== '1') return;
+      unlockAudio();
+      removeEventListener('touchend', unlock);
+      removeEventListener('click', unlock);
+    };
+    addEventListener('touchend', unlock);
+    addEventListener('click', unlock);
     return () => {
       clearInterval(t);
-      removeEventListener('pointerdown', unlock);
+      removeEventListener('touchend', unlock);
+      removeEventListener('click', unlock);
     };
   }, []);
 
