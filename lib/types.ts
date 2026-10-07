@@ -98,7 +98,14 @@ export type Projection = {
   margin: number;
   remaining: number;
   remainingFraction: number;
+  /** Ponto de partida nacional (1.ª volta com transferências), % do Flávio. */
+  prior: number;
+  /** Deslocação nacional já observada face ao ponto de partida (pp, + = Flávio). */
   nationalSwing: number;
+  /** Afluência face ao esperado (1 = como previsto). */
+  turnout: number;
+  /** Tendência nacional da contagem: votos contados primeiro − por contar (pp, + = Flávio). */
+  trend: number;
   statesFlavio: number;
   statesLula: number;
   perRegion: {
@@ -108,6 +115,8 @@ export type Projection = {
     shareNow: number | null;
     shareRemaining: number;
     finalShare: number;
+    /** Probabilidade de o Flávio vencer neste estado (0–1). */
+    prob: number;
     netFlavio: number;
   }[];
 };

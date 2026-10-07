@@ -117,3 +117,11 @@ export const mercado = sqliteTable('mercado', {
   successAt: integer('success_at'),
   error: text('error'),
 });
+
+/** Última projeção calculada (com o histórico da noite), para não a recalcular a cada visita. */
+export const projecao = sqliteTable('projecao', {
+  id: integer('id').primaryKey(),
+  payload: text('payload').notNull(),
+  sourceAt: integer('source_at').notNull(),
+  at: integer('at').notNull(),
+});

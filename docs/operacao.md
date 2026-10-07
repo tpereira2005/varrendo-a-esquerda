@@ -40,8 +40,14 @@ Painel Flávio Bolsonaro (PL, 22) × Lula (PT, 13), do ponto de vista de quem to
 
 ## Projeção (não oficial)
 
-- `lib/projecao.mjs`: em cada estado e no estrangeiro, os votos por apurar (votos válidos esperados − contados) são repartidos pela quota do Flávio na 1.ª volta entre os dois, corrigida pela deslocação observada nesse estado (com poucos votos contados, encolhe para a deslocação média do país). Assim a ordem de contagem dos estados não engana a projeção.
-- Incerteza (desvio-padrão): ~3,75 pp antes dos votos, ~2,2 pp com 40% contado, ~0,8 pp com 80%, ~0,3 pp no fim. Probabilidade de vitória pela distribuição normal; nunca mostra 100% (">99%").
+- `lib/projecao.mjs`, em cinco partes:
+  1. **Ponto de partida**: 1.ª volta por estado com os votos dos eliminados redistribuídos (`TRANSFERENCIAS`, hipóteses por candidato) e alguma perda de eleitores (`RETENCAO`).
+  2. **Deslocação** face a esse ponto de partida, em três níveis (estado → região → país): um estado com pouco contado usa a da região; uma região com pouco contado, a do país. A ordem de contagem entre estados não engana a projeção.
+  3. **Tendência da contagem**: com o histórico da noite (tabela `timeline`), ajusta-se em cada estado c(p) = F + (1 − p)·d (quota acumulada em função da fração contada) e os votos que faltam seguem essa tendência. Também em três níveis.
+  4. **Votos por apurar**: ponto de partida corrigido pela afluência observada.
+  5. **Incerteza** com correlação (parte comum ao país, à região e ao estado), parâmetros em `AJUSTE`, afinados em noites simuladas, com margem de segurança de 15%.
+- `scripts/avaliar-projecao.mjs`: simula centenas de noites (desvios por país/região/estado, afluência, regiões a ritmos diferentes, ordem de contagem não linear) e mede cobertura do intervalo de 95%, Brier e excesso de confiança. Compara com outro modelo: `node scripts/avaliar-projecao.mjs 400 caminho/outro.mjs`.
+- A projeção é calculada pela recolha só quando chega um ficheiro novo (tabela `projecao`, migração 0007) e a página lê a guardada. Antes da noite é calculada na hora (sem histórico).
 - Avisos "Projeção: o X deve ganhar" (≥ 90%) e "vai ganhar" (≥ 99%), só a partir de 10% apurado, uma vez por nível. Chave própria (`2026:2:PROJ`), por isso nunca são "corrigidos" pelos ficheiros oficiais.
 - Desaparece quando o TSE declara o vencedor. A vitória oficial (e o festejo) continua a depender só do TSE.
 - "Onde faltam votos": estados com mais votos por apurar e o saldo que devem dar a cada candidato, com o "para virar".

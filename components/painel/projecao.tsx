@@ -5,6 +5,7 @@ import { projectionVerdict, probText } from '@/lib/projecao.mjs';
 import { Numero } from './numero';
 import { compact, pct } from './format';
 
+const sinal = (v: number) => `${v >= 0 ? '+' : '−'}${pct(Math.abs(v), 1).replace('%', ' pp')} ${v >= 0 ? 'Flávio' : 'Lula'}`;
 const ufName = (uf: string) => UF_NAMES[uf as keyof typeof UF_NAMES];
 
 /** Projeção do resultado final: estimativa estatística, sempre identificada como não oficial. */
@@ -59,14 +60,26 @@ export function Projecao({ data }: { data: Snapshot }) {
 
       <details className="detalhes-pequenos">
         <summary>Como é calculada?</summary>
-        <p className="hint mt-1">
-          Em cada estado (e no estrangeiro), os votos que faltam contar são estimados e repartidos segundo a quota do Flávio na 1.ª volta entre os
-          dois, corrigida pela deslocação já observada nesse estado (com poucos votos contados, usa-se a deslocação média do país, agora{' '}
-          {p.nationalSwing >= 0 ? '+' : '−'}
-          {pct(Math.abs(p.nationalSwing), 1).replace('%', ' pp')} para o {p.nationalSwing >= 0 ? 'Flávio' : 'Lula'}). Assim, a ordem de contagem
-          dos estados não engana a projeção. A incerteza vem sobretudo da ordem de contagem dentro de cada estado e diminui à medida que se conta. É
-          uma estimativa: o resultado oficial é só o do TSE.
-        </p>
+        <ul className="hint mt-1 lista-como">
+          <li>
+            <b>Ponto de partida:</b> 1.ª volta com os votos dos eliminados redistribuídos (Caiado e Zema sobretudo para o Flávio) · Flávio{' '}
+            {pct(p.prior, 1)}.
+          </li>
+          <li>
+            <b>Deslocação:</b> o que já se contou face a esse ponto de partida, estado a estado; um estado com pouco contado usa a da sua região e
+            do país{counted && <> (país: {sinal(p.nationalSwing)})</>}.
+          </li>
+          <li>
+            <b>Tendência da contagem:</b> como a quota muda à medida que se conta em cada estado; os votos que faltam seguem-na
+            {counted && Math.abs(p.trend) >= 0.3 && (
+              <> (agora, os que faltam são {pct(Math.abs(p.trend), 1).replace('%', ' pp')} mais {p.trend > 0 ? 'Lula' : 'Flávio'})</>
+            )}
+            .
+          </li>
+          <li>
+            <b>Incerteza:</b> com uma parte comum ao país e às regiões; calibrada em noites simuladas.
+          </li>
+        </ul>
       </details>
     </section>
   );

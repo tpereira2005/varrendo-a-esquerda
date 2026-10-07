@@ -530,6 +530,14 @@ html[data-motion='off'] .mercado-pulso { animation: none; }
 }
 .mercado-comparar .hint { flex-basis: 100%; font-size: 0.75rem; }
 
+/* projeção: "Como é calculada?" */
+.lista-como {
+  display: grid;
+  gap: 4px;
+  padding-left: 18px;
+  list-style: disc;
+}
+
 /* notificações */
 
 /* ---------- placar principal ---------- */
