@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Cand } from '@/lib/types';
 import { int, pct, retrato } from './format';
-import { fanfare } from './efeitos';
+import { festejo, pararFestejo } from './efeitos';
 
 const COLORS = ['#009c3b', '#ffdf00', '#ffffff', '#3b82f6', '#ffd43b'];
 
@@ -112,12 +112,13 @@ export function Festejo({ winner, other, sound, onClose, onShare }: { winner: Ca
   const close = useRef<HTMLButtonElement>(null);
   const [full, setFull] = useState(false);
   const [canFull, setCanFull] = useState(false);
+  const [hino, setHino] = useState(sound);
 
   useEffect(() => {
     close.current?.focus();
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setCanFull(!!document.fullscreenEnabled);
-    if (sound) void fanfare();
+    if (sound) void festejo();
     const key = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
     const fs = () => setFull(!!document.fullscreenElement);
     addEventListener('keydown', key);
@@ -129,6 +130,7 @@ export function Festejo({ winner, other, sound, onClose, onShare }: { winner: Ca
       document.removeEventListener('fullscreenchange', fs);
       document.body.style.overflow = overflow;
       if (document.fullscreenElement) void document.exitFullscreen();
+      pararFestejo();
     };
   }, [onClose, sound]);
 
@@ -161,7 +163,16 @@ export function Festejo({ winner, other, sound, onClose, onShare }: { winner: Ca
               {full ? 'Sair do ecrã inteiro' : 'Ecrã inteiro'}
             </button>
           )}
-          <button className="btn" onClick={() => void fanfare()}>Tocar fanfarra</button>
+          <button
+            className="btn"
+            onClick={() => {
+              if (hino) pararFestejo();
+              else void festejo();
+              setHino(!hino);
+            }}
+          >
+            {hino ? 'Parar o hino' : '🎺 Tocar o hino'}
+          </button>
           {onShare && (
             <button className="btn" onClick={onShare}>
               Partilhar a vitória

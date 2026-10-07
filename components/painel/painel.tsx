@@ -15,7 +15,7 @@ import { Abstencao } from './abstencao';
 import { Definicoes } from './definicoes';
 import { useTema } from './controlos';
 import { shareResult } from './partilhar';
-import { chime, keepAwake, reacquireAwake, unlockAudio } from './efeitos';
+import { keepAwake, reacquireAwake, somDoAviso, tocar, unlockAudio, vibrar } from './efeitos';
 import { ago, compact, pct, shortName, timeBrasilia, timeLisbon, FLAVIO } from './format';
 
 const read = (k: string) => {
@@ -126,13 +126,13 @@ export default function Painel({ initial }: { initial: Snapshot | null }) {
     if (!top || !alerts) return;
     setToast(top);
     const presidentWon = top.kind === 'eleito' && top.key === data.national.key && top.winner === FLAVIO;
-    if (sound && !presidentWon) void chime(top.tone);
+    if (sound && !presidentWon) void tocar(somDoAviso(top));
     if (typeof Notification !== 'undefined' && Notification.permission === 'granted' && document.visibilityState !== 'visible') {
       try {
         new Notification(top.title, { body: top.detail, icon: '/emoji/humor-10.png', tag: top.id });
       } catch {}
     }
-    navigator.vibrate?.(top.tone === 'good' ? [80, 60, 80] : 120);
+    vibrar(presidentWon ? 'festejo' : somDoAviso(top));
     const t = setTimeout(() => setToast(null), 8000);
     return () => clearTimeout(t);
   }, [data, alerts, sound]);
@@ -341,7 +341,7 @@ export default function Painel({ initial }: { initial: Snapshot | null }) {
           write('som', v ? '1' : '0');
           if (v) {
             unlockAudio();
-            void chime('good');
+            void tocar('estado-bom');
           }
         }}
         awake={awake}

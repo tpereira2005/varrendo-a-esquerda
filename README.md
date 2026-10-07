@@ -64,6 +64,13 @@ Requer Node.js 22.13 ou mais recente. A publicação é feita pelo plugin Sites 
 - [Divulgação de resultados do TSE](https://www.tse.jus.br/eleicoes/informacoes-tecnicas-sobre-a-divulgacao-de-resultados) e [formato do ficheiro unificado](https://www.tse.jus.br/eleicoes/eleicoes-2026-content/arquivos/divulgacao-de-resultados/tse-ea20-arquivo-de-resultado-unificado).
 - Mapa do Brasil e reações do boneco: projeto original.
 
+
+## Créditos
+
+- Hino Nacional Brasileiro (instrumental, no festejo): gravação da United States Navy Band, obra do governo dos EUA em domínio público ([Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Hino_Nacional_Brasileiro_instrumental.ogg)). Os restantes sons são sintetizados no browser.
+- Fotos dos candidatos: ilustrações fornecidas pelo autor do site.
+- Evolução da contagem de 2022: gravações de Wesley Cota ([github.com/wcota/br_eleicoes_2022_2T](https://github.com/wcota/br_eleicoes_2022_2T)).
+
 ## Licença
 
 Código sob a [licença MIT](LICENSE). Exceções, que pertencem aos respetivos autores:

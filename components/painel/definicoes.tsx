@@ -4,6 +4,7 @@ import type { Snapshot } from '@/lib/types';
 import { Notificacoes } from './notificacoes';
 import { Definicao, Interruptor, useTema } from './controlos';
 import { timeLisbon } from './format';
+import { getVolume, setVolume, tocar } from './efeitos';
 
 type Props = {
   data: Snapshot;
@@ -22,6 +23,11 @@ type Props = {
 export function Definicoes({ data, error, alerts, setAlerts, sound, setSound, awake, setAwake, motion, setMotion }: Props) {
   const [canAwake, setCanAwake] = useState(false);
   const [dark, setTema] = useTema();
+  const [vol, setVol] = useState(0.8);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setVol(getVolume());
+  }, []);
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setCanAwake('wakeLock' in navigator);
@@ -48,7 +54,34 @@ export function Definicoes({ data, error, alerts, setAlerts, sound, setSound, aw
             <Definicao icone="aviso" titulo="Avisos no ecrã" descricao="Viradas e marcos no topo da página">
               <Interruptor on={alerts} onChange={setAlerts} label="Avisos no ecrã" />
             </Definicao>
-            <Definicao icone="som" titulo="Som" descricao="Nos avisos e na fanfarra da vitória">
+            <Definicao
+              icone="som"
+              titulo="Som"
+              descricao={
+                sound ? (
+                  <span className="volume">
+                    <input
+                      type="range"
+                      min={0}
+                      max={1}
+                      step={0.05}
+                      value={vol}
+                      aria-label="Volume"
+                      onChange={(e) => {
+                        setVol(Number(e.target.value));
+                        setVolume(Number(e.target.value));
+                      }}
+                      onPointerUp={() => void tocar('marco')}
+                    />
+                    <button className="link-botao" onClick={() => void tocar('virada-boa')}>
+                      Testar
+                    </button>
+                  </span>
+                ) : (
+                  'Avisos, viradas e o hino na vitória'
+                )
+              }
+            >
               <Interruptor on={sound} onChange={setSound} label="Som" />
             </Definicao>
           </div>
