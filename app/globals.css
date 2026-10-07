@@ -1626,6 +1626,16 @@ body:has(.modo-festejo) {
   color: #002776;
 }
 
+/* restantes botões da faixa: translúcidos, legíveis no modo claro e no escuro (como no ecrã do festejo) */
+.faixa-festejo .btn:not(.btn-forte) {
+  background: rgb(255 255 255 / 0.16);
+  border-color: rgb(255 255 255 / 0.5);
+  color: #fff;
+}
+.faixa-festejo .btn:not(.btn-forte):hover {
+  background: rgb(255 255 255 / 0.26);
+}
+
 .festejo {
   position: fixed;
   inset: 0;

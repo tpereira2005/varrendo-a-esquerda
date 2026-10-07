@@ -145,7 +145,7 @@ export function PreFestejo({ fontes, sound, onClose, onShare }: { fontes: string
             <li key={f}>{f}</li>
           ))}
         </ul>
-        <p className="pre-festejo-nota">O resultado oficial é só o do TSE: o grande festejo, com o hino, fica para quando o TSE o declarar eleito.</p>
+        <p className="pre-festejo-nota">Ainda não é oficial: só o TSE declara o eleito.</p>
         <div className="festejo-botoes">
           {onShare && (
             <button className="btn" onClick={onShare}>
