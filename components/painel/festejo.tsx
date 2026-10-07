@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
 import type { Cand } from '@/lib/types';
-import { int, pct } from './format';
+import { int, pct, retrato } from './format';
 import { fanfare } from './efeitos';
 
 const COLORS = ['#009c3b', '#ffdf00', '#ffffff', '#3b82f6', '#ffd43b'];
@@ -138,7 +138,7 @@ export function Festejo({ winner, other, sound, onClose, onShare }: { winner: Ca
       <div className="festejo-conteudo">
         <div className="festejo-retrato">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/candidatos/flavio-720.webp" alt="Flávio Bolsonaro" className="festejo-foto" width={300} height={300} />
+          <img src={retrato('22', 720)!} alt="Flávio Bolsonaro" className="festejo-foto" width={300} height={300} />
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/emoji/humor-10.png" alt="Boneco: Giga Chad" className="festejo-boneco" width={110} height={110} />
         </div>

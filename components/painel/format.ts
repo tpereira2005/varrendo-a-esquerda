@@ -62,4 +62,5 @@ export const shortName = (c: { number: string; name: string }, cargo: number) =>
 
 /** Retratos dos dois finalistas, pelo número (um finalista substituído pelo TSE fica só com o número). */
 const RETRATOS: Record<string, string> = { '22': '/candidatos/flavio', '13': '/candidatos/lula' };
-export const retrato = (number: string, size: 256 | 720 = 256) => (RETRATOS[number] ? `${RETRATOS[number]}-${size}.webp` : null);
+// ?v=: muda quando uma foto é substituída, para os browsers não mostrarem a antiga guardada em cache.
+export const retrato = (number: string, size: 256 | 720 = 256) => (RETRATOS[number] ? `${RETRATOS[number]}-${size}.webp?v=2` : null);
