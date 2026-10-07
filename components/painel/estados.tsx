@@ -1,5 +1,6 @@
 'use client';
 import type { Race, Snapshot, Turnout } from '@/lib/types';
+import { taxas } from './abstencao';
 import { UF_NAMES } from '@/lib/tse.mjs';
 import { Duelo } from './duelo';
 import { Numero } from './numero';
@@ -78,19 +79,20 @@ export function Crescimento({ states, onSelect }: { states: Race[]; onSelect: (u
   );
 }
 
-function TurnoutRow({ label, r1, r2, base1, base2 }: { label: string; r1: number | null; r2: number | null; base1: number | null; base2: number | null }) {
-  const p1 = r1 != null && base1 ? (100 * r1) / base1 : null;
-  const p2 = r2 != null && base2 ? (100 * r2) / base2 : null;
+function TurnoutRow({ label, r1, r2 }: { label: string; r1: number | null | undefined; r2: number | null | undefined }) {
   return (
     <tr className="border-t" style={{ borderColor: 'var(--line)' }}>
       <td className="py-1">{label}</td>
-      <td className="text-right">{pct(p1)}</td>
-      <td className="text-right">{p2 == null ? '—' : pct(p2)}</td>
+      <td className="text-right">{pct(r1)}</td>
+      <td className="text-right">{r2 == null ? '—' : pct(r2)}</td>
     </tr>
   );
 }
 
+/** Participação no estado. Na 2.ª volta, só sobre as secções já apuradas (ver taxas). */
 export function Participacao({ r1, r2 }: { r1: Turnout; r2: Turnout | undefined }) {
+  const t1 = taxas(r1);
+  const t2 = taxas(r2);
   return (
     <table className="w-full text-sm">
       <thead>
@@ -101,9 +103,9 @@ export function Participacao({ r1, r2 }: { r1: Turnout; r2: Turnout | undefined 
         </tr>
       </thead>
       <tbody>
-        <TurnoutRow label="Abstenção" r1={r1.abstencao} r2={r2?.abstencao ?? null} base1={r1.eleitores} base2={r2?.eleitores ?? null} />
-        <TurnoutRow label="Brancos" r1={r1.brancos} r2={r2?.brancos ?? null} base1={r1.comparecimento} base2={r2?.comparecimento ?? null} />
-        <TurnoutRow label="Nulos" r1={r1.nulos} r2={r2?.nulos ?? null} base1={r1.comparecimento} base2={r2?.comparecimento ?? null} />
+        <TurnoutRow label="Abstenção" r1={t1?.abstencao} r2={t2?.abstencao} />
+        <TurnoutRow label="Brancos" r1={t1?.brancos} r2={t2?.brancos} />
+        <TurnoutRow label="Nulos" r1={t1?.nulos} r2={t2?.nulos} />
       </tbody>
     </table>
   );

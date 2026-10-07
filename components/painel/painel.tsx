@@ -11,6 +11,7 @@ import { Estrangeiro } from './estrangeiro';
 import { Festejo } from './festejo';
 import { Projecao, OndeFaltam } from './projecao';
 import { Mercado } from './mercado';
+import { Abstencao } from './abstencao';
 import { Definicoes } from './definicoes';
 import { useTema } from './controlos';
 import { shareResult } from './partilhar';
@@ -310,6 +311,8 @@ export default function Painel({ initial }: { initial: Snapshot | null }) {
         <h2 className="mb-2">Face à 1.ª volta</h2>
         <Crescimento states={data.states} onSelect={select} />
       </section>
+
+      <Abstencao data={data} />
 
       <Estrangeiro data={data} now={now} />
 

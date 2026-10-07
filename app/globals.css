@@ -538,6 +538,39 @@ html[data-motion='off'] .mercado-pulso { animation: none; }
   list-style: disc;
 }
 
+/* abstenção */
+.abstencao-corpo {
+  display: grid;
+  gap: 16px;
+}
+@media (min-width: 1024px) {
+  .abstencao-corpo {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 28px;
+    align-items: start;
+  }
+}
+.taxas {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.taxa {
+  display: grid;
+  gap: 2px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: var(--soft);
+}
+.taxa-valor {
+  font-family: var(--font-placar);
+  font-size: 1.6rem;
+  font-weight: 800;
+  line-height: 1.1;
+}
+.taxa-nota { font-size: 0.75rem; color: var(--muted); }
+.taxa-nota b { color: var(--ink); }
+
 /* notificações */
 
 /* ---------- placar principal ---------- */
