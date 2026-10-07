@@ -33,13 +33,11 @@ export function Definicao({
   titulo,
   descricao,
   children,
-  extra,
 }: {
   icone: keyof typeof ICONES;
   titulo: string;
   descricao: ReactNode;
   children?: ReactNode;
-  extra?: ReactNode;
 }) {
   return (
     <div className="definicao">
@@ -49,7 +47,6 @@ export function Definicao({
         <div className="definicao-descricao">{descricao}</div>
       </div>
       <div className="definicao-controlo">{children}</div>
-      {extra && <div className="definicao-extra">{extra}</div>}
     </div>
   );
 }

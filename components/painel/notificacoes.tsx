@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { fromB64u } from '@/lib/webpush.mjs';
 import { Definicao, Interruptor } from './controlos';
 
@@ -45,7 +45,7 @@ export function Notificacoes() {
       setEstado('ligadas');
     } catch {
       setEstado('desligadas');
-      setMsg('Não foi possível ativar. Tenta de novo.');
+      setMsg('Não foi possível ativar · tenta de novo');
     }
   };
 
@@ -64,42 +64,34 @@ export function Notificacoes() {
     const sub = await reg?.pushManager.getSubscription();
     if (!sub) return;
     const r = await fetch('/api/push/teste', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ endpoint: sub.endpoint }) });
-    setMsg(r.ok ? 'Teste enviado: deve chegar dentro de segundos.' : 'O teste falhou ou foi pedido há pouco; tenta daqui a 1 minuto.');
+    setMsg(r.ok ? 'Teste enviado ✓ chega dentro de segundos' : 'Teste recusado · tenta daqui a 1 minuto');
+    setTimeout(() => setMsg(null), 6000);
   };
 
   if (estado === 'a-verificar' || estado === 'servidor-desligado') return null;
   const on = estado === 'ligadas' || estado === 'a-ativar';
-  const descricao: Record<Exclude<Estado, 'a-verificar' | 'servidor-desligado'>, string> = {
-    desligadas: movel ? 'Viradas, marcos e resultado, mesmo com o site fechado' : 'Viradas, marcos e resultado, mesmo com o separador fechado',
+  // Uma só linha de descrição, como nas outras definições (todas com a mesma altura).
+  const descricao: Record<Exclude<Estado, 'a-verificar' | 'servidor-desligado'>, ReactNode> = {
+    desligadas: movel ? 'Mesmo com o site fechado' : 'Mesmo com o separador fechado',
     'a-ativar': 'A ativar…',
-    ligadas: movel ? 'Ativas neste telemóvel' : 'Ativas neste computador (com o browser aberto)',
-    'instalar-iphone': 'No iPhone, primeiro adiciona o site ao ecrã principal',
+    ligadas: (
+      <>
+        {movel ? 'Ativas neste telemóvel' : 'Ativas neste computador'} ·{' '}
+        <button className="link-botao" onClick={testar}>
+          Testar
+        </button>
+      </>
+    ),
+    'instalar-iphone': (
+      <>
+        Partilhar → <b>Adicionar ao ecrã principal</b>
+      </>
+    ),
     'sem-suporte': 'Este browser não as suporta',
-    bloqueadas: 'Bloqueadas: permite-as nas definições do browser',
+    bloqueadas: 'Bloqueadas nas definições do browser',
   };
   return (
-    <Definicao
-      icone="sino"
-      titulo="Notificações"
-      descricao={descricao[estado]}
-      extra={
-        (estado === 'instalar-iphone' || estado === 'ligadas' || msg) && (
-          <>
-            {estado === 'instalar-iphone' && (
-              <p>
-                Toca em <b>Partilhar</b> → <b>Adicionar ao ecrã principal</b> e abre o site pelo novo ícone.
-              </p>
-            )}
-            {estado === 'ligadas' && (
-              <button className="link-botao" onClick={testar}>
-                Enviar notificação de teste
-              </button>
-            )}
-            {msg && <p>{msg}</p>}
-          </>
-        )
-      }
-    >
+    <Definicao icone="sino" titulo="Notificações" descricao={msg ?? descricao[estado]}>
       <Interruptor
         on={on}
         label="Notificações"
