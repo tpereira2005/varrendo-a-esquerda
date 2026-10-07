@@ -592,6 +592,41 @@ html[data-motion='off'] .mercado-pulso { animation: none; }
   box-shadow: inset 0 -3px 0 #5c0a18;
 }
 
+/* retrato redondo com aro nas cores de cada um e o número em selo no canto */
+.retrato {
+  position: relative;
+  flex-shrink: 0;
+  width: 60px;
+  height: 60px;
+  padding: 3px;
+  border-radius: 50%;
+}
+.lado-flavio .retrato { background: linear-gradient(135deg, #0aa346, #ffdf00); }
+.lado-lula .retrato { background: linear-gradient(135deg, #e0213f, #5c0a18); }
+.retrato img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--card);
+  background: var(--soft);
+}
+.dorsal-selo {
+  position: absolute;
+  bottom: -4px;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  border: 2px solid var(--card);
+}
+.lado-flavio .dorsal-selo { right: -6px; box-shadow: inset 0 -2px 0 #ffdf00; }
+.lado-lula .dorsal-selo { left: -6px; box-shadow: inset 0 -2px 0 #5c0a18; }
+@media (min-width: 768px) {
+  .retrato { width: 76px; height: 76px; }
+  .dorsal-selo { width: 30px; height: 30px; font-size: 1rem; }
+}
+
 .lado-nome {
   font-weight: 800;
   font-size: clamp(1rem, 2.6vw, 1.3rem);
@@ -1502,10 +1537,32 @@ body:has(.modo-festejo) {
   max-width: 900px;
 }
 
+.festejo-retrato {
+  position: relative;
+  width: clamp(170px, 32vmin, 300px);
+  aspect-ratio: 1;
+  margin-bottom: 6px;
+}
+.festejo-foto {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 6px solid #ffdf00;
+  box-shadow: 0 0 0 10px rgb(255 223 0 / 0.25), 0 0 70px rgb(255 223 0 / 0.55), 0 18px 40px rgb(0 0 0 / 0.45);
+  animation: brilhar 2.4s ease-in-out infinite;
+}
+@keyframes brilhar {
+  50% { box-shadow: 0 0 0 16px rgb(255 223 0 / 0.18), 0 0 100px rgb(255 223 0 / 0.75), 0 18px 40px rgb(0 0 0 / 0.45); }
+}
+/* o Giga Chad fica como autocolante no canto do retrato */
 .festejo-boneco {
-  width: clamp(120px, 22vmin, 220px);
+  position: absolute;
+  right: -8%;
+  bottom: -6%;
+  width: 38%;
   height: auto;
-  filter: drop-shadow(0 10px 25px rgb(0 0 0 / 0.4));
+  filter: drop-shadow(0 8px 18px rgb(0 0 0 / 0.45));
   animation: saltar 1.1s ease-in-out infinite;
 }
 

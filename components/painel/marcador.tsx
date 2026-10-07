@@ -1,17 +1,27 @@
 'use client';
 import type { Cand, Finalist, Snapshot } from '@/lib/types';
 import { Numero } from './numero';
-import { ago, compact, countdown, int, pct, pp, timeBrasilia, timeLisbon, titleCase, shortName, FLAVIO } from './format';
+import { ago, compact, countdown, int, pct, pp, retrato, timeBrasilia, timeLisbon, titleCase, shortName, FLAVIO } from './format';
 
 const LULA = '13';
 
 type Side = 'flavio' | 'lula';
 
 function Lado({ side, c, counted }: { side: Side; c: Finalist & Partial<Cand>; counted: boolean }) {
+  const foto = retrato(c.number);
   return (
     <div className={`lado lado-${side}`}>
       <div className="lado-id">
-        <span className="dorsal" aria-hidden="true">{c.number}</span>
+        {foto ? (
+          // Retrato com o número em selo no canto.
+          <span className="retrato" aria-hidden="true">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={foto} alt="" width={76} height={76} decoding="async" />
+            <span className="dorsal dorsal-selo">{c.number}</span>
+          </span>
+        ) : (
+          <span className="dorsal" aria-hidden="true">{c.number}</span>
+        )}
         <div>
           <div className="lado-nome">
             {/* Nomes pelo número do candidato: um finalista substituído pelo TSE aparece com o seu nome. */}

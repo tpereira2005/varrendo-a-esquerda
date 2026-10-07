@@ -136,8 +136,12 @@ export function Festejo({ winner, other, sound, onClose, onShare }: { winner: Ca
     <div className="festejo" role="dialog" aria-modal="true" aria-labelledby="festejo-titulo">
       <Fogo />
       <div className="festejo-conteudo">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/emoji/humor-10.png" alt="Boneco: Giga Chad" className="festejo-boneco" width={180} height={180} />
+        <div className="festejo-retrato">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/candidatos/flavio-720.webp" alt="Flávio Bolsonaro" className="festejo-foto" width={300} height={300} />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/emoji/humor-10.png" alt="Boneco: Giga Chad" className="festejo-boneco" width={110} height={110} />
+        </div>
         <p className="festejo-sobre">Resultado oficial do TSE</p>
         <h1 id="festejo-titulo" className="festejo-titulo">
           FLÁVIO BOLSONARO

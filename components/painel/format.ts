@@ -59,3 +59,7 @@ export const FLAVIO = '22';
 /** "Flávio"/"Lula" na Presidência; nome do boletim nos governadores. */
 export const shortName = (c: { number: string; name: string }, cargo: number) =>
   cargo === 1 && c.number === FLAVIO ? 'Flávio' : cargo === 1 && c.number === '13' ? 'Lula' : titleCase(c.name);
+
+/** Retratos dos dois finalistas, pelo número (um finalista substituído pelo TSE fica só com o número). */
+const RETRATOS: Record<string, string> = { '22': '/candidatos/flavio', '13': '/candidatos/lula' };
+export const retrato = (number: string, size: 256 | 720 = 256) => (RETRATOS[number] ? `${RETRATOS[number]}-${size}.webp` : null);

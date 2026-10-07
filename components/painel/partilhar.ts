@@ -2,7 +2,7 @@
 // Segue o tema escolhido no site (claro por predefinição ou escuro).
 import type { Snapshot } from '@/lib/types';
 import { projectionVerdict, probText } from '@/lib/projecao.mjs';
-import { compact, countdown, int, pct, pp, shortName, timeBrasilia, timeLisbon, FLAVIO } from './format';
+import { compact, countdown, int, pct, pp, retrato, shortName, timeBrasilia, timeLisbon, FLAVIO } from './format';
 
 const W = 1080;
 const H = 1350;
@@ -151,6 +151,64 @@ function drawBadge(g: CanvasRenderingContext2D, x: number, y: number, number: st
   g.fillText(number, x + s / 2, y + 54);
 }
 
+/** Retrato redondo com aro nas cores do candidato e o número em selo no canto; sem retrato, só o número. */
+function drawPortrait(
+  g: CanvasRenderingContext2D,
+  img: HTMLImageElement | null,
+  x: number,
+  y: number,
+  s: number,
+  number: string,
+  flavio: boolean,
+  left: boolean,
+  card: string,
+) {
+  if (!img) {
+    drawBadge(g, x + (s - 76) / 2, y + (s - 76) / 2, number, flavio);
+    return;
+  }
+  const r = s / 2;
+  const ring = g.createLinearGradient(x, y, x + s, y + s);
+  ring.addColorStop(0, flavio ? '#0aa346' : '#e0213f');
+  ring.addColorStop(1, flavio ? '#ffdf00' : '#5c0a18');
+  g.fillStyle = ring;
+  g.beginPath();
+  g.arc(x + r, y + r, r, 0, Math.PI * 2);
+  g.fill();
+  g.fillStyle = card;
+  g.beginPath();
+  g.arc(x + r, y + r, r - 6, 0, Math.PI * 2);
+  g.fill();
+  g.save();
+  g.beginPath();
+  g.arc(x + r, y + r, r - 10, 0, Math.PI * 2);
+  g.clip();
+  g.drawImage(img, x + 10, y + 10, s - 20, s - 20);
+  g.restore();
+  // selo com o número, no canto de fora
+  const b = 46;
+  const bx = left ? x + s - b + 8 : x - 8;
+  const by = y + s - b + 6;
+  g.save();
+  roundRect(g, bx - 4, by - 4, b + 8, b + 8, 15);
+  g.fillStyle = card;
+  g.fill();
+  roundRect(g, bx, by, b, b, 12);
+  g.clip();
+  const grad = g.createLinearGradient(bx, by, bx + b, by + b);
+  grad.addColorStop(0, flavio ? '#0aa346' : '#e0213f');
+  grad.addColorStop(1, flavio ? '#066b2d' : '#a10f29');
+  g.fillStyle = grad;
+  g.fillRect(bx, by, b, b);
+  g.fillStyle = flavio ? '#ffdf00' : '#5c0a18';
+  g.fillRect(bx, by + b - 4, b, 4);
+  g.restore();
+  g.fillStyle = '#ffffff';
+  g.font = `800 28px ${PLACAR}`;
+  g.textAlign = 'center';
+  g.fillText(number, bx + b / 2, by + 33);
+}
+
 function currentTheme(): 'light' | 'dark' {
   return document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
 }
@@ -275,17 +333,24 @@ export async function drawShareImage(data: Snapshot, theme: 'light' | 'dark' = c
 
   // candidatos
   const rowY = cy + 440;
-  const side = (cand: typeof a, left: boolean, color: string) => {
-    const bx = left ? cx + 44 : cx + cw - 44 - 76;
-    drawBadge(g, bx, rowY, cand.number, cand.number === FLAVIO);
+  const [imgA, imgB] = await Promise.all(
+    [a, b].map((cand) => {
+      const src = retrato(cand.number);
+      return src ? loadImage(src) : Promise.resolve(null);
+    }),
+  );
+  const PS = 112; // diâmetro do retrato
+  const side = (cand: typeof a, left: boolean, color: string, img: HTMLImageElement | null) => {
+    const bx = left ? cx + 44 : cx + cw - 44 - PS;
+    drawPortrait(g, img, bx, rowY - 30, PS, cand.number, cand.number === FLAVIO, left, c.card);
     g.textAlign = left ? 'left' : 'right';
-    const tx = left ? bx + 96 : bx - 20;
+    const tx = left ? bx + PS + 24 : bx - 24;
     g.fillStyle = c.ink;
     g.font = `800 38px ${TEXTO}`;
-    g.fillText(cand.number === FLAVIO ? 'Flávio Bolsonaro' : shortName(cand, 1), tx, rowY + 36);
+    g.fillText(cand.number === FLAVIO ? 'Flávio Bolsonaro' : shortName(cand, 1), tx, rowY + 20);
     g.fillStyle = c.muted;
     g.font = `600 26px ${TEXTO}`;
-    g.fillText(`${cand.party} · ${cand.number}`, tx, rowY + 70);
+    g.fillText(`${cand.party} · ${cand.number}`, tx, rowY + 54);
     g.fillStyle = color;
     g.globalAlpha = counted || winner ? 1 : 0.3;
     g.font = `800 132px ${PLACAR}`;
@@ -295,8 +360,8 @@ export async function drawShareImage(data: Snapshot, theme: 'light' | 'dark' = c
     g.font = `600 26px ${TEXTO}`;
     g.fillText(counted ? `${int(cand.votes)} votos` : '1.ª volta', left ? cx + 44 : cx + cw - 44, rowY + 245);
   };
-  side(a, true, c.flavio);
-  side(b, false, c.lula);
+  side(a, true, c.flavio, imgA);
+  side(b, false, c.lula, imgB);
 
   // barra (verde e vermelho encostados, entalhe nos 50%)
   const share = counted ? (100 * a.votes) / (a.votes + b.votes) : r1Share;
