@@ -1046,20 +1046,27 @@ details[open] > summary::after {
 }
 
 /* definições */
+.grupos-definicoes {
+  display: grid;
+  gap: 16px;
+  align-items: start;
+}
+@media (min-width: 1024px) {
+  .grupos-definicoes { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; }
+}
+.grupo-titulo {
+  margin: 0 0 8px 4px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
 .definicoes {
   display: grid;
   border-radius: 16px;
   background: var(--soft);
   overflow: hidden;
-}
-@media (min-width: 1024px) {
-  .definicoes {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    column-gap: 1px;
-    background: var(--line);
-    border: 1px solid var(--line);
-  }
-  .definicoes > .definicao { background: var(--soft); }
 }
 
 .definicao {
@@ -1071,11 +1078,6 @@ details[open] > summary::after {
   border-top: 1px solid var(--line);
 }
 .definicao:first-child { border-top: 0; }
-@media (min-width: 1024px) {
-  .definicao:nth-child(2) { border-top: 0; }
-  /* número ímpar de definições: a última ocupa a linha toda (sem um buraco à direita) */
-  .definicao:last-child:nth-child(odd) { grid-column: 1 / -1; }
-}
 
 .definicao-icone {
   width: 36px;

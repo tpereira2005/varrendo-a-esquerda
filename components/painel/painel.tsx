@@ -12,6 +12,7 @@ import { Festejo } from './festejo';
 import { Projecao, OndeFaltam } from './projecao';
 import { Mercado } from './mercado';
 import { Definicoes } from './definicoes';
+import { useTema } from './controlos';
 import { shareResult } from './partilhar';
 import { chime, keepAwake, reacquireAwake, unlockAudio } from './efeitos';
 import { ago, compact, pct, shortName, timeBrasilia, timeLisbon, FLAVIO } from './format';
@@ -386,20 +387,8 @@ function Logo() {
 
 /** Botão claro/escuro. O claro é o predefinido; a escolha fica guardada neste browser. */
 function BotaoTema() {
-  const [dark, setDark] = useState(false);
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setDark(document.documentElement.dataset.theme === 'dark');
-  }, []);
-  const toggle = () => {
-    const next = !dark;
-    setDark(next);
-    const root = document.documentElement;
-    if (next) root.dataset.theme = 'dark';
-    else delete root.dataset.theme;
-    write('tema', next ? 'escuro' : 'claro');
-    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', next ? '#0a0e17' : '#f3f4ef');
-  };
+  const [dark, setTema] = useTema();
+  const toggle = () => setTema(!dark);
   return (
     <button className="botao-tema" onClick={toggle} aria-label={dark ? 'Mudar para o modo claro' : 'Mudar para o modo escuro'} title={dark ? 'Modo claro' : 'Modo escuro'}>
       {dark ? (

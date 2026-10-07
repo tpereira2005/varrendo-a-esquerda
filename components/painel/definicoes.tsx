@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import type { Snapshot } from '@/lib/types';
 import { Notificacoes } from './notificacoes';
-import { Definicao, Interruptor } from './controlos';
+import { Definicao, Interruptor, useTema } from './controlos';
 import { timeLisbon } from './format';
 
 type Props = {
@@ -21,6 +21,7 @@ type Props = {
 /** Definições deste aparelho e, em baixo, a origem dos dados (os pormenores ficam em "Como funciona"). */
 export function Definicoes({ data, error, alerts, setAlerts, sound, setSound, awake, setAwake, motion, setMotion }: Props) {
   const [canAwake, setCanAwake] = useState(false);
+  const [dark, setTema] = useTema();
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setCanAwake('wakeLock' in navigator);
@@ -38,22 +39,36 @@ export function Definicoes({ data, error, alerts, setAlerts, sound, setSound, aw
         <p className="c-lula text-sm">O TSE pediu uma pausa; nova consulta às {timeLisbon(data.collector.pauseUntil)}.</p>
       )}
 
-      <div className="definicoes">
-        <Notificacoes />
-        <Definicao icone="aviso" titulo="Avisos no ecrã" descricao="Viradas e marcos no topo da página">
-          <Interruptor on={alerts} onChange={setAlerts} label="Avisos no ecrã" />
-        </Definicao>
-        <Definicao icone="som" titulo="Som" descricao="Nos avisos e na fanfarra da vitória">
-          <Interruptor on={sound} onChange={setSound} label="Som" />
-        </Definicao>
-        <Definicao icone="brilho" titulo="Animações" descricao="Números, gráficos e festejo">
-          <Interruptor on={motion} onChange={setMotion} label="Animações" />
-        </Definicao>
-        {canAwake && (
-          <Definicao icone="ecra" titulo="Ecrã sempre ligado" descricao="Para acompanhar a noite sem tocar">
-            <Interruptor on={awake} onChange={setAwake} label="Ecrã sempre ligado" />
-          </Definicao>
-        )}
+      {/* Dois grupos com título: cada um é uma coluna no PC, por isso o número de definições nunca desequilibra a grelha. */}
+      <div className="grupos-definicoes">
+        <section aria-labelledby="def-alertas">
+          <h3 id="def-alertas" className="grupo-titulo">Alertas</h3>
+          <div className="definicoes">
+            <Notificacoes />
+            <Definicao icone="aviso" titulo="Avisos no ecrã" descricao="Viradas e marcos no topo da página">
+              <Interruptor on={alerts} onChange={setAlerts} label="Avisos no ecrã" />
+            </Definicao>
+            <Definicao icone="som" titulo="Som" descricao="Nos avisos e na fanfarra da vitória">
+              <Interruptor on={sound} onChange={setSound} label="Som" />
+            </Definicao>
+          </div>
+        </section>
+        <section aria-labelledby="def-ecra">
+          <h3 id="def-ecra" className="grupo-titulo">Ecrã</h3>
+          <div className="definicoes">
+            <Definicao icone="lua" titulo="Modo escuro" descricao="Também no botão do topo">
+              <Interruptor on={dark} onChange={setTema} label="Modo escuro" />
+            </Definicao>
+            <Definicao icone="brilho" titulo="Animações" descricao="Números, gráficos e festejo">
+              <Interruptor on={motion} onChange={setMotion} label="Animações" />
+            </Definicao>
+            {canAwake && (
+              <Definicao icone="ecra" titulo="Ecrã sempre ligado" descricao="Para acompanhar a noite sem tocar">
+                <Interruptor on={awake} onChange={setAwake} label="Ecrã sempre ligado" />
+              </Definicao>
+            )}
+          </div>
+        </section>
       </div>
 
       <div className="fonte">
