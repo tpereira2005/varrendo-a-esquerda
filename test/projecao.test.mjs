@@ -160,3 +160,17 @@ test('projeção guardada: só é recalculada quando chega um ficheiro novo', as
   p = await refreshProjection(store, 4000);
   assert.equal((await store.projection()).at, 4000);
 });
+
+test('contagem desequilibrada (estados do Flávio contados primeiro): mais incerteza e frações por grupo', async () => {
+  const { AJUSTE } = await import('../lib/projecao.mjs');
+  const flavioState = (r) => r.finalists[0].r1Votes >= r.finalists[1].r1Votes;
+  const now = scenario((r) => (r.uf === 'ZZ' ? 0 : flavioState(r) ? 90 : 5));
+  const p = project(now);
+  assert.ok(p.blocs.flavio > 0.85 && p.blocs.lula < 0.1, JSON.stringify(p.blocs));
+  const without = project(now, {}, { ...AJUSTE, bloco: 0 });
+  assert.ok(p.sd > without.sd, `${p.sd} vs ${without.sd}`);
+  // contagem equilibrada: o termo quase não pesa (muito menos do que no caso desequilibrado)
+  const even = scenario(() => 50);
+  const extraEven = project(even).sd / project(even, {}, { ...AJUSTE, bloco: 0 }).sd - 1;
+  assert.ok(extraEven < 0.01 && extraEven < p.sd / without.sd - 1, String(extraEven));
+});

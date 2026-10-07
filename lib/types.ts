@@ -106,6 +106,8 @@ export type Projection = {
   turnout: number;
   /** Tendência nacional da contagem: votos contados primeiro − por contar (pp, + = Flávio). */
   trend: number;
+  /** Fração contada nos estados que cada um ganhou na 1.ª volta (0–1). */
+  blocs: { flavio: number; lula: number };
   statesFlavio: number;
   statesLula: number;
   perRegion: {

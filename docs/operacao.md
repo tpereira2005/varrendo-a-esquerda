@@ -45,7 +45,8 @@ Painel Flávio Bolsonaro (PL, 22) × Lula (PT, 13), do ponto de vista de quem to
   2. **Deslocação** face a esse ponto de partida, em três níveis (estado → região → país): um estado com pouco contado usa a da região; uma região com pouco contado, a do país. A ordem de contagem entre estados não engana a projeção.
   3. **Tendência da contagem**: com o histórico da noite (tabela `timeline`), ajusta-se em cada estado c(p) = F + (1 − p)·d (quota acumulada em função da fração contada) e os votos que faltam seguem essa tendência. Também em três níveis.
   4. **Votos por apurar**: ponto de partida corrigido pela afluência observada.
-  5. **Incerteza** com correlação (parte comum ao país, à região e ao estado), parâmetros em `AJUSTE`, afinados em noites simuladas, com margem de segurança de 15%.
+  5. **Incerteza** com correlação (parte comum ao país, à região e ao estado). Se os estados que um dos dois ganhou na 1.ª volta estiverem muito menos contados do que os do outro, a incerteza alarga (`bloco`) até haver votos dos dois lados; o placar mostra então "Contados sobretudo estados do X…" com a projeção.
+  6. **Afinação**: parâmetros em `AJUSTE`, afinados em noites simuladas, com margem de segurança de 15%.
 - `scripts/avaliar-projecao.mjs`: simula centenas de noites (desvios por país/região/estado, afluência, regiões a ritmos diferentes, ordem de contagem não linear) e mede cobertura do intervalo de 95%, Brier e excesso de confiança. Compara com outro modelo: `node scripts/avaliar-projecao.mjs 400 caminho/outro.mjs`.
 - A projeção é calculada pela recolha só quando chega um ficheiro novo (tabela `projecao`, migração 0007) e a página lê a guardada. Antes da noite é calculada na hora (sem histórico).
 - Avisos "Projeção: o X deve ganhar" (≥ 90%) e "vai ganhar" (≥ 99%), só a partir de 10% apurado, uma vez por nível. Chave própria (`2026:2:PROJ`), por isso nunca são "corrigidos" pelos ficheiros oficiais.

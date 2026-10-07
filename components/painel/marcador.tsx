@@ -57,6 +57,26 @@ function Lado({ side, c, counted }: { side: Side; c: Finalist & Partial<Cand>; c
   );
 }
 
+/**
+ * Aviso quando a contagem bruta está enviesada pela ordem: contaram-se sobretudo os estados de um deles.
+ * Só aparece com a diferença entre contagem e projeção a ser relevante (≥ 1 pp).
+ */
+function AvisoOrdem({ data, share }: { data: Snapshot; share: number }) {
+  const proj = data.projection;
+  const p = data.national.parsed;
+  if (!proj?.blocs || !p || p.final || p.winner != null) return null;
+  const { flavio, lula } = proj.blocs;
+  if (Math.abs(flavio - lula) < 0.15 || Math.abs(share - proj.flavio) < 1) return null;
+  const mais = flavio > lula ? 'do Flávio' : 'do Lula';
+  const [a, b] = flavio > lula ? [flavio, lula] : [lula, flavio];
+  return (
+    <p className="aviso-ordem">
+      <b>Contados sobretudo estados {mais}</b> ({pct(100 * a, 0)} contra {pct(100 * b, 0)}):{' '}
+      {share > proj.flavio ? 'o Flávio deve perder terreno' : 'o Flávio deve recuperar'} · projeção {pct(proj.flavio, 1)}
+    </p>
+  );
+}
+
 /** Placar principal: Flávio à esquerda, boneco ao centro, Lula à direita. */
 export function Marcador({ data, now }: { data: Snapshot; now: number }) {
   const race = data.national;
@@ -119,6 +139,7 @@ export function Marcador({ data, now }: { data: Snapshot; now: number }) {
         <i className="meta-50" aria-hidden="true" />
       </div>
 
+      {counted && <AvisoOrdem data={data} share={share} />}
       {!counted && (
         <p className="legenda-referencia">
           Barra: 1.ª volta contando só os dois · Flávio {pct(r1Share, 1)} × Lula {pct(100 - r1Share, 1)}
