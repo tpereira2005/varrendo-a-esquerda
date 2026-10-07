@@ -9,10 +9,12 @@ export function Notificacoes() {
   const [estado, setEstado] = useState<Estado>('a-verificar');
   const [chave, setChave] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
+  const [movel, setMovel] = useState(false);
 
   useEffect(() => {
     (async () => {
       const ios = /iPhone|iPad|iPod/.test(navigator.userAgent);
+      setMovel(ios || /Android|Mobile/i.test(navigator.userAgent));
       const instalado = matchMedia('(display-mode: standalone)').matches || (navigator as Navigator & { standalone?: boolean }).standalone === true;
       const r = (await fetch('/api/push', { cache: 'no-store' }).then((x) => x.json()).catch(() => null)) as { publicKey?: string } | null;
       if (!r?.publicKey) return setEstado('servidor-desligado');
@@ -67,7 +69,9 @@ export function Notificacoes() {
   if (estado === 'a-verificar' || estado === 'servidor-desligado') return null;
   return (
     <div className="notificacoes">
-      <div className="font-semibold">Notificações no telemóvel (mesmo com o site fechado)</div>
+      <div className="font-semibold">
+        {movel ? 'Notificações no telemóvel (mesmo com o site fechado)' : 'Notificações no computador (mesmo com o separador fechado)'}
+      </div>
       {estado === 'instalar-iphone' && (
         <p className="hint">
           No iPhone: toca em <b>Partilhar</b> (o quadrado com a seta) → <b>Adicionar ao ecrã principal</b>. Depois abre o site a partir do novo ícone e ativa
@@ -95,7 +99,10 @@ export function Notificacoes() {
         </div>
       )}
       {msg && <p className="hint">{msg}</p>}
-      <p className="hint">Recebes as viradas, os marcos do apuramento, a projeção e o resultado oficial do Presidente.</p>
+      <p className="hint">
+        Recebes as viradas, os marcos do apuramento, a projeção e o resultado oficial do Presidente.
+        {!movel && ' No computador chegam enquanto o browser estiver aberto (mesmo noutro separador ou minimizado).'}
+      </p>
     </div>
   );
 }
