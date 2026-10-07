@@ -119,7 +119,7 @@ export function Mercado({ data, now }: { data: Snapshot; now: number }) {
       </div>
 
       <p className="hint">
-        Fonte: Polymarket · não é sondagem nem resultado oficial · {m.volume > 0 && <>{compact(Math.round(m.volume))} US$ apostados · </>}
+        Não é sondagem nem resultado oficial · {m.volume > 0 && <>{compact(Math.round(m.volume))} US$ apostados · </>}
         atualizado {ago(m.at, now)}.
       </p>
     </section>
