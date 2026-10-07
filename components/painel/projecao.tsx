@@ -5,7 +5,8 @@ import { projectionVerdict, probText } from '@/lib/projecao.mjs';
 import { Numero } from './numero';
 import { compact, pct } from './format';
 
-const sinal = (v: number) => `${v >= 0 ? '+' : '−'}${pct(Math.abs(v), 1).replace('%', ' pp')} ${v >= 0 ? 'Flávio' : 'Lula'}`;
+/** Deslocação a favor de quem ganha terreno: "+1,2 pp Flávio" ou "+3,0 pp Lula" (nunca "−3 pp Lula"). */
+const sinal = (v: number) => `+${pct(Math.abs(v), 1).replace('%', ' pp')} ${v >= 0 ? 'Flávio' : 'Lula'}`;
 const ufName = (uf: string) => UF_NAMES[uf as keyof typeof UF_NAMES];
 
 /** Projeção do resultado final: estimativa estatística, sempre identificada como não oficial. */

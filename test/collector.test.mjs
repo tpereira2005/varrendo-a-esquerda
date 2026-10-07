@@ -285,3 +285,25 @@ test('resultado final continua a ser verificado devagar, para receber correçõe
   await collectStep(store, { now: () => T0 + INTERVALS.final, sleep, fetchImpl: fakeTse({ calls }) });
   assert.ok(calls.some((u) => u.includes('/br/')));
 });
+
+test('pausa pedida pelo TSE a meio do lote não deixa a projeção guardada desatualizada', async () => {
+  const store = new D1Store(database());
+  await store.saveRound({ federal: 6258, estadual: 6260, confirmed: true }, T0);
+  const ok = fakeTse({ votes: () => [60, 40] });
+  let files = 0;
+  await collectStep(store, {
+    now, sleep,
+    fetchImpl: async (url) => {
+      if (url.endsWith('ele-c.json')) return ok(url);
+      // chegam o nacional e dois estados; os seguintes recebem 429 (pausa global)
+      return files++ < 3 ? ok(url) : new Response('', { status: 429 });
+    },
+  });
+  assert.ok((await store.state()).pause_until > T0, 'houve pausa');
+  const saved = await store.projection();
+  assert.ok(saved, 'projeção recalculada apesar da pausa');
+  const keys = jobs.filter((j) => j.cargo === 1).map((j) => j.key);
+  const latest = await store.timelineLatest(keys);
+  assert.ok(latest > 0, 'chegaram ficheiros de estados');
+  assert.equal(saved.source_at, latest);
+});
