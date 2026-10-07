@@ -30,7 +30,9 @@ function Lado({ side, c, counted }: { side: Side; c: Finalist & Partial<Cand>; c
                 Flávio<span className="apelido"> Bolsonaro</span>
               </>
             ) : c.number === LULA ? (
-              'Lula'
+              <>
+                Lula<span className="apelido"> da Silva</span>
+              </>
             ) : (
               titleCase(c.name)
             )}

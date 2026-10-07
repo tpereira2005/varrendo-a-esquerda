@@ -347,7 +347,7 @@ export async function drawShareImage(data: Snapshot, theme: 'light' | 'dark' = c
     const tx = left ? bx + PS + 24 : bx - 24;
     g.fillStyle = c.ink;
     g.font = `800 38px ${TEXTO}`;
-    g.fillText(cand.number === FLAVIO ? 'Flávio Bolsonaro' : shortName(cand, 1), tx, rowY + 20);
+    g.fillText(cand.number === FLAVIO ? 'Flávio Bolsonaro' : cand.number === '13' ? 'Lula da Silva' : shortName(cand, 1), tx, rowY + 20);
     g.fillStyle = c.muted;
     g.font = `600 26px ${TEXTO}`;
     g.fillText(img ? cand.party : `${cand.party} · ${cand.number}`, tx, rowY + 54);
