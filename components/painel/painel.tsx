@@ -219,7 +219,7 @@ export default function Painel({ initial }: { initial: Snapshot | null }) {
 
   return (
     <main className={`wrap ${festejo ? 'modo-festejo' : ''}`}>
-      <Cabecalho data={data} now={now} festejo={festejo} />
+      <Cabecalho data={data} now={now} festejo={festejo} onShare={share} sharing={sharing} />
       <EstadoTSE data={data} now={now} error={error} />
       <BarraFixa data={data} />
 
@@ -259,12 +259,6 @@ export default function Painel({ initial }: { initial: Snapshot | null }) {
         um vazio enorme quando um lado tinha poucos cartões, por exemplo antes do fecho das urnas).
         Telemóvel: tudo numa coluna, pela mesma ordem.
       */}
-      <div className="partilhar-linha">
-        <button className="btn" onClick={share} disabled={sharing}>
-          {sharing ? 'A preparar a imagem…' : '📤 Partilhar o resultado'}
-        </button>
-      </div>
-
       {(data.projection || data.timeline.length > 0) && (
         <div className="par">
           {data.projection && <Projecao data={data} />}
@@ -418,7 +412,19 @@ function BotaoTema() {
   );
 }
 
-function Cabecalho({ data, now, festejo = false }: { data: Snapshot | null; now: number; festejo?: boolean }) {
+function Cabecalho({
+  data,
+  now,
+  festejo = false,
+  onShare,
+  sharing = false,
+}: {
+  data: Snapshot | null;
+  now: number;
+  festejo?: boolean;
+  onShare?: () => void;
+  sharing?: boolean;
+}) {
   const phase = data?.phase ?? 'antes';
   const label = festejo
     ? 'Flávio eleito'
@@ -460,6 +466,14 @@ function Cabecalho({ data, now, festejo = false }: { data: Snapshot | null; now:
           <span className={`pill ${phase === 'apuramento' && data?.active && !festejo ? 'live' : ''} ${festejo ? 'pill-festejo' : ''}`}>
             {label}
           </span>
+          {onShare && (
+            <button className="botao-partilhar" onClick={onShare} disabled={sharing} aria-label="Partilhar o resultado como imagem">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 3v12M7 8l5-5 5 5M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5" />
+              </svg>
+              {sharing ? '…' : 'Partilhar'}
+            </button>
+          )}
           </div>
           {now > 0 && (
             <span className="hint">

@@ -1,13 +1,59 @@
-// Imagem do resultado para partilhar (WhatsApp, Instagram…): desenhada num canvas no próprio browser.
+// Imagem do resultado para partilhar (WhatsApp, Instagram…), desenhada num canvas no próprio browser.
+// Segue o tema escolhido no site (claro por predefinição ou escuro).
 import type { Snapshot } from '@/lib/types';
 import { projectionVerdict, probText } from '@/lib/projecao.mjs';
-import { compact, int, pct, shortName, timeBrasilia, timeLisbon, FLAVIO } from './format';
+import { compact, countdown, int, pct, pp, shortName, timeBrasilia, timeLisbon, FLAVIO } from './format';
 
 const W = 1080;
 const H = 1350;
 const SITE = 'varrendo-eleicoes-brasil-2026.tomaspereira.chatgpt.site';
 const PLACAR = '"Barlow Condensed", "Arial Narrow", sans-serif';
 const TEXTO = 'Inter, "Segoe UI", system-ui, sans-serif';
+
+type Palette = {
+  bg: string;
+  glowA: string;
+  glowB: string;
+  card: string;
+  line: string;
+  soft: string;
+  ink: string;
+  muted: string;
+  flavio: string;
+  lula: string;
+  gold: string;
+  shadow: string;
+};
+
+const LIGHT: Palette = {
+  bg: '#f3f4ef',
+  glowA: 'rgba(8,137,58,0.16)',
+  glowB: 'rgba(242,194,0,0.20)',
+  card: '#ffffff',
+  line: '#e3e6df',
+  soft: '#f0f2ec',
+  ink: '#101521',
+  muted: '#5b6472',
+  flavio: '#08893a',
+  lula: '#cc1636',
+  gold: '#c99a00',
+  shadow: 'rgba(16,21,33,0.12)',
+};
+
+const DARK: Palette = {
+  bg: '#0a0e17',
+  glowA: 'rgba(47,194,102,0.18)',
+  glowB: 'rgba(255,212,59,0.14)',
+  card: '#121826',
+  line: '#232c3d',
+  soft: '#192132',
+  ink: '#eef1f6',
+  muted: '#9aa4b4',
+  flavio: '#2fc266',
+  lula: '#ff5c70',
+  gold: '#ffd43b',
+  shadow: 'rgba(0,0,0,0.45)',
+};
 
 function loadImage(src: string) {
   return new Promise<HTMLImageElement | null>((resolve) => {
@@ -28,13 +74,96 @@ function roundRect(g: CanvasRenderingContext2D, x: number, y: number, w: number,
   g.closePath();
 }
 
+/** Escreve texto reduzindo o tamanho até caber na largura indicada. */
+function fitText(g: CanvasRenderingContext2D, text: string, x: number, y: number, maxWidth: number, weight: string, size: number, family: string) {
+  let s = size;
+  do {
+    g.font = `${weight} ${s}px ${family}`;
+    if (g.measureText(text).width <= maxWidth) break;
+    s -= 2;
+  } while (s > 12);
+  g.fillText(text, x, y);
+}
+
+/** Logótipo: círculo verde com contorno amarelo e a vassoura (o mesmo desenho do cabeçalho). */
+function drawLogo(g: CanvasRenderingContext2D, x: number, y: number, size: number) {
+  const k = size / 64;
+  g.save();
+  g.translate(x, y);
+  g.scale(k, k);
+  const grad = g.createLinearGradient(0, 0, 64, 64);
+  grad.addColorStop(0, '#0aa346');
+  grad.addColorStop(1, '#05582a');
+  g.beginPath();
+  g.arc(32, 32, 29, 0, Math.PI * 2);
+  g.fillStyle = grad;
+  g.fill();
+  g.lineWidth = 3;
+  g.strokeStyle = '#ffdf00';
+  g.stroke();
+  g.lineCap = 'round';
+  g.strokeStyle = '#ffffff';
+  g.lineWidth = 4.5;
+  g.beginPath();
+  g.moveTo(45, 11);
+  g.lineTo(30, 33);
+  g.stroke();
+  g.fillStyle = '#ffdf00';
+  g.beginPath();
+  g.moveTo(23, 29);
+  g.lineTo(36, 37);
+  g.lineTo(30, 53);
+  g.quadraticCurveTo(20, 51, 13, 44);
+  g.closePath();
+  g.fill();
+  g.strokeStyle = '#b89400';
+  g.lineWidth = 1.6;
+  for (const [x1, y1, x2, y2] of [
+    [18, 45, 27, 39],
+    [22, 49, 30, 41],
+    [26, 52, 33, 42],
+  ]) {
+    g.beginPath();
+    g.moveTo(x1, y1);
+    g.lineTo(x2, y2);
+    g.stroke();
+  }
+  g.restore();
+}
+
+/** Dorsal com o número do candidato (verde com faixa amarela; vermelho com faixa bordô). */
+function drawBadge(g: CanvasRenderingContext2D, x: number, y: number, number: string, flavio: boolean) {
+  const s = 76;
+  g.save();
+  roundRect(g, x, y, s, s, 20);
+  g.clip();
+  const grad = g.createLinearGradient(x, y, x + s, y + s);
+  grad.addColorStop(0, flavio ? '#0aa346' : '#e0213f');
+  grad.addColorStop(1, flavio ? '#066b2d' : '#a10f29');
+  g.fillStyle = grad;
+  g.fillRect(x, y, s, s);
+  g.fillStyle = flavio ? '#ffdf00' : '#5c0a18';
+  g.fillRect(x, y + s - 6, s, 6);
+  g.restore();
+  g.fillStyle = '#ffffff';
+  g.font = `800 46px ${PLACAR}`;
+  g.textAlign = 'center';
+  g.fillText(number, x + s / 2, y + 54);
+}
+
+function currentTheme(): 'light' | 'dark' {
+  return document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
+}
+
 /** Desenha o cartão do resultado e devolve-o como PNG. */
-export async function drawShareImage(data: Snapshot): Promise<Blob> {
+export async function drawShareImage(data: Snapshot, theme: 'light' | 'dark' = currentTheme()): Promise<Blob> {
   await document.fonts?.ready;
+  const c = theme === 'dark' ? DARK : LIGHT;
   const canvas = document.createElement('canvas');
   canvas.width = W;
   canvas.height = H;
   const g = canvas.getContext('2d')!;
+
   const p = data.national.parsed;
   const [fa, fb] = data.national.finalists;
   const a = p?.cands[0] ?? { ...fa, votes: 0, pct: 0 };
@@ -42,154 +171,231 @@ export async function drawShareImage(data: Snapshot): Promise<Blob> {
   const counted = !!p && a.votes + b.votes > 0;
   const winner = p?.winner != null ? p.cands[p.winner] : null;
   const flavioWon = winner?.number === FLAVIO;
+  const r1Share = (100 * fa.r1Votes) / (fa.r1Votes + fb.r1Votes);
 
-  // Fundo
-  const bg = g.createLinearGradient(0, 0, W, H);
-  if (flavioWon) {
-    bg.addColorStop(0, '#003d1a');
-    bg.addColorStop(0.5, '#00792f');
-    bg.addColorStop(1, '#002776');
-  } else {
-    bg.addColorStop(0, '#0b1324');
-    bg.addColorStop(1, '#16213a');
-  }
-  g.fillStyle = bg;
+  // ---- fundo ----
+  g.fillStyle = c.bg;
   g.fillRect(0, 0, W, H);
-  // Faixa nas cores do Brasil
-  const stripe = [
+  for (const [gx, gy, col] of [
+    [0, 0, c.glowA],
+    [W, 0, c.glowB],
+  ] as const) {
+    const rg = g.createRadialGradient(gx, gy, 0, gx, gy, 760);
+    rg.addColorStop(0, flavioWon ? (theme === 'dark' ? 'rgba(255,212,59,0.22)' : 'rgba(242,194,0,0.28)') : col);
+    rg.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = rg;
+    g.fillRect(0, 0, W, H);
+  }
+  // faixa nas cores do Brasil
+  for (const [col, x0, x1] of [
     ['#009c3b', 0, 0.45],
     ['#ffdf00', 0.45, 0.7],
     ['#002776', 0.7, 1],
-  ] as const;
-  for (const [c, x0, x1] of stripe) {
-    g.fillStyle = c;
-    g.fillRect(W * x0, 0, W * (x1 - x0), 14);
+  ] as const) {
+    g.fillStyle = col;
+    g.fillRect(W * x0, 0, W * (x1 - x0), 12);
   }
 
-  g.textBaseline = 'alphabetic';
-  g.fillStyle = '#ffffff';
-  g.font = `800 64px ${PLACAR}`;
-  g.fillText('VARRENDO A ', 70, 130);
-  const w1 = g.measureText('VARRENDO A ').width;
-  g.fillStyle = '#ff5c70';
-  g.fillText('ESQUERDA', 70 + w1, 130);
-  g.fillStyle = 'rgba(255,255,255,0.75)';
-  g.font = `600 30px ${TEXTO}`;
-  g.fillText('Eleições Brasil 2026 · 2.ª volta · Presidente', 70, 180);
+  // ---- cabeçalho ----
+  drawLogo(g, 64, 52, 96);
+  g.textAlign = 'left';
+  g.fillStyle = c.ink;
+  g.font = `800 60px ${PLACAR}`;
+  const prefix = flavioWon ? 'A ' : 'VARRENDO A ';
+  g.fillText(prefix, 180, 108);
+  let x = 180 + g.measureText(prefix).width;
+  g.fillStyle = c.lula;
+  g.fillText('ESQUERDA', x, 108);
+  if (flavioWon) {
+    x += g.measureText('ESQUERDA').width;
+    g.fillStyle = c.ink;
+    g.fillText(' FOI VARRIDA!', x, 108);
+  }
+  g.fillStyle = c.muted;
+  g.font = `600 27px ${TEXTO}`;
+  g.fillText('Eleições Brasil 2026 · 2.ª volta · Presidente', 182, 146);
 
-  // Boneco
-  const mascot = await loadImage(winner ? (flavioWon ? '/emoji/humor-10.png' : '/emoji/humor-01.png') : data.mood.src);
-  if (mascot) g.drawImage(mascot, W - 70 - 190, 60, 190, 190);
+  // ---- cartão principal ----
+  const cx = 56;
+  const cy = 186;
+  const cw = W - 112;
+  const ch = 800;
+  g.save();
+  g.shadowColor = c.shadow;
+  g.shadowBlur = 50;
+  g.shadowOffsetY = 18;
+  roundRect(g, cx, cy, cw, ch, 44);
+  g.fillStyle = c.card;
+  g.fill();
+  g.restore();
+  roundRect(g, cx, cy, cw, ch, 44);
+  g.strokeStyle = flavioWon ? c.gold : c.line;
+  g.lineWidth = flavioWon ? 5 : 2;
+  g.stroke();
 
-  // Título do estado da noite
-  let headline = 'A aguardar os primeiros votos';
-  let headColor = '#ffffff';
+  // etiqueta do estado (canto superior direito do cartão)
+  const tag = winner ? 'RESULTADO OFICIAL DO TSE' : counted ? `AO VIVO · ${pct(p!.pctSections, 1)} APURADO` : 'ANTES DO FECHO DAS URNAS';
+  g.font = `800 26px ${PLACAR}`;
+  const tw = g.measureText(tag).width + 44;
+  roundRect(g, cx + cw - tw - 36, cy + 34, tw, 48, 24);
+  g.fillStyle = winner ? (flavioWon ? '#ffdf00' : c.soft) : counted ? (theme === 'dark' ? '#3a1620' : '#fbe5e8') : c.soft;
+  g.fill();
+  g.fillStyle = winner ? (flavioWon ? '#002776' : c.muted) : counted ? c.lula : c.muted;
+  g.textAlign = 'center';
+  g.fillText(tag, cx + cw - tw / 2 - 36, cy + 67);
+  g.textAlign = 'left';
+  g.fillStyle = c.muted;
+  g.font = `800 26px ${PLACAR}`;
+  g.fillText('PRESIDENTE · BRASIL', cx + 44, cy + 67);
+
+  // boneco e manchete
+  const mascotSrc = winner ? (flavioWon ? '/emoji/humor-10.png' : '/emoji/humor-01.png') : data.mood.src;
+  const mascot = await loadImage(mascotSrc);
+  if (mascot) g.drawImage(mascot, W / 2 - 85, cy + 100, 170, 170);
+  g.textAlign = 'center';
+  let head = 'A AGUARDAR OS PRIMEIROS VOTOS';
+  let headColor = c.muted;
+  let sub = `As urnas fecham às ${timeLisbon(data.pollsCloseAt)} em Lisboa (${timeBrasilia(data.pollsCloseAt)} em Brasília)`;
   if (winner) {
-    headline = flavioWon ? 'FLÁVIO BOLSONARO ELEITO!' : `${shortName(winner, 1).toUpperCase()} ELEITO PELO TSE`;
-    headColor = flavioWon ? '#ffdf00' : '#ffffff';
+    head = flavioWon ? 'FLÁVIO BOLSONARO ELEITO!' : `${shortName(winner, 1).toUpperCase()} ELEITO PELO TSE`;
+    headColor = flavioWon ? c.flavio : c.ink;
+    sub = `${pct(winner.pct, 2)} dos votos válidos · ${int(winner.votes)} votos`;
   } else if (counted) {
-    const lead = a.votes >= b.votes ? a : b;
-    headline = `${shortName(lead, 1).toUpperCase()} À FRENTE`;
-    headColor = lead === a ? '#3ad072' : '#ff6b7d';
+    const leadA = a.votes >= b.votes;
+    head = `${shortName(leadA ? a : b, 1).toUpperCase()} À FRENTE`;
+    headColor = leadA ? c.flavio : c.lula;
+    sub = `por ${compact(Math.abs(a.votes - b.votes))} votos · ${pp(Math.abs(a.pct - b.pct))}`;
+  } else if (data.serverNow < data.pollsCloseAt) {
+    sub += ` · faltam ${countdown(data.pollsCloseAt, data.serverNow)}`;
   }
   g.fillStyle = headColor;
-  g.font = `800 92px ${PLACAR}`;
-  g.fillText(headline, 70, 360, W - 140);
+  fitText(g, head, W / 2, cy + 340, cw - 80, '800', 76, PLACAR);
+  g.fillStyle = c.muted;
+  fitText(g, sub, W / 2, cy + 388, cw - 80, '600', 30, TEXTO);
 
-  // Placar
-  const cardY = 410;
-  roundRect(g, 50, cardY, W - 100, 520, 36);
-  g.fillStyle = 'rgba(255,255,255,0.08)';
-  g.fill();
-  const side = (c: typeof a, x: number, align: CanvasTextAlign, color: string) => {
-    g.textAlign = align;
-    g.fillStyle = '#ffffff';
-    g.font = `700 44px ${TEXTO}`;
-    g.fillText(c.number === FLAVIO ? 'Flávio Bolsonaro' : shortName(c, 1), x, cardY + 90);
-    g.fillStyle = 'rgba(255,255,255,0.6)';
-    g.font = `600 28px ${TEXTO}`;
-    g.fillText(`${c.party} · ${c.number}`, x, cardY + 132);
+  // candidatos
+  const rowY = cy + 440;
+  const side = (cand: typeof a, left: boolean, color: string) => {
+    const bx = left ? cx + 44 : cx + cw - 44 - 76;
+    drawBadge(g, bx, rowY, cand.number, cand.number === FLAVIO);
+    g.textAlign = left ? 'left' : 'right';
+    const tx = left ? bx + 96 : bx - 20;
+    g.fillStyle = c.ink;
+    g.font = `800 38px ${TEXTO}`;
+    g.fillText(cand.number === FLAVIO ? 'Flávio Bolsonaro' : shortName(cand, 1), tx, rowY + 36);
+    g.fillStyle = c.muted;
+    g.font = `600 26px ${TEXTO}`;
+    g.fillText(`${cand.party} · ${cand.number}`, tx, rowY + 70);
     g.fillStyle = color;
-    g.font = `800 150px ${PLACAR}`;
-    g.fillText(counted ? pct(c.pct, 1) : pct(c.r1Pct, 1), x, cardY + 290);
-    g.fillStyle = 'rgba(255,255,255,0.7)';
-    g.font = `600 30px ${TEXTO}`;
-    g.fillText(counted ? `${int(c.votes)} votos` : '1.ª volta', x, cardY + 340);
+    g.globalAlpha = counted || winner ? 1 : 0.3;
+    g.font = `800 132px ${PLACAR}`;
+    g.fillText(counted ? pct(cand.pct, 2) : pct(cand.r1Pct, 2), left ? cx + 44 : cx + cw - 44, rowY + 205);
+    g.globalAlpha = 1;
+    g.fillStyle = c.muted;
+    g.font = `600 26px ${TEXTO}`;
+    g.fillText(counted ? `${int(cand.votes)} votos` : '1.ª volta', left ? cx + 44 : cx + cw - 44, rowY + 245);
   };
-  side(a, 100, 'left', '#3ad072');
-  side(b, W - 100, 'right', '#ff6b7d');
-  g.textAlign = 'left';
+  side(a, true, c.flavio);
+  side(b, false, c.lula);
 
-  // Barra
-  const share = counted ? (100 * a.votes) / (a.votes + b.votes) : (100 * fa.r1Votes) / (fa.r1Votes + fb.r1Votes);
-  const bx = 100;
-  const by = cardY + 390;
-  const bw = W - 200;
-  const bh = 34;
+  // barra (verde e vermelho encostados, entalhe nos 50%)
+  const share = counted ? (100 * a.votes) / (a.votes + b.votes) : r1Share;
+  const bx = cx + 44;
+  const by = rowY + 280;
+  const bw = cw - 88;
+  const bh = 26;
   g.save();
+  g.globalAlpha = counted ? 1 : 0.4;
   roundRect(g, bx, by, bw, bh, bh / 2);
   g.clip();
   const gf = g.createLinearGradient(bx, 0, bx + bw * (share / 100), 0);
-  gf.addColorStop(0, '#067a33');
-  gf.addColorStop(1, '#10b04f');
+  gf.addColorStop(0, theme === 'dark' ? '#1f9e52' : '#067a33');
+  gf.addColorStop(1, theme === 'dark' ? '#3ad072' : '#10b04f');
   g.fillStyle = gf;
   g.fillRect(bx, by, bw * (share / 100), bh);
   const gl = g.createLinearGradient(bx + bw * (share / 100), 0, bx + bw, 0);
-  gl.addColorStop(0, '#e8334f');
-  gl.addColorStop(1, '#b3112e');
+  gl.addColorStop(0, theme === 'dark' ? '#ff6b7d' : '#e8334f');
+  gl.addColorStop(1, theme === 'dark' ? '#e0334c' : '#b3112e');
   g.fillStyle = gl;
   g.fillRect(bx + bw * (share / 100), by, bw * (1 - share / 100), bh);
   g.restore();
-  g.fillStyle = '#ffffff';
+  g.fillStyle = c.card;
   g.beginPath();
-  g.moveTo(bx + bw / 2 - 9, by);
-  g.lineTo(bx + bw / 2 + 9, by);
-  g.lineTo(bx + bw / 2, by + 11);
+  g.moveTo(bx + bw / 2 - 8, by);
+  g.lineTo(bx + bw / 2 + 8, by);
+  g.lineTo(bx + bw / 2, by + 10);
   g.fill();
-  g.fillStyle = 'rgba(255,255,255,0.75)';
-  g.font = `600 30px ${TEXTO}`;
   g.textAlign = 'center';
+  g.fillStyle = c.muted;
+  g.font = `600 25px ${TEXTO}`;
   g.fillText(
-    counted ? `${pct(p!.pctSections, 2)} das secções apuradas · diferença de ${compact(Math.abs(a.votes - b.votes))} votos` : 'Barra: 1.ª volta entre os dois finalistas',
+    counted
+      ? `${pct(p!.pctSections, 2)} das secções apuradas · ficheiro do TSE das ${timeLisbon(data.national.meta.generatedAt)} (Lisboa)`
+      : 'Barra: 1.ª volta entre os dois finalistas',
     W / 2,
-    by + 90,
+    by + 66,
   );
 
-  // Projeção (não oficial)
-  let y = cardY + 600;
-  if (data.projection && !winner && counted) {
+  // ---- painel inferior: projeção, festejo ou referência ----
+  const py = cy + ch + 28;
+  const ph = 172;
+  roundRect(g, cx, py, cw, ph, 36);
+  if (flavioWon) {
+    const gg = g.createLinearGradient(cx, py, cx + cw, py + ph);
+    gg.addColorStop(0, '#00782f');
+    gg.addColorStop(0.5, '#009c3b');
+    gg.addColorStop(1, '#c9a800');
+    g.fillStyle = gg;
+  } else {
+    g.fillStyle = c.card;
+  }
+  g.fill();
+  if (!flavioWon) {
+    g.strokeStyle = c.line;
+    g.lineWidth = 2;
+    g.stroke();
+  }
+  g.textAlign = 'center';
+  if (flavioWon) {
+    g.fillStyle = '#ffdf00';
+    fitText(g, 'A ESQUERDA FOI VARRIDA! 🧹', W / 2, py + 105, cw - 80, '800', 72, PLACAR);
+    g.fillStyle = 'rgba(255,255,255,0.9)';
+    g.font = `600 28px ${TEXTO}`;
+    g.fillText(`Resultado oficial do TSE · ${pct(winner!.pct, 2)} dos votos válidos`, W / 2, py + 152);
+  } else if (winner) {
+    g.fillStyle = c.muted;
+    g.font = `600 30px ${TEXTO}`;
+    g.fillText(`Resultado oficial do TSE · ${pct(p!.pctSections, 2)} das secções`, W / 2, py + 105);
+  } else if (data.projection && counted) {
     const v = projectionVerdict(data.projection);
-    g.fillStyle = '#ffdf00';
-    g.font = `800 52px ${PLACAR}`;
-    g.fillText(`PROJEÇÃO: ${v.text.toUpperCase()}`, W / 2, y, W - 140);
-    g.fillStyle = 'rgba(255,255,255,0.8)';
-    g.font = `600 32px ${TEXTO}`;
+    g.fillStyle = c.muted;
+    g.font = `800 24px ${PLACAR}`;
+    g.fillText('PROJEÇÃO · ESTIMATIVA NÃO OFICIAL', W / 2, py + 52);
+    g.fillStyle = v.who === 'flavio' ? c.flavio : v.who === 'lula' ? c.lula : c.ink;
+    fitText(g, v.text.toUpperCase(), W / 2, py + 118, cw - 80, '800', 64, PLACAR);
+    g.fillStyle = c.muted;
+    g.font = `600 28px ${TEXTO}`;
     g.fillText(
-      `Flávio ${pct(data.projection.flavio, 1)} · probabilidade de vitória ${probText(data.projection.probFlavio)} · estimativa não oficial`,
+      `Flávio ${pct(data.projection.flavio, 1)} · probabilidade de vitória ${probText(data.projection.probFlavio)}`,
       W / 2,
-      y + 54,
-      W - 140,
+      py + 160,
     );
-    y += 110;
-  } else if (flavioWon) {
-    g.fillStyle = '#ffdf00';
-    g.font = `800 64px ${PLACAR}`;
-    g.fillText('A ESQUERDA FOI VARRIDA! 🧹', W / 2, y + 20);
-    y += 90;
+  } else {
+    g.fillStyle = c.muted;
+    g.font = `800 24px ${PLACAR}`;
+    g.fillText('1.ª VOLTA, SÓ OS DOIS FINALISTAS', W / 2, py + 62);
+    g.fillStyle = c.ink;
+    fitText(g, `Flávio ${pct(r1Share, 1)} × Lula ${pct(100 - r1Share, 1)}`, W / 2, py + 128, cw - 80, '800', 64, PLACAR);
   }
 
-  // Rodapé
-  const now = data.serverNow;
-  g.fillStyle = 'rgba(255,255,255,0.6)';
-  g.font = `600 28px ${TEXTO}`;
-  g.fillText(
-    `${winner ? 'Resultado oficial do TSE' : 'Dados oficiais do TSE'} · ${timeLisbon(now)} em Lisboa (${timeBrasilia(now)} em Brasília)`,
-    W / 2,
-    H - 110,
-  );
-  g.fillStyle = '#ffffff';
-  g.font = `700 32px ${TEXTO}`;
-  g.fillText(SITE, W / 2, H - 60);
+  // ---- rodapé ----
+  g.textAlign = 'center';
+  g.fillStyle = c.muted;
+  g.font = `600 25px ${TEXTO}`;
+  g.fillText(`Dados oficiais do TSE · ${timeLisbon(data.serverNow)} em Lisboa (${timeBrasilia(data.serverNow)} em Brasília)`, W / 2, H - 86);
+  g.fillStyle = c.ink;
+  g.font = `700 29px ${TEXTO}`;
+  g.fillText(SITE, W / 2, H - 44);
   g.textAlign = 'left';
 
   return new Promise((resolve, reject) => canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('Imagem'))), 'image/png'));

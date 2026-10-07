@@ -300,10 +300,34 @@ body {
 .estado-erro i { background: var(--lula); }
 .estado-erro { color: var(--lula); font-weight: 600; }
 
-.partilhar-linha {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: -6px;
+.botao-partilhar {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--ink);
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+  transition: background-color 0.15s;
+}
+
+.botao-partilhar:hover {
+  background: var(--soft);
+}
+
+.botao-partilhar svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 /* projeção */
