@@ -54,6 +54,10 @@ function build() {
 
 export function unlockAudio() {
   try {
+    // iPhone (iOS 17+): tratar os avisos como reprodução, para tocarem mesmo com o interruptor de silêncio
+    // (quem liga o "Som" no site quer ouvi-los).
+    const session = (navigator as Navigator & { audioSession?: { type: string } }).audioSession;
+    if (session) session.type = 'playback';
     ctx ??= new AudioContext();
     build();
     if (ctx.state === 'suspended') void ctx.resume();
