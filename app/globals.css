@@ -419,10 +419,16 @@ body {
   gap: 4px 12px;
   min-width: 0;
 }
+/* sem a margem habitual dos títulos, para o "Polymarket" ficar centrado com o título */
+.mercado-titulo h2 {
+  margin-bottom: 0;
+  line-height: 1.2;
+}
 .mercado-fonte {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  line-height: 1;
   font-size: 0.85rem;
   font-weight: 600;
   color: var(--muted);
@@ -431,6 +437,7 @@ body {
   width: 18px;
   height: 18px;
   flex-shrink: 0;
+  border-radius: 5px;
 }
 .mercado-corpo {
   display: grid;

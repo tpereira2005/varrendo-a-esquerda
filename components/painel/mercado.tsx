@@ -46,7 +46,7 @@ export function Mercado({ data, now }: { data: Snapshot; now: number }) {
 
   return (
     <section className="card grid gap-3">
-      <div className="flex items-start justify-between gap-2">
+      <div className="flex items-center justify-between gap-2">
         {/* Título e fonte; no telemóvel, se não couber, a fonte desce para debaixo do título. */}
         <div className="mercado-titulo">
           <h2>Mercado de apostas</h2>
@@ -126,12 +126,22 @@ export function Mercado({ data, now }: { data: Snapshot; now: number }) {
   );
 }
 
-/** Ícone simplificado do Polymarket (desenhado aqui, para não depender do site deles, bloqueado em Portugal). */
+/**
+ * Logótipo do Polymarket em vetor (medido a partir do oficial), nítido em qualquer ecrã.
+ * Desenhado aqui, para não depender do site deles, bloqueado em Portugal.
+ */
 function LogoPolymarket() {
   return (
-    <svg viewBox="0 0 24 24" className="logo-polymarket" aria-hidden="true">
-      <rect width="24" height="24" rx="6" fill="#1652f0" />
-      <path d="M12 4.6 18.4 8.3v7.4L12 19.4 5.6 15.7V8.3Z M5.6 8.3 12 12l6.4-3.7M12 12v7.4" fill="none" stroke="#fff" strokeWidth="1.7" strokeLinejoin="round" />
+    <svg viewBox="0 0 512 512" className="logo-polymarket" aria-hidden="true">
+      <rect width="512" height="512" rx="112" fill="#2e5cff" />
+      <path
+        d="M120 170 365 101V409L120 340Z"
+        fill="#fff"
+        stroke="#fff"
+        strokeWidth="20"
+        strokeLinejoin="round"
+      />
+      <path d="M164 181 346 130V232ZM140 204 320 255 140 306ZM164 329 346 278V380Z" fill="#2e5cff" />
     </svg>
   );
 }
@@ -158,7 +168,6 @@ function Grafico({ pontos, vista, marcas }: { pontos: [number, number][]; vista:
   const top = visiveis.length ? 34 : PAD.t; // espaço para os nomes das marcas
   const sx = (t: number) => PAD.l + ((t - t0) / Math.max(1, t1 - t0)) * (W - PAD.l - PAD.r);
   const sy = (y: number) => top + ((hi - Math.max(lo, Math.min(hi, y))) / (hi - lo)) * (H - top - PAD.b);
-  const show50 = lo <= 50 && hi >= 50;
   const line = pontos.map(([t, y], i) => `${i ? 'L' : 'M'}${sx(t).toFixed(1)},${sy(y).toFixed(1)}`).join('');
   const base = sy(Math.max(lo, Math.min(hi, 50)));
   const area = `${line}L${sx(t1).toFixed(1)},${base}L${sx(t0).toFixed(1)},${base}Z`;
@@ -259,8 +268,8 @@ function Grafico({ pontos, vista, marcas }: { pontos: [number, number][]; vista:
           </>
         ) : (
           <>
-            Probabilidade do Flávio segundo o mercado.{show50 && ' Linha a tracejado: 50%.'}
-            {visiveis.length > 0 && ' Linhas douradas: fecho das urnas e secções apuradas pelo TSE.'}
+            Probabilidade do Flávio segundo o mercado.
+            {visiveis.length > 0 && ' Linhas douradas: fecho das urnas e secções apuradas.'}
           </>
         )}
       </figcaption>
