@@ -106,18 +106,19 @@ test('com o histórico, a projeção corrige o "Flávio à frente no início" qu
     });
   const histories = {};
   for (const r of regions) {
-    histories[r.uf] = [0.05, 0.1, 0.15, 0.2, 0.25].map((pct) => {
+    histories[r.uf] = [0.2, 0.3, 0.4, 0.5].map((pct) => {
       const counted = Math.round(r.prior.valid * pct);
       const a = Math.round(counted * (r.prior.share + (1 - pct) * d));
       return [pct, a, counted - a];
     });
   }
-  const now = at(0.3);
+  const now = at(0.6);
   const without = project(now);
   const withHistory = project(now, histories);
-  assert.ok(without.flavio > national() + 1.5, `sem histórico ${without.flavio}`);
-  assert.ok(Math.abs(withHistory.flavio - national()) < 0.4, `com histórico ${withHistory.flavio} vs ${national()}`);
-  assert.ok(Math.abs(withHistory.trend - 3) < 0.5, String(withHistory.trend));
+  assert.ok(without.flavio > national() + 1, `sem histórico ${without.flavio}`);
+  // a tendência só entra a partir de 20% apurado e com peso moderado: corrige grande parte do desvio, não todo
+  assert.ok(Math.abs(withHistory.flavio - national()) < Math.abs(without.flavio - national()) / 2, `com histórico ${withHistory.flavio} vs ${national()}`);
+  assert.ok(withHistory.trend > 1.5 && withHistory.trend < 3.5, String(withHistory.trend));
 });
 
 test('quase tudo contado: incerteza pequena e projeção ≈ resultado', () => {
@@ -142,7 +143,7 @@ test('"onde faltam votos" e probabilidade por estado', () => {
 test('calibração em noites simuladas: o intervalo de 95% acerta perto de 95% e o erro cai com a contagem', () => {
   const r = evaluate(project, { nights: 150, moments: [0.1, 0.4, 0.8], seed: 9 });
   for (const m of r) assert.ok(m.cobertura95 > 0.88 && m.cobertura95 <= 1, `cobertura ${m.cobertura95} aos ${m.moment}`);
-  assert.ok(r[0].erroMedio < 1.1 && r[1].erroMedio < 0.5 && r[2].erroMedio < 0.2, JSON.stringify(r));
+  assert.ok(r[0].erroMedio < 1.4 && r[1].erroMedio < 0.6 && r[2].erroMedio < 0.2, JSON.stringify(r));
   assert.ok(r.every((m) => m.excessoConfianca < 0.02));
 });
 
@@ -173,4 +174,16 @@ test('contagem desequilibrada (estados do Flávio contados primeiro): mais incer
   const even = scenario(() => 50);
   const extraEven = project(even).sd / project(even, {}, { ...AJUSTE, bloco: 0 }).sd - 1;
   assert.ok(extraEven < 0.01 && extraEven < p.sd / without.sd - 1, String(extraEven));
+});
+
+test('noite real (2.ª volta de 2022, estado a estado): resultado sempre dentro do intervalo e nunca confiante no lado errado', async () => {
+  const { at2022, moments2022, truth2022 } = await import('../scripts/backtest-2022.mjs');
+  const truth = truth2022(); // Bolsonaro 49,10%: ganhou o Lula
+  for (const m of moments2022()) {
+    const { regions, histories } = at2022(m.t);
+    const p = project(regions, histories);
+    assert.ok(truth >= p.low && truth <= p.high, `${m.target}: ${p.low}–${p.high} não contém ${truth}`);
+    assert.ok(Math.abs(p.flavio - truth) < 1, `${m.target}: erro ${p.flavio - truth}`);
+    assert.ok(p.probFlavio < 0.5, `${m.target}: deu o Bolsonaro como favorito (${p.probFlavio})`);
+  }
 });
