@@ -307,3 +307,20 @@ test('pausa pedida pelo TSE a meio do lote não deixa a projeção guardada desa
   assert.ok(latest > 0, 'chegaram ficheiros de estados');
   assert.equal(saved.source_at, latest);
 });
+
+test('dados abertos: versões por páginas, sem deputados, com as cidades do estrangeiro', async () => {
+  const db = database();
+  const store = new D1Store(db);
+  const add = (key, turn, at) => db.raw.prepare('INSERT INTO revisions(key, hash, parsed, at, turn) VALUES(?,?,?,?,?)').run(key, 'h', '{}', at, turn);
+  add('2026:1:SP:1', 1, 1);
+  add('2026:1:SP:6', 1, 2); // deputado federal: fica de fora
+  add('2026:2:SP:1', 2, 3);
+  add('2026:2:RJ:3', 2, 4);
+  add('2026:2:ZZ-cidade:29539', 2, 5);
+  add('2026:2:BR:1', 2, 6);
+  const p1 = await store.revisionsPage(2, 0, 2);
+  assert.deepEqual(p1.map((r) => r.key), ['2026:2:SP:1', '2026:2:RJ:3']);
+  const p2 = await store.revisionsPage(2, p1.at(-1).id, 2);
+  assert.deepEqual(p2.map((r) => r.key), ['2026:2:ZZ-cidade:29539', '2026:2:BR:1']);
+  assert.deepEqual((await store.revisionsPage(1, 0, 10)).map((r) => r.key), ['2026:1:SP:1']);
+});

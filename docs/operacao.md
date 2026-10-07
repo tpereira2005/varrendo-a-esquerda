@@ -147,9 +147,9 @@ Emergências: formato inesperado → `COLLECTION_PAUSED=1` (mantém o último re
 O site guarda todas as versões de cada ficheiro do TSE na tabela `revisions` (Presidente, Governador, Senado,
 estrangeiro e, desde a 2.ª volta de 2026, cada cidade do estrangeiro). Nada as apaga.
 
-1. Pedir ao Codex: exportar para JSON `SELECT key, at, parsed FROM revisions WHERE turn = 2 ORDER BY at` da base D1
-   de produção, para `arquivo/revisoes-2a-volta.json` (fora do repositório).
-2. `node --max-old-space-size=4096 scripts/dados-abertos.mjs ../arquivo/revisoes-2a-volta.json 2026 2`
-   → cria `dados-abertos/2026-2t/` (CSV e resumo).
+1. `npm run dados:descarregar -- 2` (a partir de `site/`): descarrega do site publicado, pelo endereço público
+   `/api/dados?turno=2`, todas as versões (Presidente, Governador, Senado, cidades do estrangeiro), guarda-as em
+   `arquivo/revisoes-2a-volta.json` e cria `dados-abertos/2026-2t/` (CSV e resumo). Não precisa do Codex.
+2. Confirmar o `resumo.json` (período e número de disputas).
 3. Publicar no GitHub (commit e push). Ver `dados-abertos/README.md` (colunas, fontes, licença CC0).
 

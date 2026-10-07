@@ -59,8 +59,14 @@ print(sp.pivot_table(index="gravado_em_utc", columns="nome", values="votos").tai
 
 ## Como se gera
 
+Qualquer pessoa pode descarregar diretamente do site as versões gravadas (endereço público, por páginas):
+`https://varrendo-a-esquerda.tomaspereira.chatgpt.site/api/dados?turno=2&depois=0&limite=1000`
+(continuar com `depois=<seguinte>` até `seguinte` ser `null`).
+
 ```bash
-# 1.ª e 2.ª volta de 2026: exportação da tabela `revisions` da base do site
+# descarregar do site e gerar o CSV (a partir da pasta site/)
+npm run dados:descarregar -- 2
+# a partir de uma exportação da tabela `revisions` da base do site
 node --max-old-space-size=4096 scripts/dados-abertos.mjs ../arquivo/revisoes-1a-volta.json 2026 1
 # 2.ª volta de 2022
 node scripts/dados-abertos.mjs 2022 2022 2
