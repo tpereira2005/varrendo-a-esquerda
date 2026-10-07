@@ -123,7 +123,11 @@ export type Market = {
   stale: boolean;
   error: string | null;
   recent: [number, number][];
+  /** Desde 2 h antes do fecho das urnas da 2.ª volta (vazio antes disso). */
+  night: [number, number][];
   campaign: [number, number][];
+  marks: { label: string; t: number; p: number }[];
+  nightStart: number;
 };
 
 export type ExteriorCountry = {

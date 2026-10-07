@@ -115,3 +115,27 @@ test('Polymarket: a página recebe o mercado no estado (ou nada, antes da primei
   assert.ok(s.market.flavio > 50);
   assert.ok(s.market.recent.length >= 2);
 });
+
+test('Polymarket: marcos da campanha (antes da 1.ª volta, há 7 dias, máximo) e série da noite', async () => {
+  const { marksOf, ROUND1_CLOSE, NIGHT_START } = await import('../lib/mercado.mjs');
+  const day = 86_400_000;
+  const camp = Array.from({ length: 60 }, (_, i) => [ROUND1_CLOSE - 30 * day + i * day, 30 + i]);
+  const at = ROUND1_CLOSE + 29 * day;
+  const marks = marksOf(camp, at);
+  assert.deepEqual(marks.map((k) => k.label), ['Antes da 1.ª volta', 'Há 7 dias', 'Máximo']);
+  assert.equal(marks[0].p, 60); // último ponto até ao fecho das urnas
+  assert.equal(marks[1].p, 30 + 52);
+  assert.equal(marks[2].p, 89);
+  // Antes da 1.ª volta não há esse marco.
+  assert.deepEqual(marksOf(camp.slice(0, 20), ROUND1_CLOSE - 5 * day).map((k) => k.label), ['Há 7 dias', 'Máximo']);
+
+  // A série da noite só existe a partir de 2 h antes do fecho das urnas.
+  const row = (at, recent) => ({ payload: JSON.stringify({ flavio: 90, lula: 10 }), recent: JSON.stringify(recent), campaign: '[]', success_at: at });
+  const early = marketView(row(NIGHT_START - 1000, [[NIGHT_START - 5000, 88]]), NIGHT_START, true);
+  assert.deepEqual(early.night, []);
+  const pts = Array.from({ length: 30 }, (_, i) => [NIGHT_START - 3_600_000 + i * 600_000, 85 + i / 10]);
+  const late = marketView(row(NIGHT_START + 4 * 3_600_000, pts), NIGHT_START + 4 * 3_600_000, true);
+  assert.ok(late.night.length >= 2);
+  assert.ok(late.night.every(([t]) => t >= NIGHT_START));
+  assert.equal(late.night.at(-1)[1], 90);
+});

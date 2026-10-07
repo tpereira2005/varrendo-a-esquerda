@@ -470,13 +470,10 @@ html[data-motion='off'] .mercado-pulso { animation: none; }
 
 .mercado-resumo {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(92px, 1fr));
   gap: 6px;
   font-size: 0.8rem;
   color: var(--muted);
-}
-@media (min-width: 520px) {
-  .mercado-resumo { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
 }
 .mercado-resumo span {
   display: grid;
@@ -491,7 +488,8 @@ html[data-motion='off'] .mercado-pulso { animation: none; }
 }
 .mercado-resumo b.c-flavio { color: var(--flavio); }
 .mercado-resumo b.c-lula { color: var(--lula); }
-.mercado-resumo small { font-size: 0.72rem; }
+.mercado-resumo small { font-size: 0.72rem; line-height: 1.3; }
+.mercado-resumo em { font-style: normal; font-weight: 700; }
 
 .mercado-comparar {
   display: flex;
