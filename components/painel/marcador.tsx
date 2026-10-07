@@ -35,7 +35,8 @@ function Lado({ side, c, counted }: { side: Side; c: Finalist & Partial<Cand>; c
               titleCase(c.name)
             )}
           </div>
-          <div className="hint">{c.party} · {c.number}</div>
+          {/* Com retrato, o número já está no selo. */}
+          <div className="hint">{foto ? c.party : `${c.party} · ${c.number}`}</div>
         </div>
       </div>
       <div className="lado-pct">

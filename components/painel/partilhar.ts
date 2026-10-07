@@ -350,7 +350,7 @@ export async function drawShareImage(data: Snapshot, theme: 'light' | 'dark' = c
     g.fillText(cand.number === FLAVIO ? 'Flávio Bolsonaro' : shortName(cand, 1), tx, rowY + 20);
     g.fillStyle = c.muted;
     g.font = `600 26px ${TEXTO}`;
-    g.fillText(`${cand.party} · ${cand.number}`, tx, rowY + 54);
+    g.fillText(img ? cand.party : `${cand.party} · ${cand.number}`, tx, rowY + 54);
     g.fillStyle = color;
     g.globalAlpha = counted || winner ? 1 : 0.3;
     g.font = `800 132px ${PLACAR}`;
