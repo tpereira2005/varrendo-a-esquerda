@@ -29,7 +29,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 355
     env:
-      SITE: https://varrendo-eleicoes-brasil-2026.tomaspereira.chatgpt.site
+      SITE: https://varrendo-a-esquerda.tomaspereira.chatgpt.site
       MINUTOS: ${{ github.event.inputs.minutos || '345' }}
     steps:
       - name: Pedir o estado a cada 15 segundos

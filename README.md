@@ -2,7 +2,7 @@
 
 Painel em tempo real da **2.ª volta das presidenciais brasileiras** (25 de outubro de 2026): **Flávio Bolsonaro (PL, 22) × Lula (PT, 13)**, com os resultados oficiais do Tribunal Superior Eleitoral (TSE), visto por quem torce pelo Flávio.
 
-Site: https://varrendo-eleicoes-brasil-2026.tomaspereira.chatgpt.site
+Site: https://varrendo-a-esquerda.tomaspereira.chatgpt.site
 
 Inspirado no projeto [ODevLibertario/varrendo-a-esquerda](https://github.com/ODevLibertario/varrendo-a-esquerda), de onde vem o critério de agrupamento dos partidos (`lib/parties.json`).
 

@@ -6,7 +6,7 @@ import { compact, countdown, int, pct, pp, shortName, timeBrasilia, timeLisbon, 
 
 const W = 1080;
 const H = 1350;
-const SITE = 'varrendo-eleicoes-brasil-2026.tomaspereira.chatgpt.site';
+const SITE = 'varrendo-a-esquerda.tomaspereira.chatgpt.site';
 const PLACAR = '"Barlow Condensed", "Arial Narrow", sans-serif';
 const TEXTO = 'Inter, "Segoe UI", system-ui, sans-serif';
 

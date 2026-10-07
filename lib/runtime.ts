@@ -27,7 +27,7 @@ export function store() {
 export function pushKeys() {
   const { VAPID_PUBLIC_KEY: publicKey, VAPID_PRIVATE_KEY: privateKey } = siteEnv;
   if (!publicKey || !privateKey) return null;
-  return { publicKey, privateKey, subject: siteEnv.VAPID_SUBJECT || 'https://varrendo-eleicoes-brasil-2026.tomaspereira.chatgpt.site' };
+  return { publicKey, privateKey, subject: siteEnv.VAPID_SUBJECT || 'https://varrendo-a-esquerda.tomaspereira.chatgpt.site' };
 }
 
 export function flags() {
