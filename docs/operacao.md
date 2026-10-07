@@ -141,3 +141,15 @@ Para regenerar o arquivo da 1.ª volta (`data/turno1.json` e `data/exterior-turn
 | seg 26 | Publicar com `COLLECTION_PAUSED=1` e congelar a 2.ª volta. |
 
 Emergências: formato inesperado → `COLLECTION_PAUSED=1` (mantém o último resultado bom); publicação falhada → voltar à versão Sites anterior (os dados ficam na D1). Nunca apagar a base.
+
+## Depois da 2.ª volta: publicar os dados abertos da noite
+
+O site guarda todas as versões de cada ficheiro do TSE na tabela `revisions` (Presidente, Governador, Senado,
+estrangeiro e, desde a 2.ª volta de 2026, cada cidade do estrangeiro). Nada as apaga.
+
+1. Pedir ao Codex: exportar para JSON `SELECT key, at, parsed FROM revisions WHERE turn = 2 ORDER BY at` da base D1
+   de produção, para `arquivo/revisoes-2a-volta.json` (fora do repositório).
+2. `node --max-old-space-size=4096 scripts/dados-abertos.mjs ../arquivo/revisoes-2a-volta.json 2026 2`
+   → cria `dados-abertos/2026-2t/` (CSV e resumo).
+3. Publicar no GitHub (commit e push). Ver `dados-abertos/README.md` (colunas, fontes, licença CC0).
+

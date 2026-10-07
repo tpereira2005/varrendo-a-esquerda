@@ -19,6 +19,11 @@ Inspirado no projeto [ODevLibertario/varrendo-a-esquerda](https://github.com/ODe
 - Avisos (viradas, marcos, estados decididos, resultado oficial), notificações do sistema e **modo festejo** se o TSE declarar o Flávio eleito.
 - Telemóvel e PC, tema claro (predefinido) e escuro.
 
+
+## Dados abertos
+
+A pasta [`dados-abertos/`](dados-abertos/) tem a **evolução da contagem, versão a versão e estado a estado**, da 2.ª volta de 2022, da 1.ª volta de 2026 e (depois de 25/10) da 2.ª volta de 2026, em CSV simples e no domínio público (CC0): qualquer pessoa ou IA pode usar. São também os dados com que a projeção é testada (`npm run projecao:real`).
+
 ## Regras
 
 1. Todos os números vêm dos ficheiros oficiais do TSE, sem alterações.
