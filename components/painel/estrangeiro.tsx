@@ -27,10 +27,20 @@ function MiniDuelo({ flavio, lula, r1 }: { flavio: number; lula: number; r1?: { 
   );
 }
 
+/** Deslocação face à 1.ª volta (só os dois), em pp a favor de quem ganhou terreno. */
+function Desloc({ flavio, lula, r1 }: { flavio: number; lula: number; r1?: { flavio: number; lula: number } | null }) {
+  const total = flavio + lula;
+  const r1Share = r1 && r1.flavio + r1.lula ? (100 * r1.flavio) / (r1.flavio + r1.lula) : null;
+  const swing = total && r1Share != null ? (100 * flavio) / total - r1Share : null;
+  return (
+    <span className={`ext-desloc ${swing == null ? '' : swing >= 0 ? 'c-flavio' : 'c-lula'}`}>
+      {swing == null ? '' : `${swing >= 0 ? 'Flávio' : 'Lula'} ${pp(Math.abs(swing))}`}
+    </span>
+  );
+}
+
 function Pais({ c, open, toggle }: { c: ExteriorCountry; open: boolean; toggle: () => void }) {
   const total = c.flavio + c.lula;
-  const r1Share = c.r1 && c.r1.flavio + c.r1.lula ? (100 * c.r1.flavio) / (c.r1.flavio + c.r1.lula) : null;
-  const swing = total && r1Share != null ? (100 * c.flavio) / total - r1Share : null;
   return (
     <li className="ext-pais">
       <button className="ext-linha" onClick={toggle} aria-expanded={open}>
@@ -43,17 +53,17 @@ function Pais({ c, open, toggle }: { c: ExteriorCountry; open: boolean; toggle: 
           {total ? `${int(total)} votos` : '1.ª volta'}
           {c.sections > 0 && ` · ${int(c.counted)}/${int(c.sections)} secções`}
         </span>
-        <span className={`ext-desloc ${swing == null ? '' : swing >= 0 ? 'c-flavio' : 'c-lula'}`}>
-          {swing == null ? '' : `${swing >= 0 ? 'Flávio' : 'Lula'} ${pp(Math.abs(swing))}`}
-        </span>
+        <Desloc flavio={c.flavio} lula={c.lula} r1={c.r1} />
       </button>
       {open && (
+        // As cidades usam a mesma grelha dos países: só o nome fica recuado.
         <ul className="ext-cidades">
           {c.cidades.map((x) => (
-            <li key={x.cidade} className="ext-cidade">
-              <span>{x.cidade}</span>
+            <li key={x.cidade} className="ext-linha ext-linha-cidade">
+              <span className="ext-nome">{x.cidade}</span>
               <MiniDuelo flavio={x.flavio} lula={x.lula} r1={x.r1} />
-              <span className="hint">{x.has ? `${int(x.flavio + x.lula)} votos · ${pct(x.pctSections, 0)} apurado` : 'sem votos ainda'}</span>
+              <span className="ext-info">{x.has ? `${int(x.flavio + x.lula)} votos · ${pct(x.pctSections, 0)} apurado` : 'sem votos ainda'}</span>
+              <Desloc flavio={x.flavio} lula={x.lula} r1={x.r1} />
             </li>
           ))}
         </ul>
