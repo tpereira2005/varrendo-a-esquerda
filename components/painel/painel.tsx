@@ -8,7 +8,8 @@ import { Placar, Crescimento, DetalheEstado, Governadores } from './estados';
 import { Avisos } from './avisos';
 import { Arquivo } from './arquivo';
 import { Estrangeiro } from './estrangeiro';
-import { Festejo } from './festejo';
+import { Festejo, PreFestejo } from './festejo';
+import { probText } from '@/lib/projecao.mjs';
 import { Projecao, OndeFaltam } from './projecao';
 import { Mercado } from './mercado';
 import { Abstencao } from './abstencao';
@@ -49,6 +50,8 @@ export default function Painel({ initial }: { initial: Snapshot | null }) {
   const [awake, setAwake] = useState(false);
   const [motion, setMotion] = useState(true);
   const [party, setParty] = useState(false);
+  const [pre, setPre] = useState(false);
+  const closePre = useCallback(() => setPre(false), []);
   const seen = useRef<Set<string> | null>(null);
   const skew = useRef(0);
   const dataRef = useRef(data);
@@ -92,6 +95,29 @@ export default function Painel({ initial }: { initial: Snapshot | null }) {
   const p = national?.parsed ?? null;
   const winner = p?.winner != null ? p.cands[p.winner] : null;
   const festejo = winner?.number === FLAVIO;
+
+  // Pré-festejo (não oficial): a projeção (com ≥ 10% apurado) ou o Polymarket dão o Flávio com ≥ 99%.
+  const quase: { id: string; texto: string }[] = [];
+  if (data && !winner) {
+    const proj = data.projection;
+    if (proj && proj.probFlavio >= 0.99 && (p?.pctSections ?? 0) >= 10) quase.push({ id: 'projecao', texto: `Projeção do site: ${probText(proj.probFlavio)}` });
+    const mkt = data.market;
+    if (mkt && !mkt.stale && mkt.flavio >= 99) quase.push({ id: 'mercado', texto: `Polymarket: ${pct(mkt.flavio, 0)}` });
+  }
+  const quaseIds = quase.map((q) => q.id).join(',');
+  // Mostra-se sozinho uma vez por fonte (projeção / Polymarket), com os avisos no ecrã ligados.
+  useEffect(() => {
+    if (!quaseIds || !alerts) return;
+    const shown = new Set((read('prefestejo') ?? '').split(',').filter(Boolean));
+    const fresh = quaseIds.split(',').filter((id) => !shown.has(id));
+    if (!fresh.length) return;
+    fresh.forEach((id) => shown.add(id));
+    write('prefestejo', [...shown].join(','));
+    // reação a dados novos do servidor (como o festejo oficial): abre o ecrã uma vez
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setPre(true);
+    vibrar('festejo');
+  }, [quaseIds, alerts]);
 
   // Festejo em ecrã inteiro: abre uma vez por aparelho quando o TSE declara o Flávio eleito.
   useEffect(() => {
@@ -234,6 +260,20 @@ export default function Painel({ initial }: { initial: Snapshot | null }) {
       <EstadoTSE data={data} now={now} error={error} />
       <BarraFixa data={data} />
 
+      {!winner && quase.length > 0 && (
+        <section className="card faixa-festejo faixa-quase">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/emoji/humor-10.png" alt="" width={64} height={64} className="shrink-0" />
+          <div className="grow">
+            <div className="titulo-festejo">O Flávio vai ganhar!</div>
+            <div className="font-semibold opacity-90">{quase.map((q) => q.texto).join(' · ')} · não oficial, à espera do TSE</div>
+          </div>
+          <button className="btn btn-forte shrink-0" onClick={() => (sound && unlockAudio(), setPre(true))}>
+            🎉 Festejar
+          </button>
+        </section>
+      )}
+
       {winner &&
         (festejo ? (
           <section className="card faixa-festejo">
@@ -374,6 +414,7 @@ export default function Painel({ initial }: { initial: Snapshot | null }) {
           <div className="text-sm opacity-90">{toast.detail}</div>
         </div>
       )}
+      {pre && !winner && quase.length > 0 && <PreFestejo fontes={quase.map((q) => q.texto)} sound={sound} onClose={closePre} onShare={share} />}
       {party && festejo && winner && p && <Festejo winner={winner} other={p.cands[1]} sound={sound} onClose={closeParty} onShare={share} />}
     </main>
   );

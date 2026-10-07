@@ -596,6 +596,35 @@ html[data-motion='off'] .mercado-pulso { animation: none; }
   accent-color: var(--flavio);
 }
 
+/* pré-festejo (projeção ou Polymarket a ≥ 99%, não oficial) */
+.pre-festejo {
+  background:
+    radial-gradient(circle at 50% 35%, rgb(255 223 0 / 0.28), transparent 55%),
+    linear-gradient(160deg, #04431d, #067a33 50%, #0b2f6b);
+}
+.pre-festejo-retrato { width: clamp(140px, 26vmin, 230px); }
+.pre-festejo-titulo { font-size: clamp(2.6rem, 9vw, 6rem); }
+.pre-festejo-fontes {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+.pre-festejo-fontes li {
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.14);
+  border: 1px solid rgb(255 255 255 / 0.3);
+  font-weight: 800;
+  font-size: clamp(1rem, 2.6vw, 1.3rem);
+}
+.pre-festejo-nota {
+  max-width: 34rem;
+  font-size: 0.9rem;
+  opacity: 0.85;
+}
+.faixa-quase .titulo-festejo { font-size: clamp(1.4rem, 4vw, 2rem); }
+
 /* notificações */
 
 /* ---------- placar principal ---------- */

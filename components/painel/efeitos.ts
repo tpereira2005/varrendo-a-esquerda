@@ -293,6 +293,22 @@ function fanfare(start = 0) {
 let crowdTimer: ReturnType<typeof setTimeout> | null = null;
 
 /**
+ * Pré-festejo (projeção ou Polymarket a ≥ 99%): arpejo, fanfarra de metais e um pouco de multidão.
+ * O hino fica guardado para o resultado oficial do TSE.
+ */
+export async function preFestejo() {
+  if (!(await ready())) return;
+  [C5, E5, G5, C6].forEach((f, i) => bell(f, i * 0.1, 1.2, 0.12));
+  fanfare(0.5);
+  for (const [from, gain] of [
+    [600, 0.05],
+    [1400, 0.04],
+  ] as const) {
+    noiseBurst(0.5, 4, { from, to: from * 1.2, q: 0.7, gain, attack: 0.5 });
+  }
+}
+
+/**
  * Festejo da vitória: rufar de tambores e pratos, depois o Hino Nacional, com a multidão a festejar por baixo.
  * Se o hino não puder tocar (sem rede, por exemplo), toca uma fanfarra.
  */

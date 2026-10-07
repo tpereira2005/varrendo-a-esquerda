@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Cand } from '@/lib/types';
 import { int, pct, retrato } from './format';
-import { festejo, pararFestejo } from './efeitos';
+import { festejo, pararFestejo, preFestejo } from './efeitos';
 
 const COLORS = ['#009c3b', '#ffdf00', '#ffffff', '#3b82f6', '#ffd43b'];
 
@@ -105,6 +105,60 @@ function Fogo() {
     };
   }, []);
   return <canvas ref={ref} className="festejo-canvas" aria-hidden="true" />;
+}
+
+/**
+ * Pré-festejo: a projeção do site ou o Polymarket dão o Flávio com ≥ 99%. Mais pequeno do que o festejo oficial
+ * (sem hino) e sempre identificado como não oficial: só o TSE declara o eleito.
+ */
+export function PreFestejo({ fontes, sound, onClose, onShare }: { fontes: string[]; sound: boolean; onClose: () => void; onShare?: () => void }) {
+  const close = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    close.current?.focus();
+    if (sound) void preFestejo();
+    const key = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
+    addEventListener('keydown', key);
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      removeEventListener('keydown', key);
+      document.body.style.overflow = overflow;
+    };
+  }, [onClose, sound]);
+
+  return (
+    <div className="festejo pre-festejo" role="dialog" aria-modal="true" aria-labelledby="pre-festejo-titulo">
+      <Fogo />
+      <div className="festejo-conteudo">
+        <div className="festejo-retrato pre-festejo-retrato">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={retrato('22', 720)!} alt="Flávio Bolsonaro" className="festejo-foto" width={220} height={220} />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/emoji/humor-10.png" alt="Boneco: Giga Chad" className="festejo-boneco" width={90} height={90} />
+        </div>
+        <p className="festejo-sobre">Projeção · não oficial</p>
+        <h1 id="pre-festejo-titulo" className="festejo-titulo pre-festejo-titulo">
+          O Flávio vai ganhar!
+        </h1>
+        <ul className="pre-festejo-fontes">
+          {fontes.map((f) => (
+            <li key={f}>{f}</li>
+          ))}
+        </ul>
+        <p className="pre-festejo-nota">O resultado oficial é só o do TSE: o grande festejo, com o hino, fica para quando o TSE o declarar eleito.</p>
+        <div className="festejo-botoes">
+          {onShare && (
+            <button className="btn" onClick={onShare}>
+              Partilhar
+            </button>
+          )}
+          <button ref={close} className="btn btn-forte" onClick={onClose}>
+            Continuar a acompanhar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 /** Festejo em ecrã inteiro quando o TSE declara o Flávio eleito. */
