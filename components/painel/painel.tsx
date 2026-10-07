@@ -11,7 +11,7 @@ import { Estrangeiro } from './estrangeiro';
 import { Festejo } from './festejo';
 import { Projecao, OndeFaltam } from './projecao';
 import { Mercado } from './mercado';
-import { Notificacoes } from './notificacoes';
+import { Definicoes } from './definicoes';
 import { shareResult } from './partilhar';
 import { chime, keepAwake, reacquireAwake, unlockAudio } from './efeitos';
 import { ago, compact, pct, shortName, timeBrasilia, timeLisbon, FLAVIO } from './format';
@@ -326,7 +326,7 @@ export default function Painel({ initial }: { initial: Snapshot | null }) {
         </div>
       </details>
 
-      <Rodape
+      <Definicoes
         data={data}
         error={error}
         alerts={alerts}
@@ -612,68 +612,3 @@ function ParaVirar({ data, embedded = false }: { data: Snapshot; embedded?: bool
   );
 }
 
-type RodapeProps = {
-  data: Snapshot;
-  error: string | null;
-  alerts: boolean;
-  setAlerts: (v: boolean) => void;
-  sound: boolean;
-  setSound: (v: boolean) => void;
-  awake: boolean;
-  setAwake: (v: boolean) => void;
-  motion: boolean;
-  setMotion: (v: boolean) => void;
-};
-
-function Rodape({ data, error, alerts, setAlerts, sound, setSound, awake, setAwake, motion, setMotion }: RodapeProps) {
-  const [canAwake, setCanAwake] = useState(false);
-  useEffect(() => {
-    /* eslint-disable react-hooks/set-state-in-effect */
-    setCanAwake('wakeLock' in navigator);
-    /* eslint-enable react-hooks/set-state-in-effect */
-  }, []);
-  return (
-    <footer className="card grid gap-3 text-sm">
-      {error && <p className="c-lula font-semibold">Sem ligação ao site: {error}. A mostrar os últimos dados recebidos.</p>}
-      {data.collector.pauseUntil > data.serverNow && (
-        <p className="c-lula">O TSE pediu uma pausa; nova consulta às {timeLisbon(data.collector.pauseUntil)}.</p>
-      )}
-      <Notificacoes />
-      <div className="opcoes">
-        <label>
-          <input type="checkbox" checked={alerts} onChange={(e) => setAlerts(e.target.checked)} />
-          Avisos no ecrã
-        </label>
-        <label>
-          <input type="checkbox" checked={sound} onChange={(e) => setSound(e.target.checked)} />
-          Som (avisos e fanfarra)
-        </label>
-        <label>
-          <input type="checkbox" checked={motion} onChange={(e) => setMotion(e.target.checked)} />
-          Animações
-        </label>
-        {canAwake && (
-          <label>
-            <input type="checkbox" checked={awake} onChange={(e) => setAwake(e.target.checked)} />
-            Manter o ecrã ligado
-          </label>
-        )}
-
-      </div>
-      <p className="hint">
-        Dados: Tribunal Superior Eleitoral (eleições {data.ids.federal} e {data.ids.estadual}
-        {data.ids.confirmedAt ? ', confirmadas na configuração oficial' : ', a confirmar na configuração oficial'}). Vitória só com indicação
-        oficial do TSE. Os agrupamentos “direita/esquerda” são critério do{' '}
-        <a className="underline" href="https://github.com/ODevLibertario/varrendo-a-esquerda">
-          projeto original
-        </a>
-        , não do TSE.
-      </p>
-      <p className="hint">
-        Durante a noite, a página atualiza a cada 4 s (15 s em segundo plano). O ficheiro nacional do TSE é verificado a cada 10 s e, quando
-        muda, todos os outros são lidos logo a seguir (sem mudanças: estado escolhido a cada 20 s, restantes a cada 60 s). Deixa a página aberta para
-        a recolha continuar.
-      </p>
-    </footer>
-  );
-}

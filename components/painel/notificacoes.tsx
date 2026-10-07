@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { fromB64u } from '@/lib/webpush.mjs';
+import { Definicao, Interruptor } from './controlos';
 
 type Estado = 'a-verificar' | 'servidor-desligado' | 'sem-suporte' | 'instalar-iphone' | 'bloqueadas' | 'desligadas' | 'ligadas' | 'a-ativar';
 
@@ -63,46 +64,48 @@ export function Notificacoes() {
     const sub = await reg?.pushManager.getSubscription();
     if (!sub) return;
     const r = await fetch('/api/push/teste', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ endpoint: sub.endpoint }) });
-    setMsg(r.ok ? 'Teste enviado: deve chegar dentro de segundos (podes fechar o site).' : 'O teste falhou ou foi pedido há pouco; tenta daqui a 1 minuto.');
+    setMsg(r.ok ? 'Teste enviado: deve chegar dentro de segundos.' : 'O teste falhou ou foi pedido há pouco; tenta daqui a 1 minuto.');
   };
 
   if (estado === 'a-verificar' || estado === 'servidor-desligado') return null;
+  const on = estado === 'ligadas' || estado === 'a-ativar';
+  const descricao: Record<Exclude<Estado, 'a-verificar' | 'servidor-desligado'>, string> = {
+    desligadas: movel ? 'Viradas, marcos e resultado, mesmo com o site fechado' : 'Viradas, marcos e resultado, mesmo com o separador fechado',
+    'a-ativar': 'A ativar…',
+    ligadas: movel ? 'Ativas neste telemóvel' : 'Ativas neste computador (com o browser aberto)',
+    'instalar-iphone': 'No iPhone, primeiro adiciona o site ao ecrã principal',
+    'sem-suporte': 'Este browser não as suporta',
+    bloqueadas: 'Bloqueadas: permite-as nas definições do browser',
+  };
   return (
-    <div className="notificacoes">
-      <div className="font-semibold">
-        {movel ? 'Notificações no telemóvel (mesmo com o site fechado)' : 'Notificações no computador (mesmo com o separador fechado)'}
-      </div>
-      {estado === 'instalar-iphone' && (
-        <p className="hint">
-          No iPhone: toca em <b>Partilhar</b> (o quadrado com a seta) → <b>Adicionar ao ecrã principal</b>. Depois abre o site a partir do novo ícone e ativa
-          aqui as notificações.
-        </p>
-      )}
-      {estado === 'sem-suporte' && <p className="hint">Este browser não suporta notificações com o site fechado.</p>}
-      {estado === 'bloqueadas' && (
-        <p className="hint">As notificações estão bloqueadas para este site. Permite-as nas definições do browser (ou do iPhone) e volta a tentar.</p>
-      )}
-      {(estado === 'desligadas' || estado === 'a-ativar') && (
-        <button className="btn btn-forte" onClick={ativar} disabled={estado === 'a-ativar'}>
-          {estado === 'a-ativar' ? 'A ativar…' : 'Ativar notificações'}
-        </button>
-      )}
-      {estado === 'ligadas' && (
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="c-flavio font-semibold">✓ Ativas neste aparelho</span>
-          <button className="btn" onClick={testar}>
-            Enviar teste
-          </button>
-          <button className="btn" onClick={desativar}>
-            Desativar
-          </button>
-        </div>
-      )}
-      {msg && <p className="hint">{msg}</p>}
-      <p className="hint">
-        Recebes as viradas, os marcos do apuramento, a projeção e o resultado oficial do Presidente.
-        {!movel && ' No computador chegam enquanto o browser estiver aberto (mesmo noutro separador ou minimizado).'}
-      </p>
-    </div>
+    <Definicao
+      icone="sino"
+      titulo="Notificações"
+      descricao={descricao[estado]}
+      extra={
+        (estado === 'instalar-iphone' || estado === 'ligadas' || msg) && (
+          <>
+            {estado === 'instalar-iphone' && (
+              <p>
+                Toca em <b>Partilhar</b> → <b>Adicionar ao ecrã principal</b> e abre o site pelo novo ícone.
+              </p>
+            )}
+            {estado === 'ligadas' && (
+              <button className="link-botao" onClick={testar}>
+                Enviar notificação de teste
+              </button>
+            )}
+            {msg && <p>{msg}</p>}
+          </>
+        )
+      }
+    >
+      <Interruptor
+        on={on}
+        label="Notificações"
+        disabled={estado !== 'ligadas' && estado !== 'desligadas'}
+        onChange={(v) => void (v ? ativar() : desativar())}
+      />
+    </Definicao>
   );
 }
