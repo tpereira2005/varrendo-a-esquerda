@@ -1,0 +1,26 @@
+name: Erro
+description: Algo não funciona ou aparece mal
+labels: [erro]
+body:
+  - type: textarea
+    id: o-que
+    attributes:
+      label: O que aconteceu?
+      description: E o que esperavas que acontecesse. Capturas de ecrã ajudam muito.
+    validations:
+      required: true
+  - type: input
+    id: onde
+    attributes:
+      label: Em que parte do site?
+      placeholder: ex. mapa, projeção, notificações, festejo
+  - type: dropdown
+    id: aparelho
+    attributes:
+      label: Aparelho
+      options: [iPhone, Android, PC/Mac, Outro]
+  - type: input
+    id: browser
+    attributes:
+      label: Browser e versão
+      placeholder: ex. Safari 18, Chrome 141

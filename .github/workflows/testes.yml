@@ -1,0 +1,37 @@
+# Em cada envio e pedido de alteração: lint, tipos, testes (incluindo as noites reais de 2022 e 2026) e compilação.
+name: Testes
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: testes-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  testes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      # npm install (e não npm ci): o package-lock.json tem dependências opcionais desatualizadas, que a
+      # publicação no Sites trata à sua maneira; não se altera o lock antes da noite eleitoral.
+      - run: npm install --no-audit --no-fund
+      - name: Lint
+        run: npm run lint
+      - name: Tipos
+        run: npx tsc --noEmit -p .
+      - name: Testes
+        run: npm test
+      - name: Compilação
+        run: npm run build

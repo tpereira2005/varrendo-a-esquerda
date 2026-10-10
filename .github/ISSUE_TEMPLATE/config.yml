@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Vulnerabilidade de segurança
+    url: https://github.com/tpereira2005/varrendo-a-esquerda/security/advisories/new
+    about: Reporta em privado, não num issue público.

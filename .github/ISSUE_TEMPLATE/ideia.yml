@@ -1,0 +1,11 @@
+name: Ideia
+description: Sugestão de melhoria ou de algo novo
+labels: [ideia]
+body:
+  - type: textarea
+    id: ideia
+    attributes:
+      label: A ideia
+      description: O que gostavas de ver no site e porquê.
+    validations:
+      required: true
