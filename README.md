@@ -16,7 +16,7 @@ mapa, estrangeiro com Portugal no topo e notificações no telemóvel, vistos po
 
 **[Abrir o site](https://varrendo-a-esquerda.tomaspereira.chatgpt.site)** · [Dados abertos](dados-abertos/) · [Como funciona a projeção](#projeção) · [Operação na noite](docs/operacao.md)
 
-<img src="docs/imagens/pc-claro.webp" alt="Página principal no PC: placar Flávio × Lula, projeção e evolução da noite" width="860" />
+<img src="docs/imagens/placar.webp" alt="Placar principal no PC: Flávio Bolsonaro × Lula, com as fotos, as percentagens e as secções apuradas" width="900" />
 
 </div>
 
@@ -38,17 +38,28 @@ mapa, estrangeiro com Portugal no topo e notificações no telemóvel, vistos po
 | **Imagem para partilhar** | Cartão com o resultado, no tema claro ou escuro. |
 | **Arquivo da 1.ª volta** | Resultados finais por estado e por país. |
 
+## No ecrã
+
+<div align="center">
+<img src="docs/imagens/telemovel.webp" alt="No telemóvel: placar, projeção e evolução da noite, mercado de apostas" width="900" />
+<br /><sub>No telemóvel: placar, projeção e evolução da noite, mercado de apostas</sub>
+</div>
+
 <table>
 <tr>
-<td width="34%"><img src="docs/imagens/telemovel-escuro.webp" alt="No telemóvel, modo escuro" /></td>
-<td>
-<img src="docs/imagens/estados.webp" alt="Mapa por estado e detalhe do estado escolhido" />
-<img src="docs/imagens/mercado.webp" alt="Mercado de apostas: probabilidade do Polymarket e gráfico da campanha" />
-</td>
+<td width="50%" valign="top"><img src="docs/imagens/projecao.webp" alt="Projeção do resultado final e evolução da noite" /><br /><sub><b>Projeção</b> com intervalo e probabilidade, e a evolução da noite</sub></td>
+<td width="50%" valign="top"><img src="docs/imagens/mercado.webp" alt="Mercado de apostas: probabilidade do Polymarket e gráfico da campanha" /><br /><sub><b>Mercado de apostas</b> (Polymarket), comparado com a projeção</sub></td>
+</tr>
+<tr>
+<td width="50%" valign="top"><img src="docs/imagens/estados.webp" alt="Mapa por estado e detalhe do estado escolhido" /><br /><sub><b>Mapa</b> e detalhe de cada estado, com a participação</sub></td>
+<td width="50%" valign="top"><img src="docs/imagens/estrangeiro.webp" alt="Voto no estrangeiro por país e cidade, com Portugal no topo" /><br /><sub><b>Estrangeiro</b> por país e cidade, com Portugal no topo</sub></td>
 </tr>
 </table>
 
-<div align="center"><img src="docs/imagens/festejo.webp" alt="Festejo: Flávio Bolsonaro eleito Presidente do Brasil" width="760" /></div>
+<div align="center">
+<img src="docs/imagens/festejo.webp" alt="Festejo: Flávio Bolsonaro eleito Presidente do Brasil" width="760" />
+<br /><sub>O festejo, com o Hino Nacional, quando o TSE declara o Flávio eleito</sub>
+</div>
 
 ## Regras
 
