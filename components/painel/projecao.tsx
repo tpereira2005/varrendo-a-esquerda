@@ -4,6 +4,13 @@ import { UF_NAMES } from '@/lib/tse.mjs';
 import { projectionVerdict, probText } from '@/lib/projecao.mjs';
 import { Numero } from './numero';
 import { compact, pct } from './format';
+import vespera from '@/data/vespera.json';
+
+// Sondagens da véspera (data/vespera.json), só quando a atualização estiver ligada.
+const sondagens =
+  vespera.ativo && vespera.sondagens.flavio != null
+    ? { ...vespera.sondagens, flavio: vespera.sondagens.flavio as number }
+    : null;
 
 /** Deslocação a favor de quem ganha terreno: "+1,2 pp Flávio" ou "+3,0 pp Lula" (nunca "−3 pp Lula"). */
 const sinal = (v: number) => `+${pct(Math.abs(v), 1).replace('%', ' pp')} ${v >= 0 ? 'Flávio' : 'Lula'}`;
@@ -59,11 +66,28 @@ export function Projecao({ data }: { data: Snapshot }) {
         {counted && <> · estados projetados: Flávio {p.statesFlavio}, Lula {p.statesLula}</>}.
       </p>
 
+      {sondagens && (
+        <p className="mercado-comparar">
+          <span>
+            Sondagens: <b className={sondagens.flavio >= 50 ? 'c-flavio' : 'c-lula'}>Flávio {pct(sondagens.flavio, 1)}</b>
+          </span>
+          {data.market && (
+            <span>
+              Polymarket: <b className={data.market.flavio >= 50 ? 'c-flavio' : 'c-lula'}>{pct(data.market.flavio, 0)}</b>
+            </span>
+          )}
+          <span className="hint">
+            média de {sondagens.institutos} institutos ({sondagens.periodo}) · não oficial
+          </span>
+        </p>
+      )}
+
       <details className="detalhes-pequenos">
         <summary>Como é calculada?</summary>
         <ul className="hint mt-1 lista-como">
           <li>
-            <b>Ponto de partida:</b> 1.ª volta com os votos dos eliminados redistribuídos (Caiado e Zema sobretudo para o Flávio) · Flávio{' '}
+            <b>Ponto de partida:</b> 1.ª volta com os votos dos eliminados redistribuídos
+            {sondagens ? ' (como medido pelo Datafolha), combinada com a média das sondagens' : ' (Caiado e Zema sobretudo para o Flávio)'} · Flávio{' '}
             {pct(p.prior, 1)}.
           </li>
           <li>

@@ -7,8 +7,13 @@ import { refreshProjection } from '../lib/collector.mjs';
 import { D1Store } from '../lib/store.mjs';
 import { evaluate } from '../scripts/avaliar-projecao.mjs';
 import { database } from './round2-files.mjs';
+import turno1 from '../data/turno1.json' with { type: 'json' };
 
-const regions = RACES.filter((r) => r.cargo === 1 && (UFS.includes(r.uf) || r.uf === 'ZZ'));
+// Pontos de partida "puros" do modelo (sem a atualização da véspera, data/vespera.json): os testes valem ligada ou não.
+const regions = RACES.filter((r) => r.cargo === 1 && (UFS.includes(r.uf) || r.uf === 'ZZ')).map((r) => ({
+  ...r,
+  prior: priorOf(turno1.president[r.uf].candidates, '22', '13'),
+}));
 // Ponto de partida nacional: em cada estado, a 1.ª volta com as transferências dos eliminados.
 const national = () => {
   const v = regions.reduce((n, r) => n + r.prior.valid, 0);
@@ -45,8 +50,9 @@ test('ponto de partida: votos dos eliminados redistribuídos (Caiado e Zema sobr
   assert.ok(right.valid < 1000 && right.valid > 900);
   // Brasil: o Flávio parte à frente da 1.ª volta só entre os dois (51,0%)
   const br = RACES[0];
+  const brPrior = priorOf(turno1.president.BR.candidates, '22', '13');
   const twoWay = (100 * br.finalists[0].r1Votes) / (br.finalists[0].r1Votes + br.finalists[1].r1Votes);
-  assert.ok(100 * br.prior.share > twoWay + 0.5, `${100 * br.prior.share} vs ${twoWay}`);
+  assert.ok(100 * brPrior.share > twoWay + 0.5, `${100 * brPrior.share} vs ${twoWay}`);
 });
 
 test('sem votos: projeção = ponto de partida, com muita incerteza', () => {
@@ -189,4 +195,30 @@ test('noites reais (2.ª volta de 2022 e 1.ª volta de 2026, estado a estado): r
       if (m.target >= 0.5) assert.ok(Math.abs(p.flavio - truth) < 1, `${tag}: erro ${p.flavio - truth}`);
     }
   }
+});
+
+test('véspera: transferências medidas e âncora das sondagens (pesos pelo inverso da variância)', async () => {
+  const { ancorarSondagens } = await import('../lib/projecao.mjs');
+  const cands = [
+    { number: '22', votes: 450 },
+    { number: '13', votes: 450 },
+    { number: '55', votes: 100 },
+    { number: '80', votes: 100 },
+  ];
+  // taxa medida para todos os eliminados, exceto os que se mantêm (UP continua com a do modelo)
+  const medida = priorOf(cands, '22', '13', { padrao: [0.46, 0.32], manter: ['80'] });
+  const modelo = priorOf(cands);
+  assert.ok(medida.share < modelo.share, `${medida.share} < ${modelo.share}`);
+  // âncora: o nacional passa a ser a média ponderada; todos os estados mexem no mesmo sentido
+  const priors = regions.map((r) => r.prior);
+  const { alvo, antes, sd, priors: novos } = ancorarSondagens(priors, { flavio: 51, incerteza: 2 }, 3);
+  const nacional = (100 * novos.reduce((n, p) => n + p.share * p.valid, 0)) / novos.reduce((n, p) => n + p.valid, 0);
+  assert.ok(Math.abs(nacional - alvo) < 0.01, `${nacional} vs ${alvo}`);
+  assert.ok(Math.abs(alvo - (51 * 0.25 + antes / 9) / (0.25 + 1 / 9)) < 1e-9);
+  assert.ok(Math.abs(sd - 1 / Math.sqrt(0.25 + 1 / 9)) < 1e-9);
+  assert.ok(novos.every((p, i) => Math.sign(p.share - priors[i].share) === Math.sign(alvo - antes)));
+  // a projeção usa a incerteza combinada antes de haver votos
+  const p = project(regions.map((r, i) => ({ ...r, prior: novos[i], parsed: null })));
+  assert.ok(Math.abs(p.flavio - alvo) < 0.05);
+  assert.ok(p.sd < project(regions.map((r) => ({ ...r, parsed: null }))).sd);
 });

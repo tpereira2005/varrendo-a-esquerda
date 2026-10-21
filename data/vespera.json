@@ -1,0 +1,25 @@
+{
+  "_comentario": "Atualização da véspera (24/10/2026): ver docs/plano-vespera.md. Com ativo=false o site ignora tudo o resto.",
+  "ativo": false,
+  "atualizado": null,
+  "transferencias": {
+    "_fonte": "Datafolha 6–8/10/2026: eleitores dos eliminados na 2.ª volta (46% Flávio, 32% Lula, resto branco/nulo/não sabe)",
+    "padrao": [
+      0.46,
+      0.32
+    ],
+    "manter": [
+      "80",
+      "16",
+      "21",
+      "29"
+    ]
+  },
+  "sondagens": {
+    "_fonte": "scripts/sondagens.mjs (média da sondagem mais recente de cada instituto, últimos 7 dias)",
+    "flavio": null,
+    "incerteza": 2,
+    "institutos": null,
+    "periodo": null
+  }
+}
