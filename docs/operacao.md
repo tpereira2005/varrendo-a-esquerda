@@ -14,7 +14,7 @@ Painel Flávio Bolsonaro (PL, 22) × Lula (PT, 13), do ponto de vista de quem to
 
 | Ficheiro | Função |
 |---|---|
-| `data/turno1.json` | Resultados finais da 1.ª volta (Presidência BR + 27 estados; Governador nos 7 estados com 2.ª volta). Gerado por `scripts/build-turno1.mjs` a partir dos ficheiros oficiais. Nunca muda. |
+| `data/turno1.json` | Resultados finais da 1.ª volta (Presidência BR + 27 estados; Governador nos 6 estados com 2.ª volta; o RJ ficou decidido na retotalização da 1.ª volta, a 21/10). Gerado por `scripts/build-turno1.mjs` a partir dos ficheiros oficiais. Nunca muda. |
 | `lib/tse.mjs` | Leitura do formato unificado do TSE. |
 | `lib/rounds.mjs` | As 35 disputas, os finalistas, os IDs da eleição (6258/6260) e a leitura da configuração oficial. |
 | `lib/runoff.mjs` | Validação de cada ficheiro, vencedor, avisos (viradas, marcos, estados, resultado), "para virar", boneco. |

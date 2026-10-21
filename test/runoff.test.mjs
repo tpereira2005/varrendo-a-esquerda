@@ -11,16 +11,17 @@ const job = (uf, cargo = 1) => jobs.find((j) => j.uf === uf && j.cargo === cargo
 const BR = job('BR');
 const fixture = (n) => JSON.parse(readFileSync(new URL(`fixtures/${n}.json`, import.meta.url), 'utf8'));
 
-test('disputas: Presidente no BR, nos 27 estados e no estrangeiro, Governador em 7 estados, Flávio sempre primeiro', () => {
-  assert.equal(RACES.length, 36);
+test('disputas: Presidente no BR, nos 27 estados e no estrangeiro, Governador em 6 estados, Flávio sempre primeiro', () => {
+  // O RJ saiu a 21/10/2026: Douglas Ruas eleito na retotalização da 1.ª volta.
+  assert.equal(RACES.length, 35);
   assert.equal(job('ZZ').url, 'https://resultados.tse.jus.br/oficial/ele2026/6258/dados/zz/zz-c0001-e006258-u.json');
-  assert.deepEqual(RACES.filter((r) => r.cargo === 3).map((r) => r.uf), ['AC', 'AM', 'DF', 'ES', 'RJ', 'RN', 'TO']);
+  assert.deepEqual(RACES.filter((r) => r.cargo === 3).map((r) => r.uf), ['AC', 'AM', 'DF', 'ES', 'RN', 'TO']);
   for (const r of RACES.filter((r) => r.cargo === 1)) assert.deepEqual(r.finalists.map((f) => f.number), ['22', '13']);
   assert.equal(BR.url, 'https://resultados.tse.jus.br/oficial/ele2026/6258/dados/br/br-c0001-e006258-u.json');
-  assert.equal(job('RJ', 3).url.endsWith('/6260/dados/rj/rj-c0003-e006260-u.json'), true);
+  assert.equal(job('ES', 3).url.endsWith('/6260/dados/es/es-c0003-e006260-u.json'), true);
   const internal = RACES.filter((r) => r.internal).map((r) => r.uf);
   assert.deepEqual(internal, ['DF', 'RN', 'TO']);
-  assert.equal(job('RJ', 3).finalists[0].name, 'DOUGLAS RUAS');
+  assert.equal(job('ES', 3).finalists[0].name, 'LORENZO PAZOLINI');
 });
 
 test('1.ª volta: o TSE marca e="s" nos finalistas, mas isso não é "eleito"', () => {
@@ -120,8 +121,20 @@ test('resultado oficial: celebração para o Flávio, mensagem sóbria para o Lu
   const l = eventsFor(RACES[0], loss, []).find((x) => x.kind === 'eleito');
   assert.equal(l.title, 'Lula eleito Presidente pelo TSE');
   assert.equal(l.tone, 'bad');
-  const rj = parseRunoff(round2File('RJ', 3, { pct: 100, a: 60, b: 40, st: ['Eleito', 'Não eleito'] }), job('RJ', 3));
-  assert.equal(eventsFor(job('RJ', 3), rj, []).find((x) => x.kind === 'eleito').title, 'Douglas Ruas (PL) vence no Rio de Janeiro');
+  // Governador: o ficheiro de exemplo é o do RJ na 1.ª volta (a disputa já não existe na 2.ª), com uma disputa de teste.
+  const rjJob = {
+    ...job('ES', 3),
+    uf: 'RJ',
+    key: '2026:2:RJ:3',
+    url: 'https://resultados.tse.jus.br/oficial/ele2026/6260/dados/rj/rj-c0003-e006260-u.json',
+    finalists: [
+      { number: '22', name: 'DOUGLAS RUAS', party: 'PL', group: 'direita', r1Votes: 1, r1Pct: 1 },
+      { number: '55', name: 'EDUARDO PAES', party: 'PSD', group: 'esquerda', r1Votes: 1, r1Pct: 1 },
+    ],
+    internal: false,
+  };
+  const rj = parseRunoff(round2File('RJ', 3, { pct: 100, a: 60, b: 40, st: ['Eleito', 'Não eleito'] }), rjJob);
+  assert.equal(eventsFor(rjJob, rj, []).find((x) => x.kind === 'eleito').title, 'Douglas Ruas (PL) vence no Rio de Janeiro');
   const df = RACES.find((r) => r.uf === 'DF' && r.cargo === 3);
   assert.equal(eventsFor(df, { ...rj, cands: rj.cands, winner: 0 }, [])[0].tone, 'neutral');
 });

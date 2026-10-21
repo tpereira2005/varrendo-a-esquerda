@@ -365,7 +365,7 @@ export default function Painel({ initial }: { initial: Snapshot | null }) {
       <Estrangeiro data={data} now={now} />
 
       <details className="card">
-        <summary>Governadores (7 estados)</summary>
+        <summary>Governadores ({data.governors.length} estados)</summary>
         <div className="mt-3">
           <Governadores data={data} />
         </div>

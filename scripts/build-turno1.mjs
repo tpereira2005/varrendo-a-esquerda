@@ -7,7 +7,9 @@ import { UFS, candidatesOf, turnoutOf, officialTime, pct } from '../lib/tse.mjs'
 import { parseCity, byCountry } from '../lib/exterior.mjs';
 
 const dir = process.argv[2] ?? 'data/fontes/1a-volta';
-const GOVERNOR_RUNOFF = ['AC', 'AM', 'DF', 'ES', 'RJ', 'RN', 'TO'];
+// Estados com 2.ª volta para governador. O RJ saiu a 21/10/2026: na retotalização oficial da 1.ª volta,
+// Douglas Ruas ficou eleito com 50,88% dos votos válidos (ficheiro rj-c0003-e006259-u.json atualizado).
+const GOVERNOR_RUNOFF = ['AC', 'AM', 'DF', 'ES', 'RN', 'TO'];
 
 function read(uf, cargo, ele) {
   const u = uf.toLowerCase();

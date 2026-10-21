@@ -5,24 +5,27 @@
 # visitante: não precisa de segredos e não fala diretamente com o TSE.
 #
 # Arranque automático: domingo, 25/10/2026, às 19h20 UTC (= 19h20 em Lisboa, já em hora de inverno;
-# 16h20 em Brasília), 10 minutos antes de a recolha abrir. Também se pode lançar à mão
+# 16h20 em Brasília), 10 minutos antes de a recolha abrir. O GitHub não garante a hora dos arranques
+# agendados (podem atrasar ou, raramente, falhar), por isso há mais três tentativas (19h45, 20h15 e
+# 22h00 UTC): cada uma termina logo se já houver outra recolha a correr. Também se pode lançar à mão
 # (separador Actions → "Noite eleitoral" → Run workflow).
 name: Noite eleitoral
 
 on:
   schedule:
     - cron: '20 19 25 10 *'
+    - cron: '45 19 25 10 *'
+    - cron: '15 20 25 10 *'
+    - cron: '0 22 25 10 *'
   workflow_dispatch:
     inputs:
       minutos:
         description: 'Durante quantos minutos manter a recolha ativa (máx. 345)'
         default: '345'
 
-permissions: {}
-
-concurrency:
-  group: noite-eleitoral
-  cancel-in-progress: false
+# Só para ver se já há outra recolha a correr (as tentativas extra terminam logo nesse caso).
+permissions:
+  actions: read
 
 jobs:
   manter-recolha:
@@ -32,7 +35,16 @@ jobs:
       SITE: https://varrendo-a-esquerda.tomaspereira.chatgpt.site
       MINUTOS: ${{ github.event.inputs.minutos || '345' }}
     steps:
+      - name: Já há uma recolha a correr?
+        id: outra
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          outras=$(gh run list -R "$GITHUB_REPOSITORY" --workflow noite-eleitoral.yml --status in_progress --json databaseId             -q "map(select(.databaseId != $GITHUB_RUN_ID)) | length" || echo 0)
+          echo "Outras recolhas a correr: $outras"
+          echo "outras=$outras" >> "$GITHUB_OUTPUT"
       - name: Pedir o estado a cada 15 segundos
+        if: steps.outra.outputs.outras == '0'
         run: |
           if [ "${{ github.event_name }}" = "schedule" ] && [ "$(date -u +%Y)" != "2026" ]; then
             echo "Só para a eleição de 2026."; exit 0
