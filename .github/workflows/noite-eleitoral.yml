@@ -40,8 +40,10 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          outras=$(gh run list -R "$GITHUB_REPOSITORY" --workflow noite-eleitoral.yml --status in_progress --json databaseId             -q "map(select(.databaseId != $GITHUB_RUN_ID)) | length" || echo 0)
-          echo "Outras recolhas a correr: $outras"
+          # Só conta recolhas mais antigas (a correr ou ainda em fila): se duas arrancarem ao mesmo tempo,
+          # a mais antiga continua e a mais recente termina, por isso fica sempre exatamente uma.
+          outras=$(gh run list -R "$GITHUB_REPOSITORY" --workflow noite-eleitoral.yml --limit 30 --json databaseId,status             -q "[.[] | select(.databaseId < $GITHUB_RUN_ID and (.status == \"in_progress\" or .status == \"queued\"))] | length" || echo 0)
+          echo "Recolhas mais antigas a correr ou em fila: $outras"
           echo "outras=$outras" >> "$GITHUB_OUTPUT"
       - name: Pedir o estado a cada 15 segundos
         if: steps.outra.outputs.outras == '0'
