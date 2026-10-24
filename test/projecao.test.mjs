@@ -131,7 +131,7 @@ test('quase tudo contado: incerteza pequena e projeção ≈ resultado', () => {
   const p = project(scenario(() => 99, () => 0.02));
   assert.ok(p.sd < 0.5, String(p.sd));
   assert.ok(p.probFlavio > 0.99);
-  assert.equal(projectionVerdict(p).text, 'O Flávio vai ganhar');
+  assert.equal(projectionVerdict(p).text, 'Vitória do Flávio muito provável');
   const done = project(scenario(() => 100, () => 0.02, true));
   assert.equal(done.remaining, 0);
 });

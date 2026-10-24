@@ -34,6 +34,7 @@ const write = (k: string, v: string) => {
 
 /** Intervalo de atualização: rápido com a página à vista; mais lento em segundo plano (o PC continua a receber avisos). */
 function pollDelay(data: Snapshot | null) {
+  if (data?.availability) return 5000;
   const hidden = typeof document !== 'undefined' && document.visibilityState !== 'visible';
   if (!data?.active) return hidden ? 300_000 : 60_000;
   return hidden ? 15_000 : 4000;
@@ -98,11 +99,10 @@ export default function Painel({ initial }: { initial: Snapshot | null }) {
 
   // Pré-festejo (não oficial): a projeção (com ≥ 10% apurado) ou o Polymarket dão o Flávio com ≥ 99%.
   const quase: { id: string; texto: string }[] = [];
-  if (data && !winner) {
+  if (data && !winner && !data.availability) {
     const proj = data.projection;
     if (proj && proj.probFlavio >= 0.99 && (p?.pctSections ?? 0) >= 10) quase.push({ id: 'projecao', texto: `Projeção do site: ${probText(proj.probFlavio)}` });
-    const mkt = data.market;
-    if (mkt && !mkt.stale && mkt.flavio >= 99) quase.push({ id: 'mercado', texto: `Polymarket: ${pct(mkt.flavio, 0)}` });
+    // O mercado é contexto; o pré-festejo exige a projeção com votos efetivamente contados.
   }
   const quaseIds = quase.map((q) => q.id).join(',');
   // Mostra-se sozinho uma vez por fonte (projeção / Polymarket), com os avisos no ecrã ligados.
@@ -541,6 +541,9 @@ function EstadoTSE({ data, now, error }: { data: Snapshot; now: number; error: s
   if (error) {
     tone = 'erro';
     text = `Sem ligação ao site (${error})`;
+  } else if (data.availability) {
+    tone = 'erro';
+    text = `Ligação instável · última fotografia válida ${ago(data.availability.cachedAt, now)} · a tentar novamente`;
   } else if (data.paused) {
     text = 'Recolha em pausa · a mostrar os resultados guardados';
   } else if (!data.active) {

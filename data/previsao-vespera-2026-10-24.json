@@ -1,0 +1,74 @@
+{
+  "at": "2026-10-24T12:11:13.933Z",
+  "config": {
+    "_comentario": "Atualização da véspera (24/10/2026): ver docs/plano-vespera.md. Com ativo=false o site ignora tudo o resto.",
+    "ativo": true,
+    "atualizado": "2026-10-24T12:11:13.933Z",
+    "transferencias": {
+      "_fonte": "Datafolha, campo 20–22/10/2026, publicação 23/10: eliminados 47% Flávio, 26% Lula; restantes não atribuídos aos finalistas",
+      "padrao": [
+        0.47,
+        0.26
+      ],
+      "manter": [
+        "80",
+        "16",
+        "21",
+        "29"
+      ],
+      "fonte": "https://datafolha.folha.uol.com.br/eleicoes/2026/10/flavio-bolsonaro-pl-tem-47-e-tem-empate-tecnico-com-lula-pt-que-aparece-com-46.shtml"
+    },
+    "sondagens": {
+      "_fonte": "Uma sondagem por instituto; média simples dos votos válidos publicados, conferidos nas fontes originais. Sem correção política ou mercado.",
+      "flavio": 50.43,
+      "incerteza": 2,
+      "institutos": 3,
+      "periodo": "2026-10-18 a 2026-10-22"
+    }
+  },
+  "forecast": {
+    "flavio": 50.833871030717035,
+    "lula": 49.166128969282965,
+    "probFlavio": 0.6348209852643321,
+    "low": 46.091695169077056,
+    "high": 55.57604689235701
+  },
+  "fontes": [
+    {
+      "instituto": "Datafolha",
+      "fim": "2026-10-22",
+      "periodo": "20–22/10",
+      "publicado": "2026-10-23",
+      "quota": 50,
+      "lula": 50,
+      "universo": "eleitores de 16 anos ou mais; votos válidos publicados",
+      "amostra": 2520,
+      "registro": "BR-09709/2026",
+      "fonte": "https://datafolha.folha.uol.com.br/eleicoes/2026/10/flavio-bolsonaro-pl-tem-47-e-tem-empate-tecnico-com-lula-pt-que-aparece-com-46.shtml"
+    },
+    {
+      "instituto": "PoderData",
+      "fim": "2026-10-21",
+      "periodo": "19–21/10",
+      "publicado": "2026-10-22",
+      "quota": 51,
+      "lula": 49,
+      "universo": "eleitores brasileiros; votos válidos publicados",
+      "amostra": 4000,
+      "registro": "BR-07926/2026",
+      "fonte": "https://www.poder360.com.br/poderdata/pesquisa-poderdata-aya-leia-os-resultados-de-lula-e-flavio-na-reta-final-do-2o-turno-3/"
+    },
+    {
+      "instituto": "Nexus",
+      "fim": "2026-10-18",
+      "periodo": "16–18/10",
+      "publicado": "2026-10-19",
+      "quota": 50.3,
+      "lula": 49.7,
+      "universo": "eleitores de 16 anos ou mais; votos válidos publicados",
+      "amostra": 2002,
+      "registro": "BR-04499/2026",
+      "fonte": "https://www.nexus.fsb.com.br/estudos-divulgados/pesquisa-btg-nexus-de-intencao-de-votos-para-presidente-do-brasil-19-de-outubro-de-2026/"
+    }
+  ]
+}

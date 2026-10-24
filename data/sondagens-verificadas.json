@@ -1,0 +1,17 @@
+[
+  {
+    "instituto": "Datafolha", "fim": "2026-10-22", "periodo": "20–22/10", "publicado": "2026-10-23",
+    "quota": 50, "lula": 50, "universo": "eleitores de 16 anos ou mais; votos válidos publicados", "amostra": 2520,
+    "registro": "BR-09709/2026", "fonte": "https://datafolha.folha.uol.com.br/eleicoes/2026/10/flavio-bolsonaro-pl-tem-47-e-tem-empate-tecnico-com-lula-pt-que-aparece-com-46.shtml"
+  },
+  {
+    "instituto": "PoderData", "fim": "2026-10-21", "periodo": "19–21/10", "publicado": "2026-10-22",
+    "quota": 51, "lula": 49, "universo": "eleitores brasileiros; votos válidos publicados", "amostra": 4000,
+    "registro": "BR-07926/2026", "fonte": "https://www.poder360.com.br/poderdata/pesquisa-poderdata-aya-leia-os-resultados-de-lula-e-flavio-na-reta-final-do-2o-turno-3/"
+  },
+  {
+    "instituto": "Nexus", "fim": "2026-10-18", "periodo": "16–18/10", "publicado": "2026-10-19",
+    "quota": 50.3, "lula": 49.7, "universo": "eleitores de 16 anos ou mais; votos válidos publicados", "amostra": 2002,
+    "registro": "BR-04499/2026", "fonte": "https://www.nexus.fsb.com.br/estudos-divulgados/pesquisa-btg-nexus-de-intencao-de-votos-para-presidente-do-brasil-19-de-outubro-de-2026/"
+  }
+]

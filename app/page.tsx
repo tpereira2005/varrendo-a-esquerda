@@ -2,6 +2,7 @@ import Painel from '@/components/painel/painel';
 import { snapshot } from '@/lib/collector.mjs';
 import { store, flags } from '@/lib/runtime';
 import type { Snapshot } from '@/lib/types';
+import { readSnapshot } from '@/lib/snapshot-read.mjs';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,7 +12,7 @@ export default async function Home() {
   try {
     // Renderizada a cada pedido: a hora atual faz parte dos dados.
     // eslint-disable-next-line react-hooks/purity
-    initial = (await snapshot(store(), Date.now(), flags())) as Snapshot;
+    initial = (await readSnapshot(() => snapshot(store(), Date.now(), flags()))) as Snapshot;
   } catch (error) {
     console.error('Página:', error);
   }

@@ -4,6 +4,7 @@ import { jobsFor } from '../../../lib/rounds.mjs';
 import { UFS } from '../../../lib/tse.mjs';
 import { refreshMarket } from '../../../lib/mercado.mjs';
 import { store, flags } from '../../../lib/runtime';
+import { readSnapshot, errorDetail } from '../../../lib/snapshot-read.mjs';
 
 export async function GET(request: Request) {
   const uf = (new URL(request.url).searchParams.get('uf') || 'BR').toUpperCase();
@@ -12,17 +13,19 @@ export async function GET(request: Request) {
     const db = store();
     const f = flags();
     const now = Date.now();
-    const data = await snapshot(db, now, f);
-    if (data.active && !f.paused) {
+    const data = await readSnapshot(() => snapshot(db, Date.now(), f));
+    if (data.active && !f.paused && !data.availability) {
       // Quem tem a página aberta mantém a recolha viva; a concessão garante uma recolha de cada vez.
-      await db.prioritize(jobsFor(await currentIds(db), f.base), uf, now);
-      waitUntil(collectStep(db, { ...f, limit: 32, foreground: true }).catch((e) => console.error('Recolha:', e)));
+      waitUntil((async () => {
+        await db.prioritize(jobsFor(await currentIds(db), f.base), uf, now);
+        await collectStep(db, { ...f, limit: 32, foreground: true });
+      })().catch((e) => console.error('Recolha:', errorDetail(e))));
     }
     // Mercado de previsões: lido em segundo plano, ao seu próprio ritmo (a base garante um pedido de cada vez).
-    waitUntil(refreshMarket(db, { active: data.active }).catch((e) => console.error('Mercado:', e)));
+    if (!data.availability) waitUntil(refreshMarket(db, { active: data.active }).catch((e) => console.error('Mercado:', errorDetail(e))));
     return Response.json(data, { headers: { 'cache-control': 'no-store' } });
   } catch (error) {
-    console.error('Estado:', error);
+    console.error('Estado:', errorDetail(error));
     return Response.json({ error: 'Não foi possível ler os resultados guardados.' }, { status: 503 });
   }
 }

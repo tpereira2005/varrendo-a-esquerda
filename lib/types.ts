@@ -62,6 +62,7 @@ export type Notice = {
 };
 
 export type Snapshot = {
+  availability?: { cachedAt: number };
   serverNow: number;
   phase: 'antes' | 'apuramento' | 'encerrado';
   active: boolean;

@@ -5,6 +5,7 @@ import { projectionVerdict, probText } from '@/lib/projecao.mjs';
 import { Numero } from './numero';
 import { compact, pct } from './format';
 import vespera from '@/data/vespera.json';
+import fontes from '@/data/sondagens-verificadas.json';
 
 // Sondagens da véspera (data/vespera.json), só quando a atualização estiver ligada.
 const sondagens =
@@ -31,7 +32,7 @@ export function Projecao({ data }: { data: Snapshot }) {
 
       <div className={`projecao-veredito ${verdict.who ? `c-${verdict.who}` : ''}`}>
         <strong>{verdict.text}</strong>
-        <span>{counted ? verdict.strength : 'antes dos votos · com base na 1.ª volta'}</span>
+        <span>{counted ? verdict.strength : sondagens ? 'antes dos votos · 1.ª volta e sondagens' : 'antes dos votos · com base na 1.ª volta'}</span>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
@@ -69,11 +70,11 @@ export function Projecao({ data }: { data: Snapshot }) {
       {sondagens && (
         <p className="mercado-comparar">
           <span>
-            Sondagens: <b className={sondagens.flavio >= 50 ? 'c-flavio' : 'c-lula'}>Flávio {pct(sondagens.flavio, 1)}</b>
+            Sondagens · votos válidos: <b className={sondagens.flavio >= 50 ? 'c-flavio' : 'c-lula'}>Flávio {pct(sondagens.flavio, 1)}</b>
           </span>
           {data.market && (
             <span>
-              Polymarket: <b className={data.market.flavio >= 50 ? 'c-flavio' : 'c-lula'}>{pct(data.market.flavio, 0)}</b>
+              Polymarket · probabilidade de vitória: <b className={data.market.flavio >= 50 ? 'c-flavio' : 'c-lula'}>{pct(data.market.flavio, 0)}</b>
             </span>
           )}
           <span className="hint">
@@ -85,6 +86,7 @@ export function Projecao({ data }: { data: Snapshot }) {
       <details className="detalhes-pequenos">
         <summary>Como é calculada?</summary>
         <ul className="hint mt-1 lista-como">
+          {sondagens && <li>Atualização de véspera: {vespera.atualizado}. O mercado não entra no cálculo. Fontes: {fontes.map((s, i) => <span key={s.registro}>{i > 0 ? ' · ' : ''}<a href={s.fonte} target="_blank" rel="noreferrer">{s.instituto} ({s.periodo})</a></span>)}. Incerteza das sondagens: desvio-padrão de {vespera.sondagens.incerteza} pp, incluindo risco de erro comum; não é a margem de erro de uma sondagem.</li>}
           <li>
             <b>Ponto de partida:</b> 1.ª volta com os votos dos eliminados redistribuídos
             {sondagens ? ' (como medido pelo Datafolha), combinada com a média das sondagens' : ' (Caiado e Zema sobretudo para o Flávio)'} · Flávio{' '}

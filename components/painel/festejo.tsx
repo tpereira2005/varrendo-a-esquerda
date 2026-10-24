@@ -138,7 +138,7 @@ export function PreFestejo({ fontes, sound, onClose, onShare }: { fontes: string
         </div>
         <p className="festejo-sobre">Projeção · não oficial</p>
         <h1 id="pre-festejo-titulo" className="festejo-titulo pre-festejo-titulo">
-          O Flávio vai ganhar!
+          Vitória do Flávio muito provável
         </h1>
         <ul className="pre-festejo-fontes">
           {fontes.map((f) => (

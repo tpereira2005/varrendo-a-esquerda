@@ -1,5 +1,7 @@
 # Plano da véspera (sábado, 24/10/2026, à noite)
 
+**Executado em 24/10, com revisão das fontes e do procedimento.** Ver `docs/vespera-ativada.md` e a fotografia `data/previsao-vespera-2026-10-24.json`. A âncora usa apenas votos válidos conferidos em fontes originais; a compilação abaixo é descoberta, não entrada automática. Os passos e números seguintes ficam como registo do plano original de 21/10.
+
 Atualização única do ponto de partida da projeção, com os dados mais recentes possíveis.
 Até lá `data/vespera.json` fica com `"ativo": false` e o site usa o modelo atual (só transferências da 1.ª volta).
 
