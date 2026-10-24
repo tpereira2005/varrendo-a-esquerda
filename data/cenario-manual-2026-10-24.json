@@ -1,0 +1,17 @@
+{
+  "at": "2026-10-24T12:26:58.660Z",
+  "cenario": {
+    "ativo": true,
+    "flavio": 53.2,
+    "origem": "Cenário manual solicitado pelo utilizador; não é a média das sondagens nem um resultado oficial"
+  },
+  "forecast": {
+    "flavio": 53.199999999999996,
+    "lula": 46.800000000000004,
+    "probFlavio": 0.9070100641556542,
+    "sd": 2.419539155578107,
+    "low": 48.4577032550669,
+    "high": 57.94229674493309
+  },
+  "nota": "Probabilidade condicional ao cenário manual; sondagens e respetiva incerteza preservadas"
+}

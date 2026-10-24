@@ -16,6 +16,7 @@ const sondagens =
 /** Deslocação a favor de quem ganha terreno: "+1,2 pp Flávio" ou "+3,0 pp Lula" (nunca "−3 pp Lula"). */
 const sinal = (v: number) => `+${pct(Math.abs(v), 1).replace('%', ' pp')} ${v >= 0 ? 'Flávio' : 'Lula'}`;
 const ufName = (uf: string) => UF_NAMES[uf as keyof typeof UF_NAMES];
+const cenario = vespera.ativo && vespera.cenario?.ativo ? vespera.cenario : null;
 
 /** Projeção do resultado final: estimativa estatística, sempre identificada como não oficial. */
 export function Projecao({ data }: { data: Snapshot }) {
@@ -27,13 +28,14 @@ export function Projecao({ data }: { data: Snapshot }) {
     <section className="card grid gap-3">
       <div className="flex items-center justify-between gap-2">
         <h2>Projeção</h2>
-        <span className="tag">estimativa · não oficial</span>
+        <span className="tag">{cenario ? 'cenário manual' : 'estimativa'} · não oficial</span>
       </div>
 
       <div className={`projecao-veredito ${verdict.who ? `c-${verdict.who}` : ''}`}>
         <strong>{verdict.text}</strong>
-        <span>{counted ? verdict.strength : sondagens ? 'antes dos votos · 1.ª volta e sondagens' : 'antes dos votos · com base na 1.ª volta'}</span>
+        <span>{counted ? verdict.strength : cenario ? 'antes dos votos · cenário assumido' : sondagens ? 'antes dos votos · 1.ª volta e sondagens' : 'antes dos votos · com base na 1.ª volta'}</span>
       </div>
+      {cenario && <p className="hint">Ponto de partida ajustado manualmente: Flávio {pct(cenario.flavio, 1)}. Probabilidades condicionais a este cenário; os votos apurados vão corrigindo a projeção.</p>}
 
       <div className="grid grid-cols-2 gap-3">
         <div>
@@ -89,7 +91,7 @@ export function Projecao({ data }: { data: Snapshot }) {
           {sondagens && <li>Atualização de véspera: {vespera.atualizado}. O mercado não entra no cálculo. Fontes: {fontes.map((s, i) => <span key={s.registro}>{i > 0 ? ' · ' : ''}<a href={s.fonte} target="_blank" rel="noreferrer">{s.instituto} ({s.periodo})</a></span>)}. Incerteza das sondagens: desvio-padrão de {vespera.sondagens.incerteza} pp, incluindo risco de erro comum; não é a margem de erro de uma sondagem.</li>}
           <li>
             <b>Ponto de partida:</b> 1.ª volta com os votos dos eliminados redistribuídos
-            {sondagens ? ' (como medido pelo Datafolha), combinada com a média das sondagens' : ' (Caiado e Zema sobretudo para o Flávio)'} · Flávio{' '}
+            {sondagens ? ' (como medido pelo Datafolha), combinada com a média das sondagens' : ' (Caiado e Zema sobretudo para o Flávio)'}{cenario ? ', seguida do ajuste manual do cenário' : ''} · Flávio{' '}
             {pct(p.prior, 1)}.
           </li>
           <li>

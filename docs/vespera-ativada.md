@@ -1,5 +1,9 @@
 # Atualização de 24/10/2026
 
+## Cenário principal escolhido posteriormente
+
+Por pedido explícito do utilizador, o valor principal passou para um cenário manual de 53,2% para Flávio e 46,8% para Lula, identificado no cartão. A deslocação é uniforme em logit nos pontos de partida estaduais, preservando votos válidos esperados e incertezas. Não se modificaram os valores das sondagens, as suas fontes nem a incerteza para obter uma probabilidade escolhida. Com desvio-padrão nacional efetivo de aproximadamente 2,4195 pp, a probabilidade condicional de vitória é 90,70% para Flávio e 9,30% para Lula; o intervalo de 95% do cenário é aproximadamente 48,46–57,94%. Os resultados observados durante o apuramento continuam a corrigir o cenário e o resultado oficial prevalece. Os números seguintes documentam a previsão anterior, baseada nas fontes.
+
 A âncora usa votos válidos publicados em fontes originais conferidas: Datafolha 50%, PoderData 51% e Nexus 50,3% para Flávio (fichas, datas e fontes em `data/sondagens-verificadas.json`). Média simples: 50,43%. A compilação de outros institutos é conservada como contexto, sem entrar automaticamente na previsão enquanto os valores originais não forem conferidos.
 
 Transferência do conjunto de eliminados: Datafolha, campo 20–22/10, 47% para Flávio e 26% para Lula. Não é uma medição exata por candidato ou estado. As pequenas candidaturas de esquerda mantêm os pressupostos anteriores; finalistas mantêm retenção simétrica de 97%. Não se transferiu uma classificação política de partido para uma taxa nova de retenção.

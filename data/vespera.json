@@ -1,7 +1,7 @@
 {
   "_comentario": "Atualização da véspera (24/10/2026): ver docs/plano-vespera.md. Com ativo=false o site ignora tudo o resto.",
   "ativo": true,
-  "atualizado": "2026-10-24T12:11:13.933Z",
+  "atualizado": "2026-10-24T12:26:58.660Z",
   "transferencias": {
     "_fonte": "Datafolha, campo 20–22/10/2026, publicação 23/10: eliminados 47% Flávio, 26% Lula; restantes não atribuídos aos finalistas",
     "padrao": [
@@ -22,5 +22,10 @@
     "incerteza": 2,
     "institutos": 3,
     "periodo": "2026-10-18 a 2026-10-22"
+  },
+  "cenario": {
+    "ativo": true,
+    "flavio": 53.2,
+    "origem": "Cenário manual solicitado pelo utilizador; não é a média das sondagens nem um resultado oficial"
   }
 }
