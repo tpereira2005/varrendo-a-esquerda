@@ -70,19 +70,13 @@ export function Projecao({ data }: { data: Snapshot }) {
       </p>
 
       {sondagens && (
-        <p className="mercado-comparar">
-          <span>
-            Sondagens · votos válidos: <b className={sondagens.flavio >= 50 ? 'c-flavio' : 'c-lula'}>Flávio {pct(sondagens.flavio, 1)}</b>
-          </span>
-          {data.market && (
-            <span>
-              Polymarket · probabilidade de vitória: <b className={data.market.flavio >= 50 ? 'c-flavio' : 'c-lula'}>{pct(data.market.flavio, 0)}</b>
-            </span>
-          )}
+        <div className="mercado-comparar">
+          <span className="hint">Média das sondagens</span>
+          <span><b className="c-flavio">Flávio {pct(sondagens.flavio, 1)}</b> · <b className="c-lula">Lula {pct(100 - sondagens.flavio, 1)}</b></span>
           <span className="hint">
-            média de {sondagens.institutos} institutos ({sondagens.periodo}) · não oficial
+            {sondagens.institutos} institutos · {sondagens.periodo.replace(/\d{4}-(\d{2})-(\d{2})/g, '$2/$1').replace(' a ', '–')} · votos válidos
           </span>
-        </p>
+        </div>
       )}
 
       <details className="detalhes-pequenos">
