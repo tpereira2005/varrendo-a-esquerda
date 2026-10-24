@@ -35,7 +35,6 @@ export function Projecao({ data }: { data: Snapshot }) {
         <strong>{verdict.text}</strong>
         <span>{counted ? verdict.strength : cenario ? 'antes dos votos · cenário assumido' : sondagens ? 'antes dos votos · 1.ª volta e sondagens' : 'antes dos votos · com base na 1.ª volta'}</span>
       </div>
-      {cenario && <p className="hint">Ponto de partida ajustado manualmente: Flávio {pct(cenario.flavio, 1)}. Probabilidades condicionais a este cenário; os votos apurados vão corrigindo a projeção.</p>}
 
       <div className="grid grid-cols-2 gap-3">
         <div>
@@ -82,6 +81,7 @@ export function Projecao({ data }: { data: Snapshot }) {
       <details className="detalhes-pequenos">
         <summary>Como é calculada?</summary>
         <ul className="hint mt-1 lista-como">
+          {cenario && <li>Cenário inicial manual: Flávio {pct(cenario.flavio, 1)}. As probabilidades dependem deste cenário, que é corrigido pelos votos apurados.</li>}
           {sondagens && <li>Atualização de véspera: {vespera.atualizado}. O mercado não entra no cálculo. Fontes: {fontes.map((s, i) => <span key={s.registro}>{i > 0 ? ' · ' : ''}<a href={s.fonte} target="_blank" rel="noreferrer">{s.instituto} ({s.periodo})</a></span>)}. Incerteza das sondagens: desvio-padrão de {vespera.sondagens.incerteza} pp, incluindo risco de erro comum; não é a margem de erro de uma sondagem.</li>}
           <li>
             <b>Ponto de partida:</b> 1.ª volta com os votos dos eliminados redistribuídos
