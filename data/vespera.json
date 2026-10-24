@@ -1,7 +1,7 @@
 {
   "_comentario": "Atualização da véspera (24/10/2026): ver docs/plano-vespera.md. Com ativo=false o site ignora tudo o resto.",
   "ativo": true,
-  "atualizado": "2026-10-24T12:26:58.660Z",
+  "atualizado": "2026-10-24T12:47:41.770Z",
   "transferencias": {
     "_fonte": "Datafolha, campo 20–22/10/2026, publicação 23/10: eliminados 47% Flávio, 26% Lula; restantes não atribuídos aos finalistas",
     "padrao": [
@@ -17,11 +17,12 @@
     "fonte": "https://datafolha.folha.uol.com.br/eleicoes/2026/10/flavio-bolsonaro-pl-tem-47-e-tem-empate-tecnico-com-lula-pt-que-aparece-com-46.shtml"
   },
   "sondagens": {
-    "_fonte": "Uma sondagem por instituto; média simples dos votos válidos publicados, conferidos nas fontes originais. Sem correção política ou mercado.",
-    "flavio": 50.43,
+    "_fonte": "Média simples, uma sondagem nacional de segundo turno por instituto, campo terminado nos últimos 7 dias. Preferência por válidos publicados; quando só há totais, conversão explícita F/(F+L). Fontes originais ou reportagens identificadas com ficha técnica. Sem correção política ou mercado.",
+    "flavio": 51.06,
     "incerteza": 2,
-    "institutos": 3,
-    "periodo": "2026-10-18 a 2026-10-22"
+    "institutos": 16,
+    "periodo": "2026-10-18 a 2026-10-22",
+    "convertidas": 2
   },
   "cenario": {
     "ativo": true,

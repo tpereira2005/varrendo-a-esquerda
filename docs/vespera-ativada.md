@@ -1,5 +1,7 @@
 # Atualização de 24/10/2026
 
+A média foi posteriormente alargada para 16 institutos (51,06% Flávio / 48,94% Lula), após conferência; ver `docs/sondagens-2026-10-24.md`. Mantém-se o cenário manual principal de 53,2%. Os três institutos e os números iniciais abaixo ficam como histórico da primeira atualização.
+
 ## Cenário principal escolhido posteriormente
 
 Por pedido explícito do utilizador, o valor principal passou para um cenário manual de 53,2% para Flávio e 46,8% para Lula, identificado no cartão. A deslocação é uniforme em logit nos pontos de partida estaduais, preservando votos válidos esperados e incertezas. Não se modificaram os valores das sondagens, as suas fontes nem a incerteza para obter uma probabilidade escolhida. Com desvio-padrão nacional efetivo de aproximadamente 2,4195 pp, a probabilidade condicional de vitória é 90,70% para Flávio e 9,30% para Lula; o intervalo de 95% do cenário é aproximadamente 48,46–57,94%. Os resultados observados durante o apuramento continuam a corrigir o cenário e o resultado oficial prevalece. Os números seguintes documentam a previsão anterior, baseada nas fontes.

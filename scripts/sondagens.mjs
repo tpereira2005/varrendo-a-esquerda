@@ -44,7 +44,7 @@ for (const row of table.split('\n|-').slice(1)) {
 }
 if (!sondagens.length) throw new Error('Nenhuma sondagem lida: o formato da tabela mudou?');
 
-// A compilação serve para descoberta. A âncora só usa valores válidos conferidos na publicação original.
+// A compilação serve para descoberta. Conferência em fonte original ou reportagem identificada com ficha técnica.
 const verificadas = JSON.parse(readFileSync(new URL('../data/sondagens-verificadas.json', import.meta.url), 'utf8'));
 const lista = recentesPorInstituto(verificadas, DIAS).sort((a, b) => b.quota - a.quota);
 const descoberta = recentesPorInstituto(sondagens, DIAS);
@@ -67,7 +67,8 @@ const resumo = {
   dias: DIAS,
   periodo: `${new Date(desde).toISOString().slice(0, 10)} a ${new Date(ultimaData).toISOString().slice(0, 10)}`,
   institutos: lista.length,
-  metodo: 'Uma sondagem por instituto; média simples dos votos válidos publicados, conferidos nas fontes originais. Sem correção política ou mercado.',
+  metodo: 'Média simples, uma sondagem nacional de segundo turno por instituto, campo terminado nos últimos 7 dias. Preferência por válidos publicados; quando só há totais, conversão explícita F/(F+L). Fontes originais ou reportagens identificadas com ficha técnica. Sem correção política ou mercado.',
+  convertidas: lista.filter((s) => s.base === 'convertidos-de-totais').length,
   descoberta: { institutos: descoberta.length, media: descoberta.reduce((n, p) => n + p.quota, 0) / descoberta.length, uso: 'Contexto não usado na âncora; valores recalculados da compilação ainda não conferidos' },
   media: +media.toFixed(2),
   mediana: +mediana.toFixed(2),
