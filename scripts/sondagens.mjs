@@ -39,7 +39,7 @@ for (const row of table.split('\n|-').slice(1)) {
   const l = Number(lula);
   const f = Number(flavio);
   const data = fim(periodo);
-  if (!instituto || !Number.isFinite(l) || !Number.isFinite(f) || !data) continue;
+  if (!instituto || !Number.isFinite(l) || !Number.isFinite(f) || l < 0 || f < 0 || f + l <= 0 || !data) continue;
   sondagens.push({ instituto, periodo, fim: new Date(data).toISOString().slice(0, 10), lula: l, flavio: f, quota: (100 * f) / (f + l) });
 }
 if (!sondagens.length) throw new Error('Nenhuma sondagem lida: o formato da tabela mudou?');

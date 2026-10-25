@@ -13,7 +13,7 @@ test('institutos com acentos e grafias diferentes contam uma vez; datas futuras 
 
 test('base conferida: um instituto por entrada, ficha e fontes completas; conversões explícitas corretas', () => {
   const polls = JSON.parse(readFileSync(new URL('../data/sondagens-verificadas.json', import.meta.url)));
-  const selected = recentesPorInstituto(polls, 7, Date.parse('2026-10-24T12:00Z'));
+  const selected = recentesPorInstituto(polls, 7, Date.parse('2026-10-25T12:00Z'));
   assert.equal(selected.length, polls.length);
   for (const p of selected) {
     assert.match(p.fonte, /^https:\/\//);
