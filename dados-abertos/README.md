@@ -13,7 +13,7 @@ autorização (ver [Licença](#licença)).
 |---|---|---|
 | `2022-2t/` | 2.ª volta de 2022 (Bolsonaro × Lula) | Presidente, 27 estados, ~100–180 momentos por estado |
 | `2026-1t/` | 1.ª volta de 2026 | Presidente, Governador e Senado, por estado (e Brasil), ~50–95 momentos por disputa |
-| `2026-2t/` | 2.ª volta de 2026 (Flávio Bolsonaro × Lula) | Acrescentado depois de 25/10/2026: Presidente, Governador e as cidades do estrangeiro |
+| `2026-2t/` | 2.ª volta de 2026 (Flávio Bolsonaro × Lula) | Presidente (Brasil, 27 estados e estrangeiro), Governador em 6 estados e as cidades do estrangeiro, de 25/10 19h33 a 26/10 06h46 UTC |
 
 Em cada pasta:
 
